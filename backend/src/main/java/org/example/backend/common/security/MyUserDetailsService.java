@@ -17,13 +17,13 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.getUserByUsername(username);
+        User user = userRepository.findUserByUsername(username);
         if (user == null || user.getEnabled() == 0) {
             throw new UsernameNotFoundException("用户不存在/用户禁用");
         }
 
-        List<String> roles = userRepository.getRolesByUserId(user.getId());
-        List<String> permissions = userRepository.getPermissionsByUserId(user.getId());
+        List<String> roles = userRepository.findRolesByUserId(user.getId());
+        List<String> permissions = userRepository.findPermissionsByUserId(user.getId());
 
         return new MyUserDetails(user.getId(), user.getUsername(), user.getPassword(), roles, permissions, null);
     }
