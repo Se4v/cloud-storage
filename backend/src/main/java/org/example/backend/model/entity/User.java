@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @TableName("sys_user")
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -36,7 +38,7 @@ public class User implements Serializable {
     private String email;
 
     @TableField("is_enabled")
-    private Boolean enabled;
+    private Integer enabled;
 
     @TableField("created_at")
     private LocalDateTime createdAt;

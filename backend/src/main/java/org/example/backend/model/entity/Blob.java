@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @TableName("file_blob")
 public class Blob implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -35,8 +37,11 @@ public class Blob implements Serializable {
     @TableField("object_key")
     private String objectKey;
 
+    @TableField("mime_type")
+    private String mimeType;
+
     @TableField("is_enabled")
-    private Boolean enabled;
+    private Integer enabled;
 
     @TableField("ref_count")
     private Integer refCount;

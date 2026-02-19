@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @TableName("file_share")
 public class Share implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -42,7 +44,7 @@ public class Share implements Serializable {
     private Integer shareLinkType;
 
     @TableField("is_valid")
-    private Boolean valid;
+    private Integer valid;
 
     @TableField("expired_at")
     private LocalDateTime expiredAt;

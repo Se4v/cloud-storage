@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @TableName("sys_notification")
 public class Notification implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -33,7 +35,7 @@ public class Notification implements Serializable {
     private Integer type;
 
     @TableField("is_read")
-    private Boolean read;
+    private Integer read;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
