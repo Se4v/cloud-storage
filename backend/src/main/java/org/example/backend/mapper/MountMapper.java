@@ -1,4 +1,7 @@
 package org.example.backend.mapper;
 
-public interface MountMapper {
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.example.backend.model.entity.Mount;
+
+public interface MountMapper extends BaseMapper<Mount> {
 }
