@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-@TableName("sys_notification")
-public class Notification implements Serializable {
+@TableName("sys_notice")
+public class Notice implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
