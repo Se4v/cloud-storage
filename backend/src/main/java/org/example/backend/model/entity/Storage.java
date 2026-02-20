@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-@TableName("file_blob")
-public class Blob implements Serializable {
+@TableName("file_storage")
+public class Storage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)

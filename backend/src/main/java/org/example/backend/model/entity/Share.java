@@ -46,6 +46,9 @@ public class Share implements Serializable {
     @TableField("is_valid")
     private Integer valid;
 
+    @TableField("is_deleted")
+    private Integer deleted;
+
     @TableField("expired_at")
     private LocalDateTime expiredAt;
 

@@ -28,8 +28,8 @@ public class Entry implements Serializable {
     @TableField("parent_id")
     private Long parentId;
 
-    @TableField("blob_id")
-    private Long blobId;
+    @TableField("storage_id")
+    private Long storageId;
 
     @TableField("entry_name")
     private String entryName;

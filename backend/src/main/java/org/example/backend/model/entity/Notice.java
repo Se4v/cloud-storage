@@ -19,8 +19,8 @@ public class Notice implements Serializable {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @TableField("user_id")
-    private Long userId;
+    @TableField("receiver_id")
+    private Long receiverId;
 
     @TableField("sender_id")
     private Long senderId;
@@ -36,6 +36,9 @@ public class Notice implements Serializable {
 
     @TableField("is_read")
     private Integer read;
+
+    @TableField("is_deleted")
+    private Integer deleted;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
