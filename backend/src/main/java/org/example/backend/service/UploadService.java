@@ -14,7 +14,7 @@ import org.example.backend.model.entity.Entry;
 import org.example.backend.model.args.MergeChunksRequest;
 import org.example.backend.model.args.RecordChunksRequest;
 import org.example.backend.model.args.DirectUploadRequest;
-import org.example.backend.model.args.InitUploadRequest;
+import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.view.MergeChunksResponse;
 import org.example.backend.model.view.RecordChunksResponse;
 import org.example.backend.model.view.DirectUploadResponse;
@@ -53,9 +53,9 @@ public class UploadService {
     private static final long TASK_EXPIRE_HOURS = 24;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    public InitUploadResponse initUpload(InitUploadRequest request, Long userId) {
+    public InitUploadResponse initUpload(InitUploadArgs args, Long userId) {
         // 判断操作是否为同一用户
-        if (!request.getUserId().equals(userId)) {
+        if (!args.getUserId().equals(userId)) {
             throw new BusinessException("Invalid user id");
         }
 
@@ -73,9 +73,9 @@ public class UploadService {
         int successCount = 0;
 
         // 单个文件上传初始化
-        for (InitUploadRequest.RequestItem requestItem : request.getRequestItems()) {
+        for (InitUploadArgs.Arg arg : args.getArgList()) {
             try {
-                InitUploadResponse.ResponseItem responseItem = initSingleUpload(requestItem, request);
+                InitUploadResponse.ResponseItem responseItem = initSingleUpload(arg, args);
 
                 if (responseItem.getSuccess()) {
                     successCount++;
@@ -84,7 +84,7 @@ public class UploadService {
                 responseItems.add(responseItem);
             } catch (Exception e) {
                 responseItems.add(InitUploadResponse.ResponseItem.builder()
-                        .entryName(requestItem.getEntryName())
+                        .entryName(arg.getEntryName())
                         .success(false)
                         .message("初始化失败")
                         .build());
@@ -93,34 +93,34 @@ public class UploadService {
 
         return InitUploadResponse.builder()
                 .responseItems(responseItems)
-                .totalCount(request.getRequestItems().size())
+                .totalCount(args.getArgList().size())
                 .successCount(successCount)
                 .build();
     }
 
-    private InitUploadResponse.ResponseItem initSingleUpload(InitUploadRequest.RequestItem requestItem,
-                                                         InitUploadRequest request) throws Exception {
+    private InitUploadResponse.ResponseItem initSingleUpload(InitUploadArgs.Arg arg,
+                                                             InitUploadArgs args) throws Exception {
         // 秒传检查
-        Storage existStorage = fileRepository.findBlobBySha256(requestItem.getSha256());
+        Storage existStorage = fileRepository.findBlobBySha256(arg.getSha256());
         if (existStorage != null && existStorage.getEnabled() == 1) {
             Entry entry = Entry.builder()
-                    .driveId(request.getDriveId())
-                    .parentId(request.getParentId())
-                    .userId(request.getUserId())
+                    .driveId(args.getDriveId())
+                    .parentId(args.getParentId())
+                    .userId(args.getUserId())
                     .storageId(existStorage.getId())
-                    .entryName(requestItem.getEntryName())
+                    .entryName(arg.getEntryName())
                     .entryType(1)
-                    .fileSize(requestItem.getFileSize())
+                    .fileSize(arg.getFileSize())
                     .fileExt(existStorage.getFileExt())
                     .enabled(1)
                     .deleted(0)
-                    .updaterId(request.getUserId())
+                    .updaterId(args.getUserId())
                     .build();
 
-            fileRepository.saveEntryWithIncreaseRefCount(entry, requestItem.getSha256());
+            fileRepository.saveEntryWithIncreaseRefCount(entry, arg.getSha256());
 
             return InitUploadResponse.ResponseItem.builder()
-                    .entryName(requestItem.getEntryName())
+                    .entryName(arg.getEntryName())
                     .success(true)
                     .message("秒传成功")
                     .skipUpload(true)
@@ -128,18 +128,18 @@ public class UploadService {
         }
 
         // 断点续传检查
-        String existUploadId = findExistingTask(request.getUserId(), requestItem.getSha256());
-        if (existUploadId != null && validateTaskOwnership(existUploadId, request.getUserId())) {
+        String existUploadId = findExistingTask(args.getUserId(), arg.getSha256());
+        if (existUploadId != null && validateTaskOwnership(existUploadId, args.getUserId())) {
             List<Integer> uploadedChunks = getUploadedChunksFromRedis(existUploadId);
-            List<String> chunkUrls = regenerateChunkUrls(existUploadId, requestItem.getTotalChunks(), uploadedChunks);
+            List<String> chunkUrls = regenerateChunkUrls(existUploadId, arg.getTotalChunks(), uploadedChunks);
 
             return InitUploadResponse.ResponseItem.builder()
-                    .entryName(requestItem.getEntryName())
+                    .entryName(arg.getEntryName())
                     .success(true)
                     .message("断点续传")
                     .skipUpload(false)
                     .directUpload(false)
-                    .sha256(requestItem.getSha256())
+                    .sha256(arg.getSha256())
                     .uploadId(existUploadId)
                     .uploadedChunks(uploadedChunks)
                     .chunkUrls(chunkUrls)
@@ -147,29 +147,29 @@ public class UploadService {
         }
 
         // 小文件上传
-        if (requestItem.getFileSize() <= minioConfig.getDirectUploadThreshold()) {
+        if (arg.getFileSize() <= minioConfig.getDirectUploadThreshold()) {
             return InitUploadResponse.ResponseItem.builder()
-                    .entryName(requestItem.getEntryName())
+                    .entryName(arg.getEntryName())
                     .success(true)
                     .message("小文件直传")
                     .skipUpload(false)
                     .directUpload(true)
-                    .sha256(requestItem.getSha256())
+                    .sha256(arg.getSha256())
                     .build();
         }
 
         // 大文件上传
         try {
-            String uploadId = createNewMultipartTask(requestItem, request);
-            List<String> chunkUrls = generateChunkUrls(uploadId, requestItem.getTotalChunks());
+            String uploadId = createNewMultipartTask(arg, args);
+            List<String> chunkUrls = generateChunkUrls(uploadId, arg.getTotalChunks());
 
             return InitUploadResponse.ResponseItem.builder()
-                    .entryName(requestItem.getEntryName())
+                    .entryName(arg.getEntryName())
                     .success(true)
                     .message("大文件分片上传")
                     .skipUpload(false)
                     .directUpload(false)
-                    .sha256(requestItem.getSha256())
+                    .sha256(arg.getSha256())
                     .uploadId(uploadId)
                     .uploadedChunks(List.of())
                     .chunkUrls(chunkUrls)
@@ -200,9 +200,9 @@ public class UploadService {
         return String.valueOf(userId).equals(ownerId);
     }
 
-    private String createNewMultipartTask(InitUploadRequest.RequestItem initItem,
-                                          InitUploadRequest request) throws Exception {
-        String objectName = generateObjectName(initItem.getSha256(), initItem.getEntryName());
+    private String createNewMultipartTask(InitUploadArgs.Arg arg,
+                                          InitUploadArgs args) throws Exception {
+        String objectName = generateObjectName(arg.getSha256(), arg.getEntryName());
 
         CompletableFuture<CreateMultipartUploadResponse> response = minioClient.createMultipartUploadAsync(
                 minioConfig.getBucketName(), null, objectName, null, null);
@@ -212,15 +212,15 @@ public class UploadService {
 
         // 任务信息
         Map<String, Object> task = new HashMap<>();
-        task.put("entryName", initItem.getEntryName());
-        task.put("sha256", initItem.getSha256());
-        task.put("fileSize", initItem.getFileSize());
-        task.put("chunkSize", initItem.getChunkSize());
+        task.put("entryName", arg.getEntryName());
+        task.put("sha256", arg.getSha256());
+        task.put("fileSize", arg.getFileSize());
+        task.put("chunkSize", arg.getChunkSize());
         task.put("uploadedChunks", "0");
-        task.put("totalChunks", initItem.getTotalChunks());
-        task.put("driveId", request.getDriveId());
-        task.put("parentId", request.getParentId());
-        task.put("userId", request.getUserId());
+        task.put("totalChunks", arg.getTotalChunks());
+        task.put("driveId", args.getDriveId());
+        task.put("parentId", args.getParentId());
+        task.put("userId", args.getUserId());
         task.put("status", "UPLOADING");
         task.put("bucketName", minioConfig.getBucketName());
         task.put("objectName", objectName);
@@ -237,12 +237,12 @@ public class UploadService {
         redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
         // 用户任务索引
-        String userTasksKey = USER_TASKS_PREFIX + request.getUserId();
+        String userTasksKey = USER_TASKS_PREFIX + args.getUserId();
         redisTemplate.opsForSet().add(userTasksKey, uploadId);
         redisTemplate.expire(userTasksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
         // hash索引
-        String hashKey = HASH_INDEX_PREFIX + request.getUserId() + ":" + initItem.getSha256();
+        String hashKey = HASH_INDEX_PREFIX + args.getUserId() + ":" + arg.getSha256();
         redisTemplate.opsForHash().putAll(hashKey, Map.of(
                 "uploadId", uploadId,
                 "status", "UPLOADING",

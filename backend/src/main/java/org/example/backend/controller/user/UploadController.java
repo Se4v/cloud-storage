@@ -1,7 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.InitUploadRequest;
+import org.example.backend.model.args.InitUploadArgs;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UploadController {
 
     @PostMapping("/init")
-    public Result<?> initUpload(@RequestBody InitUploadRequest request) {
+    public Result<?> initUpload(@RequestBody InitUploadArgs request) {
 
         return Result.success();
     }

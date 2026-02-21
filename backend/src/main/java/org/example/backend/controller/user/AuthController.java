@@ -1,4 +1,4 @@
-package org.example.backend.controller;
+package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.MyUserDetails;

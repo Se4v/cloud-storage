@@ -5,14 +5,14 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class InitUploadRequest {
-    private List<RequestItem> requestItems;
+public class InitUploadArgs {
+    private List<Arg> argList;
     private Long userId;
     private Long driveId;
     private Long parentId;
 
     @Data
-    public static class RequestItem {
+    public static class Arg {
         private String entryName;
         private String sha256;
         private Long fileSize;
