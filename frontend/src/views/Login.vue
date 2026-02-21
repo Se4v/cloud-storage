@@ -1,160 +1,189 @@
 <template>
-  <div class="login-container">
-    <!-- 左侧品牌展示区 - 全新设计 -->
-    <div class="brand-section">
-      <div class="brand-content">
-        <div class="logo-wrapper">
-          <div class="logo-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+  <div class="min-h-screen w-full flex bg-background">
+    <!-- 左侧品牌展示区 -->
+    <div class="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden bg-slate-950">
+      <!-- 装饰性背景元素 -->
+      <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900" />
+      <div class="absolute top-0 left-0 w-full h-full overflow-hidden">
+        <div class="absolute -top-1/2 -left-1/2 w-full h-full bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div class="absolute -bottom-1/2 -right-1/2 w-full h-full bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
+
+      <!-- 内容 -->
+      <div class="relative z-10 flex flex-col justify-between p-12 w-full">
+        <div class="flex items-center gap-2 text-white">
+          <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
             </svg>
           </div>
-          <h1 class="brand-title">SecureVault</h1>
+          <span class="text-xl font-bold tracking-tight">Enterprise Cloud</span>
         </div>
-        <p class="brand-description">企业级智能云存储平台，让文件管理更安全、协作更高效</p>
 
-        <div class="feature-list">
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
+        <div class="space-y-6 max-w-lg">
+          <h1 class="text-4xl xl:text-5xl font-bold text-white tracking-tight leading-tight">
+            安全、高效的企业<br/>文件协作平台
+          </h1>
+          <p class="text-slate-400 text-lg leading-relaxed">
+            为现代企业打造的智能云存储解决方案，提供银行级加密、团队协作和无缝同步体验。
+          </p>
+
+          <!-- 特性列表 -->
+          <div class="space-y-4 pt-4">
+            <div class="flex items-center gap-3 text-slate-300">
+              <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span class="text-sm font-medium">端到端加密传输与存储</span>
             </div>
-            <span>端到端加密存储</span>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
+            <div class="flex items-center gap-3 text-slate-300">
+              <div class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span class="text-sm font-medium">支持 500+ 人实时协作编辑</span>
             </div>
-            <span>千人级团队协作</span>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                <polyline points="17 6 23 6 23 12"/>
-              </svg>
+            <div class="flex items-center gap-3 text-slate-300">
+              <div class="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span class="text-sm font-medium">99.99% SLA 服务可用性保障</span>
             </div>
-            <span>实时同步与备份</span>
           </div>
         </div>
-      </div>
 
-      <!-- 全新背景装饰：极光流动效果 + 浮动几何 -->
-      <div class="aurora-bg">
-        <div class="aurora aurora-1"></div>
-        <div class="aurora aurora-2"></div>
-        <div class="aurora aurora-3"></div>
+        <div class="text-slate-500 text-sm">
+          © 2026 Enterprise Cloud. 保留所有权利。
+        </div>
       </div>
-      <div class="floating-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-      </div>
-      <div class="noise-overlay"></div>
     </div>
 
-    <!-- 右侧登录表单区（保持不变） -->
-    <div class="form-section">
-      <div class="form-wrapper">
-        <div class="form-header">
-          <h2 class="form-title">欢迎回来</h2>
-          <p class="form-subtitle">请输入您的账号密码以继续访问</p>
+    <!-- 右侧登录表单区 -->
+    <div class="w-full lg:w-1/2 xl:w-2/5 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-slate-50">
+      <div class="w-full max-w-sm space-y-6">
+        <!-- 移动端 Logo -->
+        <div class="lg:hidden flex items-center justify-center gap-2 mb-8">
+          <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-slate-900 tracking-tight">Enterprise Cloud</span>
         </div>
 
+        <div class="space-y-2 text-center lg:text-left">
+          <h2 class="text-2xl font-semibold tracking-tight text-slate-900">欢迎回来</h2>
+          <p class="text-sm text-slate-500">
+            请输入您的企业账号以继续访问
+          </p>
+        </div>
+
+        <!-- 登录表单 -->
         <el-form
             ref="loginFormRef"
             :model="loginForm"
             :rules="loginRules"
-            class="login-form"
+            class="space-y-4"
             @keyup.enter="handleLogin"
         >
-          <el-form-item prop="username">
+          <el-form-item prop="email" class="!mb-4">
             <el-input
-                v-model="loginForm.username"
-                placeholder="请输入企业邮箱或用户名"
+                v-model="loginForm.email"
+                placeholder="name@company.com"
                 size="large"
-                :prefix-icon="User"
-                class="custom-input"
-            />
+                class="!h-11 !rounded-lg"
+            >
+              <template #prefix>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+              </template>
+            </el-input>
           </el-form-item>
 
-          <el-form-item prop="password">
+          <el-form-item prop="password" class="!mb-4">
             <el-input
                 v-model="loginForm.password"
                 type="password"
-                placeholder="请输入密码"
+                placeholder="••••••••"
                 size="large"
-                :prefix-icon="Lock"
                 show-password
-                class="custom-input"
-            />
+                class="!h-11 !rounded-lg"
+            >
+              <template #prefix>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </template>
+            </el-input>
           </el-form-item>
 
-          <div class="form-options">
-            <el-checkbox v-model="loginForm.remember" class="custom-checkbox">
+          <div class="flex items-center justify-between">
+            <el-checkbox v-model="loginForm.remember" class="!text-sm !text-slate-600">
               记住我
             </el-checkbox>
-            <el-button
-                link
-                type="primary"
-                class="forgot-link"
-                @click="handleForgotPassword"
-            >
+            <a href="#" class="text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors">
               忘记密码？
-            </el-button>
+            </a>
           </div>
 
-          <el-form-item>
-            <el-button
-                type="primary"
-                size="large"
-                class="login-button"
-                :loading="loading"
-                @click="handleLogin"
-            >
-              登录
-            </el-button>
-          </el-form-item>
+          <el-button
+              type="primary"
+              size="large"
+              class="!w-full !h-11 !rounded-lg !bg-slate-900 !border-slate-900 hover:!bg-slate-800 transition-all duration-200 !text-sm !font-medium"
+              :loading="loading"
+              @click="handleLogin"
+          >
+            登录
+          </el-button>
         </el-form>
 
-        <div class="divider">
-          <span class="divider-text">或使用以下方式登录</span>
+        <!-- 分隔线 -->
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200" />
+          </div>
+          <div class="relative flex justify-center text-xs uppercase">
+            <span class="bg-slate-50 px-2 text-slate-500 font-medium">或通过以下方式登录</span>
+          </div>
         </div>
 
-        <div class="social-login">
-          <el-button class="social-btn" @click="handleSSO">
-            <svg class="sso-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="9" y1="21" x2="9" y2="9"/>
+        <!-- SSO 按钮 -->
+        <div class="grid grid-cols-2 gap-3">
+          <button
+              type="button"
+              class="flex items-center justify-center gap-2 h-10 px-4 border border-slate-200 rounded-lg bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            企业微信登录
-          </el-button>
-          <el-button class="social-btn" @click="handleSSO">
-            <svg class="sso-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            Google
+          </button>
+          <button
+              type="button"
+              class="flex items-center justify-center gap-2 h-10 px-4 border border-slate-200 rounded-lg bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
             </svg>
-            钉钉登录
-          </el-button>
+            Microsoft
+          </button>
         </div>
 
-        <div class="form-footer">
-          <span class="footer-text">还没有账号？</span>
-          <el-button link type="primary" class="register-link" @click="handleRegister">
+        <div class="text-center text-sm text-slate-500">
+          还没有账号？
+          <a href="#" class="font-semibold text-slate-900 hover:text-slate-700 transition-colors">
             联系管理员开通
-          </el-button>
+          </a>
         </div>
-      </div>
-
-      <div class="copyright">
-        <p>© 2024 SecureVault Enterprise. 企业数据安全保障</p>
       </div>
     </div>
   </div>
@@ -163,25 +192,24 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
 
 const loginFormRef = ref(null)
 const loading = ref(false)
 
 const loginForm = reactive({
-  username: '',
+  email: '',
   password: '',
   remember: false
 })
 
 const loginRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
+  email: [
+    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+    { min: 6, message: '密码长度至少为6位', trigger: 'blur' }
   ]
 }
 
@@ -189,466 +217,79 @@ const handleLogin = async () => {
   if (!loginFormRef.value) return
 
   try {
-    await loginFormRef.value.validate()
-    loading.value = true
-
-    setTimeout(() => {
-      loading.value = false
-      ElMessage.success('登录成功')
-    }, 1500)
+    await loginFormRef.value.validate((valid) => {
+      if (valid) {
+        loading.value = true
+        // 模拟登录请求
+        setTimeout(() => {
+          loading.value = false
+          ElMessage.success('登录成功，正在跳转...')
+          // 这里添加实际的路由跳转逻辑
+        }, 1500)
+      }
+    })
   } catch (error) {
     console.error('表单验证失败:', error)
   }
 }
-
-const handleForgotPassword = () => {
-  ElMessage.info('请联系IT管理员重置密码')
-}
-
-const handleRegister = () => {
-  ElMessage.info('请联系管理员开通企业账号')
-}
-
-const handleSSO = () => {
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    ElMessage.success('SSO登录成功')
-  }, 1000)
-}
 </script>
 
 <style scoped>
-.login-container {
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-/* 左侧品牌区域 - 全新 Aurora 极光背景 */
-.brand-section {
-  position: relative;
-  display: none;
-  flex: 1;
-  flex-direction: column;
-  justify-content: center;
-  padding: 3rem;
-  background: #0f172a;
-  color: white;
-  overflow: hidden;
-}
-
-@media (min-width: 1024px) {
-  .brand-section {
-    display: flex;
-  }
-}
-
-/* Aurora 极光背景效果 */
-.aurora-bg {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.aurora {
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  opacity: 0.4;
-  filter: blur(80px);
-  animation: aurora-flow 20s ease-in-out infinite;
-}
-
-.aurora-1 {
-  background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.4) 0%, transparent 50%);
-  animation-delay: 0s;
-}
-
-.aurora-2 {
-  background: radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);
-  animation-delay: -7s;
-}
-
-.aurora-3 {
-  background: radial-gradient(circle at 70% 30%, rgba(14, 165, 233, 0.3) 0%, transparent 50%);
-  animation-delay: -14s;
-}
-
-@keyframes aurora-flow {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-  33% {
-    transform: translate(5%, -5%) rotate(5deg) scale(1.1);
-  }
-  66% {
-    transform: translate(-5%, 5%) rotate(-5deg) scale(0.9);
-  }
-}
-
-/* 浮动几何形状 */
-.floating-shapes {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.shape-1 {
-  width: 300px;
-  height: 300px;
-  top: -100px;
-  right: -100px;
-  animation: float 25s infinite ease-in-out;
-}
-
-.shape-2 {
-  width: 200px;
-  height: 200px;
-  bottom: 10%;
-  left: -50px;
-  animation: float 30s infinite ease-in-out reverse;
-}
-
-.shape-3 {
-  width: 150px;
-  height: 150px;
-  top: 40%;
-  right: 15%;
-  animation: float 20s infinite ease-in-out;
-  animation-delay: -10s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate(30px, -30px) rotate(10deg);
-  }
-}
-
-/* 噪点纹理覆盖 */
-.noise-overlay {
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  pointer-events: none;
-}
-
-.brand-content {
-  position: relative;
-  z-index: 10;
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.logo-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
-  border-radius: 1rem;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  transform: rotate(-3deg);
-  transition: transform 0.3s ease;
-}
-
-.logo-icon:hover {
-  transform: rotate(0deg) scale(1.05);
-}
-
-.brand-title {
-  font-size: 2.25rem;
-  font-weight: 800;
-  margin: 0;
-  background: linear-gradient(to right, #fff, #cbd5e1);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.02em;
-}
-
-.brand-description {
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.65);
-  margin-bottom: 3rem;
-  font-weight: 400;
-}
-
-.feature-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  font-size: 0.9375rem;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-  transition: transform 0.2s;
-}
-
-.feature-item:hover {
-  transform: translateX(5px);
-}
-
-.feature-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 0.625rem;
-  color: #38bdf8;
-  border: 1px solid rgba(255,255,255,0.1);
-  transition: all 0.3s;
-}
-
-.feature-item:hover .feature-icon {
-  background: rgba(56, 189, 248, 0.2);
-  color: #7dd3fc;
-  transform: scale(1.1);
-}
-
-/* 右侧表单区域（保持原样） */
-.form-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1.5rem;
-  background: #fafafa;
-  position: relative;
-}
-
-.form-wrapper {
-  width: 100%;
-  max-width: 400px;
-  background: white;
-  padding: 2.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-}
-
-.form-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.form-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -0.025em;
-}
-
-.form-subtitle {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.login-form {
-  margin-top: 1.5rem;
-}
-
-:deep(.custom-input .el-input__wrapper) {
-  box-shadow: 0 0 0 1px #e2e8f0 inset;
+/* 覆盖 Element Plus 默认样式以匹配 shadcn 美学 */
+:deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #e2e8f0 !important;
   border-radius: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  background: white;
-  transition: all 0.2s;
+  background-color: white;
+  padding: 0 12px;
 }
 
-:deep(.custom-input .el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #cbd5e1 inset;
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 2px #0f172a !important;
 }
 
-:deep(.custom-input .el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 2px #0f172a inset;
-}
-
-:deep(.custom-input .el-input__inner) {
-  height: 2.5rem;
-  font-size: 0.875rem;
+:deep(.el-input__inner) {
   color: #0f172a;
+  font-size: 0.875rem;
+  height: 2.75rem;
 }
 
-:deep(.custom-input .el-input__icon) {
+:deep(.el-input__inner::placeholder) {
   color: #94a3b8;
 }
 
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
+:deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+  color: #0f172a;
 }
 
-:deep(.custom-checkbox .el-checkbox__label) {
-  font-size: 0.875rem;
-  color: #475569;
-}
-
-:deep(.custom-checkbox .el-checkbox__input.is-checked .el-checkbox__inner) {
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
   background-color: #0f172a;
   border-color: #0f172a;
 }
 
-.forgot-link {
-  font-size: 0.875rem;
-  color: #0f172a;
-  font-weight: 500;
-}
-
-.forgot-link:hover {
-  color: #334155;
-}
-
-.login-button {
-  width: 100%;
-  height: 2.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: #0f172a;
-  border: none;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-}
-
-.login-button:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-}
-
-.divider {
-  position: relative;
-  margin: 1.5rem 0;
-  text-align: center;
-}
-
-.divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: #e2e8f0;
-}
-
-.divider-text {
-  position: relative;
-  display: inline-block;
-  padding: 0 0.75rem;
+:deep(.el-form-item__error) {
+  color: #ef4444;
   font-size: 0.75rem;
-  color: #94a3b8;
-  background: white;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+  padding-left: 0.25rem;
 }
 
-.social-login {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.social-btn {
-  height: 2.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  background: white;
-  color: #475569;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
-
-.social-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
-}
-
-.sso-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.form-footer {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.footer-text {
-  margin-right: 0.25rem;
-}
-
-.register-link {
-  font-weight: 500;
-  color: #0f172a;
-}
-
-.copyright {
-  position: absolute;
-  bottom: 1.5rem;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  text-align: center;
-}
-
-@media (max-width: 640px) {
-  .form-wrapper {
-    padding: 1.5rem;
-    border: none;
-    box-shadow: none;
-    background: transparent;
+/* 动画效果 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
   }
-
-  .form-section {
-    background: white;
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
   }
+}
+
+.animate-pulse {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.delay-1000 {
+  animation-delay: 1s;
 }
 </style>
