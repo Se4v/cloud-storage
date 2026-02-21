@@ -9,9 +9,5 @@ import java.util.List;
 public interface ShareMapper extends BaseMapper<Share> {
     List<ShareDetailResult> selectAllByUserId(Long userId);
 
-    Share selectByShareId(Long id);
-
     Integer updateByShareId(Share share, Long shareId);
-
-    Integer batchDeleteByShareId(List<Long> shareIds);
 }
