@@ -17,14 +17,14 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public Result<?> login(String username, String password) {
+    public Result<String> login(String username, String password) {
         String token = authService.login(username, password);
 
         return Result.success("", token);
     }
 
     @PostMapping("/logout")
-    public Result<?> logout() {
+    public Result<Void> logout() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
 

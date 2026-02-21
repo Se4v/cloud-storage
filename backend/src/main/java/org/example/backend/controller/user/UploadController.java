@@ -13,7 +13,6 @@ public class UploadController {
 
     @PostMapping("/init")
     public Result<?> initUpload(@RequestBody InitUploadArgs request) {
-
         return Result.success();
     }
 

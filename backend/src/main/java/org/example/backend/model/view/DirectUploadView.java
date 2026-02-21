@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DirectUploadResponse {
+public class DirectUploadView {
     private String entryName;
     private String sha256;
     private Boolean success;

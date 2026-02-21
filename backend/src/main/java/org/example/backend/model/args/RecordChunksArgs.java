@@ -5,11 +5,11 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class RecordChunksRequest {
-    private List<RequestItem> requestItems;
+public class RecordChunksArgs {
+    private List<Arg> argList;
 
     @Data
-    public static class RequestItem {
+    public static class Arg {
         private String uploadId;
         private String chunkNumber;
         private String etag;

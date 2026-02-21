@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class DirectUploadRequest {
+public class DirectUploadArgs {
     private Long driveId;
     private Long parentId;
     private Long userId;

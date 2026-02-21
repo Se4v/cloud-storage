@@ -10,4 +10,6 @@ public interface EntryMapper extends BaseMapper<Entry> {
     List<EntryWithBlobResult> selectDescendantsWithBlobByEntryIds(Long entryId);
 
     List<EntryWithBlobResult> selectBatchWithBlobByEntryIds(List<Long> entryIds);
+
+    List<Entry> selectDescendantsByEntryId(Long entryId);
 }

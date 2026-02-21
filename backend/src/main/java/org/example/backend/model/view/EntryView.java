@@ -5,7 +5,5 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MergeChunksResponse {
-    private String uploadId;
-    private Boolean success;
+public class EntryView {
 }

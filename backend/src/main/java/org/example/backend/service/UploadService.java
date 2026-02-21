@@ -11,14 +11,13 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.config.MinioConfig;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Entry;
-import org.example.backend.model.args.MergeChunksRequest;
-import org.example.backend.model.args.RecordChunksRequest;
-import org.example.backend.model.args.DirectUploadRequest;
+import org.example.backend.model.args.RecordChunksArgs;
+import org.example.backend.model.args.DirectUploadArgs;
 import org.example.backend.model.args.InitUploadArgs;
-import org.example.backend.model.view.MergeChunksResponse;
-import org.example.backend.model.view.RecordChunksResponse;
-import org.example.backend.model.view.DirectUploadResponse;
-import org.example.backend.model.view.InitUploadResponse;
+import org.example.backend.model.view.MergeChunksView;
+import org.example.backend.model.view.RecordChunksView;
+import org.example.backend.model.view.DirectUploadView;
+import org.example.backend.model.view.InitUploadView;
 import org.example.backend.repository.FileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -53,13 +52,13 @@ public class UploadService {
     private static final long TASK_EXPIRE_HOURS = 24;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    public InitUploadResponse initUpload(InitUploadArgs args, Long userId) {
+    public InitUploadView initUpload(InitUploadArgs args, Long userId) {
         // 判断操作是否为同一用户
         if (!args.getUserId().equals(userId)) {
             throw new BusinessException("Invalid user id");
         }
 
-        List<InitUploadResponse.ResponseItem> responseItems = new ArrayList<>();
+        List<InitUploadView.View> viewList = new ArrayList<>();
 
         // 计算总上传文件大小
         // Long totalSize = request.getRequestItems() == null ? 0L :
@@ -75,15 +74,15 @@ public class UploadService {
         // 单个文件上传初始化
         for (InitUploadArgs.Arg arg : args.getArgList()) {
             try {
-                InitUploadResponse.ResponseItem responseItem = initSingleUpload(arg, args);
+                InitUploadView.View view = initSingleUpload(arg, args);
 
-                if (responseItem.getSuccess()) {
+                if (view.getSuccess()) {
                     successCount++;
                 }
 
-                responseItems.add(responseItem);
+                viewList.add(view);
             } catch (Exception e) {
-                responseItems.add(InitUploadResponse.ResponseItem.builder()
+                viewList.add(InitUploadView.View.builder()
                         .entryName(arg.getEntryName())
                         .success(false)
                         .message("初始化失败")
@@ -91,15 +90,15 @@ public class UploadService {
             }
         }
 
-        return InitUploadResponse.builder()
-                .responseItems(responseItems)
+        return InitUploadView.builder()
+                .viewList(viewList)
                 .totalCount(args.getArgList().size())
                 .successCount(successCount)
                 .build();
     }
 
-    private InitUploadResponse.ResponseItem initSingleUpload(InitUploadArgs.Arg arg,
-                                                             InitUploadArgs args) throws Exception {
+    private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg,
+                                                         InitUploadArgs args) throws Exception {
         // 秒传检查
         Storage existStorage = fileRepository.findBlobBySha256(arg.getSha256());
         if (existStorage != null && existStorage.getEnabled() == 1) {
@@ -119,7 +118,7 @@ public class UploadService {
 
             fileRepository.saveEntryWithIncreaseRefCount(entry, arg.getSha256());
 
-            return InitUploadResponse.ResponseItem.builder()
+            return InitUploadView.View.builder()
                     .entryName(arg.getEntryName())
                     .success(true)
                     .message("秒传成功")
@@ -133,7 +132,7 @@ public class UploadService {
             List<Integer> uploadedChunks = getUploadedChunksFromRedis(existUploadId);
             List<String> chunkUrls = regenerateChunkUrls(existUploadId, arg.getTotalChunks(), uploadedChunks);
 
-            return InitUploadResponse.ResponseItem.builder()
+            return InitUploadView.View.builder()
                     .entryName(arg.getEntryName())
                     .success(true)
                     .message("断点续传")
@@ -148,7 +147,7 @@ public class UploadService {
 
         // 小文件上传
         if (arg.getFileSize() <= minioConfig.getDirectUploadThreshold()) {
-            return InitUploadResponse.ResponseItem.builder()
+            return InitUploadView.View.builder()
                     .entryName(arg.getEntryName())
                     .success(true)
                     .message("小文件直传")
@@ -163,7 +162,7 @@ public class UploadService {
             String uploadId = createNewMultipartTask(arg, args);
             List<String> chunkUrls = generateChunkUrls(uploadId, arg.getTotalChunks());
 
-            return InitUploadResponse.ResponseItem.builder()
+            return InitUploadView.View.builder()
                     .entryName(arg.getEntryName())
                     .success(true)
                     .message("大文件分片上传")
@@ -319,46 +318,46 @@ public class UploadService {
         return chunkUrls;
     }
 
-    public DirectUploadResponse directUpload(DirectUploadRequest request, Long userId) {
+    public DirectUploadView directUpload(DirectUploadArgs args, Long userId) {
         // 判断操作是否为同一用户
-        if (!request.getUserId().equals(userId)) {
+        if (!args.getUserId().equals(userId)) {
             throw new BusinessException("Invalid user id");
         }
 
-        String objectName = generateObjectName(request.getSha256(), request.getEntryName());
-        String fileExt = getFileSuffix(request.getEntryName());
+        String objectName = generateObjectName(args.getSha256(), args.getEntryName());
+        String fileExt = getFileSuffix(args.getEntryName());
 
-        try (InputStream inputStream = request.getFile().getInputStream()) {
+        try (InputStream inputStream = args.getFile().getInputStream()) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(minioConfig.getBucketName())
                             .object(objectName)
-                            .stream(inputStream, request.getFileSize(), -1)
-                            .contentType(request.getMimeType())
+                            .stream(inputStream, args.getFileSize(), -1)
+                            .contentType(args.getMimeType())
                             .build()
             );
 
             Entry entry = Entry.builder()
-                    .driveId(request.getDriveId())
-                    .userId(request.getUserId())
-                    .parentId(request.getParentId())
-                    .entryName(request.getEntryName())
+                    .driveId(args.getDriveId())
+                    .userId(args.getUserId())
+                    .parentId(args.getParentId())
+                    .entryName(args.getEntryName())
                     .entryType(1)
-                    .fileSize(request.getFileSize())
+                    .fileSize(args.getFileSize())
                     .fileExt(fileExt)
                     .enabled(1)
                     .deleted(0)
-                    .updaterId(request.getUserId())
+                    .updaterId(args.getUserId())
                     .build();
 
             Storage storage = Storage.builder()
-                    .originalName(request.getEntryName())
+                    .originalName(args.getEntryName())
                     .fileExt(fileExt)
-                    .fileSize(request.getFileSize())
-                    .sha256(request.getSha256())
+                    .fileSize(args.getFileSize())
+                    .sha256(args.getSha256())
                     .bucketName(minioConfig.getBucketName())
                     .objectKey(objectName)
-                    .mimeType(request.getMimeType())
+                    .mimeType(args.getMimeType())
                     .enabled(1)
                     .refCount(0)
                     .build();
@@ -382,9 +381,9 @@ public class UploadService {
             throw new BusinessException("");
         }
 
-        return DirectUploadResponse.builder()
-                .entryName(request.getEntryName())
-                .sha256(request.getSha256())
+        return DirectUploadView.builder()
+                .entryName(args.getEntryName())
+                .sha256(args.getSha256())
                 .success(true)
                 .build();
     }
@@ -405,38 +404,38 @@ public class UploadService {
         return "";
     }
 
-    public RecordChunksResponse recordChunks(RecordChunksRequest request, Long userId) {
-        List<RecordChunksResponse.ResponseItem> responseItems = new ArrayList<>();
+    public RecordChunksView recordChunks(RecordChunksArgs args, Long userId) {
+        List<RecordChunksView.View> viewList = new ArrayList<>();
 
-        for (RecordChunksRequest.RequestItem requestItem : request.getRequestItems()) {
+        for (RecordChunksArgs.Arg arg : args.getArgList()) {
             try {
-                if (!validateTaskOwnership(requestItem.getUploadId(), userId)) {
+                if (!validateTaskOwnership(arg.getUploadId(), userId)) {
                     log.warn("");
                     continue;
                 }
 
-                RecordChunksResponse.ResponseItem responseItem = recordSingleChunk(requestItem);
+                RecordChunksView.View view = recordSingleChunk(arg);
 
-                responseItems.add(responseItem);
+                viewList.add(view);
             } catch (Exception e) {
                 log.error("");
             }
         }
 
-        return RecordChunksResponse.builder()
-                .responseItems(responseItems)
+        return RecordChunksView.builder()
+                .viewList(viewList)
                 .build();
     }
 
-    private RecordChunksResponse.ResponseItem recordSingleChunk(RecordChunksRequest.RequestItem requestItem) throws Exception {
-        String chunksKey = CHUNKS_KEY_PREFIX + requestItem.getUploadId();
-        String taskKey = TASK_KEY_PREFIX + requestItem.getUploadId();
+    private RecordChunksView.View recordSingleChunk(RecordChunksArgs.Arg arg) throws Exception {
+        String chunksKey = CHUNKS_KEY_PREFIX + arg.getUploadId();
+        String taskKey = TASK_KEY_PREFIX + arg.getUploadId();
 
         // TODO:需要合并操作到同一事务
 
         // 记录分片完成
-        redisTemplate.opsForHash().put(chunksKey, String.valueOf(requestItem.getChunkNumber()),
-                requestItem.getEtag() != null ? requestItem.getEtag() : "completed");
+        redisTemplate.opsForHash().put(chunksKey, String.valueOf(arg.getChunkNumber()),
+                arg.getEtag() != null ? arg.getEtag() : "completed");
 
         // 增加已上传分片计数
         redisTemplate.opsForHash().increment(taskKey, "uploadedChunks", 1);
@@ -445,22 +444,22 @@ public class UploadService {
         redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
         redisTemplate.expire(taskKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
-        return RecordChunksResponse.ResponseItem.builder()
-                .uploadId(requestItem.getUploadId())
-                .chunkNumber(requestItem.getChunkNumber())
+        return RecordChunksView.View.builder()
+                .uploadId(arg.getUploadId())
+                .chunkNumber(arg.getChunkNumber())
                 .success(true)
                 .build();
     }
 
-    public MergeChunksResponse mergeChunks(MergeChunksRequest request, Long userId) {
-        if (!validateTaskOwnership(request.getUploadId(), userId)) {
+    public MergeChunksView mergeChunks(String uploadId, Long userId) {
+        if (!validateTaskOwnership(uploadId, userId)) {
             log.warn("");
-            return MergeChunksResponse.builder().build();
+            throw new BusinessException("Invalid task ownership");
         }
 
         try {
-            String taskKey = TASK_KEY_PREFIX + request.getUploadId();
-            String chunksKey = CHUNKS_KEY_PREFIX + request.getUploadId();
+            String taskKey = TASK_KEY_PREFIX + uploadId;
+            String chunksKey = CHUNKS_KEY_PREFIX + uploadId;
 
             // 获取任务信息
             Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
@@ -497,7 +496,7 @@ public class UploadService {
                     bucketName,
                     null,
                     objectName,
-                    request.getUploadId(),
+                    uploadId,
                     parts.toArray(new Part[0]),
                     null,
                     null
@@ -550,17 +549,17 @@ public class UploadService {
 
             // 从用户任务列表中移除（Set）
             String userTasksKey = USER_TASKS_PREFIX + userId;
-            redisTemplate.opsForSet().remove(userTasksKey, request.getUploadId());
+            redisTemplate.opsForSet().remove(userTasksKey, uploadId);
         } catch (Exception e) {
             log.error("");
-            return MergeChunksResponse.builder()
-                    .uploadId(request.getUploadId())
+            return MergeChunksView.builder()
+                    .uploadId(uploadId)
                     .success(false)
                     .build();
         }
 
-        return MergeChunksResponse.builder()
-                .uploadId(request.getUploadId())
+        return MergeChunksView.builder()
+                .uploadId(uploadId)
                 .success(true)
                 .build();
     }
