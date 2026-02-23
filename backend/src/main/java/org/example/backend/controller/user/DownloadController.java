@@ -16,7 +16,7 @@ public class DownloadController {
     @Autowired
     private DownloadService downloadService;
 
-    @PostMapping("")
+    @PostMapping()
     public Result<?> download(@RequestBody List<Long> entryIds) {
         return null;
     }

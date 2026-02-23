@@ -34,11 +34,11 @@ public class AuthService {
         try {
             userDetails = (MyUserDetails) userDetailsService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
-            throw new BusinessException("");
+            throw new BusinessException("Username or password is incorrect");
         }
 
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            throw new BusinessException("<UNK>");
+            throw new BusinessException("Username or password is incorrect");
         }
 
         String token = jwtUtil.generateToken(userDetails.getUserId(), userDetails.getUsername());

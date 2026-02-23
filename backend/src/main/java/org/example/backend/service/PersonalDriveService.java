@@ -4,23 +4,46 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.model.args.CreateFolderArgs;
+import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
-import org.example.backend.model.view.EntryView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PersonalDriveService {
     @Autowired
     private EntryMapper entryMapper;
+    @Autowired
+    private DriveMapper driveMapper;
+
+    public List<Entry> listEntries(Long userId, Long parentId) {
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getUserId, userId);
+        Drive existDrive = driveMapper.selectOne(driveQuery);
+        if (existDrive == null) {
+            throw new BusinessException("<UNK>");
+        }
+
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getParentId, parentId)
+                .eq(Entry::getDriveId, existDrive.getId());
+        List<Entry> entries = entryMapper.selectList(entryQuery);
+        if (entries == null || entries.isEmpty()) {
+            throw new BusinessException("<UNK>");
+        }
+
+        return entries;
+    }
 
     @Transactional
-    public void createFolder(CreateFolderArgs args, Long userId) {
+    public void createEntry(CreateFolderArgs args, Long userId) {
         // 目标父目录下是否存在同名条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Entry::getParentId, args.getParentId())
@@ -42,10 +65,6 @@ public class PersonalDriveService {
         if (count != 1) {
             throw new BusinessException("Create folder failed");
         }
-    }
-
-    public List<EntryView> getEntries(Long userId, Long parentId, Long driveId) {
-
     }
 
     @Transactional
@@ -89,18 +108,61 @@ public class PersonalDriveService {
         }
     }
 
-    public void searchEntry(String targetName) {
+    public List<Entry> searchEntry(String targetName, Long userId) {
         // 文件名校验
         String invalidChars = "[\\\\/:*?\"<>|]";
         if (targetName.length() > 100 || targetName.matches(".*" + invalidChars + ".*")) {
             throw new BusinessException("New entry name invalid");
         }
 
+        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(Entry::getEntryName, targetName);
+        List<Entry> entries = entryMapper.selectList(queryWrapper);
 
+        if (entries == null || entries.isEmpty()) {
+            throw new BusinessException("Search entry failed");
+        }
+
+        return entries;
     }
 
     @Transactional
-    public void deleteEntries() {
+    public void deleteEntries(List<Long> entryIds) {
+        // 获取数据
+        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Entry::getId, entryIds);
+        List<Entry> entries = entryMapper.selectList(queryWrapper);
+        if (entries == null || entries.isEmpty()) {
+            throw new BusinessException("entry does not exist");
+        }
 
+        // 文件分类
+        List<Long> files = entries.stream()
+                .filter(entry -> entry.getEntryType() != null && entry.getEntryType() == 1)
+                .map(Entry::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        List<Long> folders = entries.stream()
+                .filter(entry -> entry.getEntryType() != null && entry.getEntryType() == 2)
+                .map(Entry::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        // 删除文件
+        int deleteFileCount = entryMapper.updateDeleteFlagBatch(files);
+        if (deleteFileCount != files.size()) {
+            throw new BusinessException("Delete files failed");
+        }
+
+        // 删除文件夹
+        List<Long> children = entryMapper.selectRecursiveChildEntryIdsBatch(folders);
+        int deleteFolderCount = entryMapper.updateDeleteFlagBatch(children);
+        if (deleteFolderCount != children.size()) {
+            throw new BusinessException("Delete folders failed");
+        }
+    }
+
+    private boolean validateFileName() {
+        return false;
     }
 }

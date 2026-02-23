@@ -1,33 +1,42 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping
 public class EnterpriseDriveController {
-    public Result<?> get() {
+    @GetMapping()
+    public Result<?> listEntries(Long parentId, Long userId) {
+
 
     }
 
-    public Result<?> create() {
+    @PostMapping
+    public Result<?> createEntry() {
 
     }
 
-    public Result<?> move() {
+    @PostMapping
+    public Result<?> moveEntries() {
 
     }
 
-    public Result<?> rename() {
+    @PostMapping
+    public Result<?> renameEntry() {
 
     }
 
-    public Result<?> search() {
+    @PostMapping
+    public Result<?> searchEntry() {
 
     }
 
-    public Result<?> delete() {
+    @PostMapping
+    public Result<?> deleteEntries() {
 
     }
 }

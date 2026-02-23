@@ -1,34 +1,39 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping
 public class PersonalDriveController {
+    @GetMapping()
+    public Result<?> listEntries(Long parentId, Long userId) {
 
-    public Result<?> get() {
-
-    }
-
-    public Result<?> create() {
 
     }
 
-    public Result<?> move() {
+    @PostMapping
+    public Result<?> createEntry() {
 
     }
 
-    public Result<?> rename() {
+    @PostMapping
+    public Result<?> moveEntries() {
 
     }
 
-    public Result<?> search() {
+    @PostMapping
+    public Result<?> renameEntry() {
 
     }
 
-    public Result<?> delete() {
+    @PostMapping
+    public Result<?> searchEntry() {
+
+    }
+
+    @PostMapping
+    public Result<?> deleteEntries() {
 
     }
 }

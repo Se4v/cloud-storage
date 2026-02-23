@@ -11,5 +11,7 @@ public interface EntryMapper extends BaseMapper<Entry> {
 
     List<EntryWithBlobResult> selectBatchWithBlobByEntryIds(List<Long> entryIds);
 
-    List<Entry> selectDescendantsByEntryId(Long entryId);
+    List<Long> selectRecursiveChildEntryIdsBatch(List<Long> folderIds);
+
+    Integer updateDeleteFlagBatch(List<Long> entryIds);
 }

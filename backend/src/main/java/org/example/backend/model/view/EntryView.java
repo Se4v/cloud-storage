@@ -6,4 +6,9 @@ import lombok.Data;
 @Data
 @Builder
 public class EntryView {
+    private String id;
+    private String name;
+    private String type;
+    private String size;
+    private String createTime;
 }
