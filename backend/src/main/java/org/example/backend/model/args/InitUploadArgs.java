@@ -18,5 +18,6 @@ public class InitUploadArgs {
         private Long fileSize;
         private Integer chunkSize;
         private Integer totalChunks;
+        private String mimeType;
     }
 }
