@@ -46,8 +46,8 @@ public class Entry implements Serializable {
     @TableField("is_enabled")
     private Integer enabled;
 
-    @TableField("is_deleted")
-    private Integer deleted;
+    @TableField("status")
+    private Integer status;
 
     @TableField("deleted_at")
     private LocalDateTime deletedAt;

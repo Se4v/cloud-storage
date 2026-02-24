@@ -29,11 +29,11 @@ public class NoticeController {
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> {
                     return NoticeView.builder()
-                            .noticeId(result.getId().toString())
+                            .noticeId(String.valueOf(result.getId()))
                             .senderName(result.getSenderName())
                             .title(result.getTitle())
                             .content(result.getContent())
-                            .sendTime(result.getCreatedAt().toString())
+                            .sendTime(String.valueOf(result.getCreatedAt()))
                             .build();
                 })
                 .toList();
@@ -51,11 +51,11 @@ public class NoticeController {
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> {
                     return NoticeView.builder()
-                            .noticeId(result.getId().toString())
+                            .noticeId(String.valueOf(result.getId()))
                             .senderName(result.getSenderName())
                             .title(result.getTitle())
                             .content(result.getContent())
-                            .sendTime(result.getCreatedAt().toString())
+                            .sendTime(String.valueOf(result.getCreatedAt()))
                             .build();
                 })
                 .toList();

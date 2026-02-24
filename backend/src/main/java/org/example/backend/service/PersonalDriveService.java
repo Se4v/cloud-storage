@@ -13,8 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class PersonalDriveService {
@@ -149,15 +148,17 @@ public class PersonalDriveService {
                 .toList();
 
         // 删除文件
-        int deleteFileCount = entryMapper.updateDeleteFlagBatch(files);
-        if (deleteFileCount != files.size()) {
+        int fileCount = entryMapper.updateStatusBatch(files, 2);
+        if (fileCount != files.size()) {
             throw new BusinessException("Delete files failed");
         }
 
         // 删除文件夹
         List<Long> children = entryMapper.selectRecursiveChildEntryIdsBatch(folders);
-        int deleteFolderCount = entryMapper.updateDeleteFlagBatch(children);
-        if (deleteFolderCount != children.size()) {
+        Set<Long> allIds = new HashSet<>(folders);
+        allIds.addAll(children);
+        int folderCount = entryMapper.updateStatusBatch(new ArrayList<>(allIds), 2);
+        if (folderCount != allIds.size()) {
             throw new BusinessException("Delete folders failed");
         }
     }
