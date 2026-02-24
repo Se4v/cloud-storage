@@ -104,13 +104,13 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <div class="w-px h-5 bg-slate-200 mx-1"></div>
           <button class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all" title="上传">
             <el-icon :size="20"><Upload /></el-icon>
           </button>
           <button class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all" title="下载">
             <el-icon :size="20"><Download /></el-icon>
           </button>
-          <div class="w-px h-5 bg-slate-200 mx-1"></div>
           <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="消息通知">
             <el-icon :size="20"><Bell /></el-icon>
             <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -127,8 +127,6 @@
           </transition>
         </router-view>
 
-        <!-- 方式2：使用 Slot（如果不使用路由） -->
-        <!-- <slot></slot> -->
       </div>
     </main>
   </div>

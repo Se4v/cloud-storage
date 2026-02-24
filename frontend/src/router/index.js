@@ -1,7 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Login from '@/views/login.vue'  // 确保路径正确
-import DriveLayout from '@/components/DriveLayout.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import Login from '@/views/login.vue';
+import DriveLayout from '@/components/DriveLayout.vue';
 import PersonalDrive from "@/views/PersonalDrive.vue";
+import EnterpriseDrive from "@/views/EnterpriseDrive.vue";
 
 const routes = [
     {
@@ -18,6 +19,11 @@ const routes = [
                 path: 'personal',
                 name: 'PersonalDrive',
                 component: PersonalDrive
+            },
+            {
+                path: 'enterprise',
+                name: 'EnterpriseDrive',
+                component: EnterpriseDrive
             }
         ]
     },
