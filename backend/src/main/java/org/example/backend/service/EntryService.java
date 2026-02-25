@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 @Service
-public class PersonalDriveService {
+public class EntryService {
     @Autowired
     private EntryMapper entryMapper;
     @Autowired

@@ -96,7 +96,7 @@ public class UploadService {
                     .fileSize(arg.getFileSize())
                     .fileExt(existStorage.getFileExt())
                     .enabled(1)
-                    .deleted(0)
+                    .status(1)
                     .updaterId(args.getUserId())
                     .build();
 
@@ -354,7 +354,7 @@ public class UploadService {
                     .fileSize(args.getFileSize())
                     .fileExt(fileExt)
                     .enabled(1)
-                    .deleted(0)
+                    .status(1)
                     .updaterId(args.getUserId())
                     .build();
 
@@ -532,7 +532,7 @@ public class UploadService {
                     .fileSize(fileSize)
                     .fileExt(fileExt)
                     .enabled(1)
-                    .deleted(0)
+                    .status(1)
                     .updaterId(userId)
                     .build();
 
