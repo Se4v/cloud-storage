@@ -3,6 +3,7 @@ import Login from '@/views/login.vue';
 import DriveLayout from '@/components/DriveLayout.vue';
 import PersonalDrive from "@/views/PersonalDrive.vue";
 import EnterpriseDrive from "@/views/EnterpriseDrive.vue";
+import SafeExternalLinks from "@/views/SafeExternalLinks.vue";
 
 const routes = [
     {
@@ -24,6 +25,11 @@ const routes = [
                 path: 'enterprise',
                 name: 'EnterpriseDrive',
                 component: EnterpriseDrive
+            },
+            {
+                path: 'links',
+                name: 'SafeExternalLinks',
+                component: SafeExternalLinks
             }
         ]
     },

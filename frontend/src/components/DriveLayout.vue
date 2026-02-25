@@ -306,8 +306,8 @@ const storageMenu = [
 ]
 
 const fileMenu = [
-  { key: 'link', label: '安全外链', icon: Link, title: '安全外链管理', route: '/drive/links' },
-  { key: 'recovery', label: '误删恢复', icon: Delete, title: '误删文件恢复', route: '/drive/recovery' }
+  { key: 'link', label: '安全外链', icon: Link, title: '安全外链', route: '/drive/links' },
+  { key: 'recovery', label: '误删恢复', icon: Delete, title: '误删恢复', route: '/drive/recovery' }
 ]
 
 // 是否在企业空间相关页面
