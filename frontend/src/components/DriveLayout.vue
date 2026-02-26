@@ -8,7 +8,7 @@
           <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
             <el-icon :size="20"><FolderOpened /></el-icon>
           </div>
-          <span class="font-bold text-lg tracking-tight text-slate-800">腾讯云盘</span>
+          <span class="font-bold text-lg tracking-tight text-slate-800">企业云盘</span>
         </div>
       </div>
 
@@ -201,9 +201,12 @@
           <button class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all" title="下载">
             <el-icon :size="20"><Download /></el-icon>
           </button>
-          <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="消息通知">
-            <el-icon :size="20"><Bell /></el-icon>
+          <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="消息">
+            <el-icon :size="20"><Message /></el-icon>
             <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </button>
+          <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="公告">
+            <el-icon :size="20"><Notification /></el-icon>
           </button>
         </div>
       </header>
@@ -228,13 +231,13 @@ import {
   FolderOpened,
   Upload,
   Download,
-  Bell,
   Link,
   Delete,
   ArrowRight,
   ArrowDown,
   OfficeBuilding,
-  Share,
+  Message,
+  Notification,
   User
 } from '@element-plus/icons-vue'
 
@@ -319,7 +322,7 @@ const treeProps = {
 
 // 分组的菜单项
 const storageMenu = [
-  { key: 'personal', label: '个人空间', icon: Folder, title: '个人空间', route: '/drive/personal' }
+  { key: 'personal', label: '个人空间', icon: User, title: '个人空间', route: '/drive/personal' }
 ]
 
 const fileMenu = [
