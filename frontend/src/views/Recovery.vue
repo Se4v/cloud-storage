@@ -1,161 +1,173 @@
 <template>
-  <div class="h-full flex flex-col bg-slate-50 p-6">
-    <!-- 操作栏 - 白色背景卡片 -->
-    <div class="mb-4 bg-white rounded-lg border border-slate-200 p-4 flex items-center justify-between shadow-sm">
-      <div class="flex items-center gap-3">
-        <button
-            @click="handleBatchRestore"
-            :disabled="selectedRows.length === 0"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-        >
-          <el-icon :size="16"><RefreshLeft /></el-icon>
-          还原
-        </button>
+  <div class="h-full flex flex-col bg-slate-50">
+    <!-- 顶部工具栏 - 白色背景 -->
+    <div class="bg-white px-8 py-4 border-b border-slate-200 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button
+              @click="handleBatchRestore"
+              :disabled="selectedRows.length === 0"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            <el-icon :size="16"><RefreshLeft /></el-icon>
+            还原
+          </button>
 
-        <button
-            @click="handleBatchDelete"
-            :disabled="selectedRows.length === 0"
-            class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 hover:text-red-600 hover:border-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <el-icon :size="16"><Delete /></el-icon>
-          彻底删除
-        </button>
+          <button
+              @click="handleBatchDelete"
+              :disabled="selectedRows.length === 0"
+              class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 hover:text-red-600 hover:border-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <el-icon :size="16"><Delete /></el-icon>
+            彻底删除
+          </button>
 
-        <button
-            @click="handleClearAll"
-            class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 hover:text-red-600 hover:border-red-300 transition-colors"
-        >
-          <el-icon :size="16"><DeleteFilled /></el-icon>
-          清空
-        </button>
+          <button
+              @click="handleClearAll"
+              :disabled="tableData.length === 0"
+              class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 hover:text-red-600 hover:border-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <el-icon :size="16"><DeleteFilled /></el-icon>
+            清空
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- 表格区域 -->
-    <div class="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-      <el-table
-          ref="tableRef"
-          :data="tableData"
-          style="width: 100%; height: 100%"
-          @selection-change="handleSelectionChange"
-          row-key="id"
-          class="recovery-table"
-          :header-cell-style="{
-          background: '#ffffff',
-          color: '#64748b',
-          fontWeight: 600,
-          fontSize: '14px',
-          borderBottom: '1px solid #e2e8f0',
-          height: '48px'
-        }"
-          :cell-style="{
-          fontSize: '14px',
-          color: '#334155',
-          borderBottom: '1px solid #f1f5f9'
-        }"
-      >
-        <el-table-column
-            type="selection"
-            width="48"
-            align="center"
-        />
-
-        <el-table-column
-            prop="fileName"
-            label="文件名"
-            min-width="300"
+    <!-- 内容区域 - 淡灰背景，与上下隔开 -->
+    <div class="flex-1 overflow-auto p-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- 表格 -->
+        <el-table
+            ref="tableRef"
+            :data="tableData"
+            row-key="id"
+            @selection-change="handleSelectionChange"
+            class="recovery-table"
+            :header-cell-style="{
+            background: '#f8fafc',
+            color: '#475569',
+            fontWeight: 600,
+            fontSize: '14px',
+            height: '48px',
+            borderBottom: '1px solid #e2e8f0'
+          }"
+            :cell-style="{
+            fontSize: '14px',
+            color: '#334155',
+            borderBottom: '1px solid #f1f5f9'
+          }"
         >
-          <template #default="{ row }">
-            <div class="flex items-center gap-4 py-2">
-              <div
-                  class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  :class="getFileIconBg(row.fileType)"
-              >
-                <el-icon :size="22" :class="getFileIconColor(row.fileType)">
-                  <component :is="getFileIcon(row.fileType)" />
-                </el-icon>
+          <el-table-column
+              type="selection"
+              width="48"
+              align="center"
+          />
+
+          <el-table-column
+              prop="fileName"
+              label="文件名"
+              min-width="280"
+          >
+            <template #default="{ row }">
+              <div class="flex items-center gap-3 py-1">
+                <div
+                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                    :class="getFileIconBg(row.fileType)"
+                >
+                  <el-icon :size="20" :class="getFileIconColor(row.fileType)">
+                    <component :is="getFileIcon(row.fileType)" />
+                  </el-icon>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-sm font-medium text-slate-900 truncate">{{ row.fileName }}</span>
+                  <span v-if="row.subCount" class="text-xs text-slate-500 mt-0.5">{{ row.subCount }}</span>
+                </div>
               </div>
-              <div class="flex flex-col min-w-0">
-                <span class="font-medium text-slate-900 truncate text-[15px]">{{ row.fileName }}</span>
-                <span v-if="row.subCount" class="text-xs text-slate-500 mt-0.5">{{ row.subCount }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+              prop="filePath"
+              label="文件路径"
+              min-width="200"
+              show-overflow-tooltip
+          >
+            <template #default="{ row }">
+              <span class="text-sm text-slate-600">{{ row.filePath }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+              prop="deleteTime"
+              label="删除时间"
+              width="180"
+              sortable
+          >
+            <template #default="{ row }">
+              <div class="flex items-center gap-1.5 text-sm text-slate-600">
+                <el-icon :size="14" class="text-slate-400"><Clock /></el-icon>
+                <span class="whitespace-nowrap">{{ row.deleteTime }}</span>
               </div>
-            </div>
-          </template>
-        </el-table-column>
+            </template>
+          </el-table-column>
 
-        <el-table-column
-            prop="filePath"
-            label="文件路径"
-            min-width="200"
-            show-overflow-tooltip
-        >
-          <template #default="{ row }">
-            <span class="text-slate-600 text-[14px]">{{ row.filePath }}</span>
-          </template>
-        </el-table-column>
+          <el-table-column
+              prop="fileSize"
+              label="大小"
+              width="120"
+              align="left"
+              sortable
+          >
+            <template #default="{ row }">
+              <span class="text-sm text-slate-600 tabular-nums">{{ row.fileSize }}</span>
+            </template>
+          </el-table-column>
 
-        <el-table-column
-            prop="deleteTime"
-            label="删除时间"
-            width="180"
-            sortable
-        >
-          <template #default="{ row }">
-            <div class="flex items-center gap-1.5 text-slate-600 text-[14px]">
-              <el-icon :size="14" class="text-slate-400"><Clock /></el-icon>
-              <span>{{ row.deleteTime }}</span>
-            </div>
-          </template>
-        </el-table-column>
+          <el-table-column
+              label="操作"
+              width="140"
+              fixed="right"
+              align="center"
+          >
+            <template #default="{ row }">
+              <div class="flex items-center justify-center gap-1">
+                <button
+                    class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
+                    @click="handleRestore(row)"
+                    title="还原"
+                >
+                  <el-icon :size="18"><RefreshLeft /></el-icon>
+                </button>
+                <button
+                    class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                    @click="handleDelete(row)"
+                    title="彻底删除"
+                >
+                  <el-icon :size="18"><Delete /></el-icon>
+                </button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
 
-        <el-table-column
-            prop="fileSize"
-            label="大小"
-            width="120"
-            align="left"
-            sortable
-        >
-          <template #default="{ row }">
-            <span class="text-slate-600 text-[14px] tabular-nums">{{ row.fileSize }}</span>
-          </template>
-        </el-table-column>
-
-        <el-table-column
-            label="操作"
-            width="100"
-            align="center"
-            fixed="right"
-        >
-          <template #default="{ row }">
-            <div class="flex items-center justify-center gap-1">
-              <button
-                  @click="handleRestore(row)"
-                  class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                  title="还原"
-              >
-                <el-icon :size="18"><RefreshLeft /></el-icon>
-              </button>
-              <button
-                  @click="handleDelete(row)"
-                  class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                  title="彻底删除"
-              >
-                <el-icon :size="18"><Delete /></el-icon>
-              </button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+        <!-- 空状态 -->
+        <div v-if="tableData.length === 0" class="py-20 flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <el-icon class="text-slate-400" :size="32"><Delete /></el-icon>
+          </div>
+          <h3 class="text-sm font-medium text-slate-900 mb-1">回收站是空的</h3>
+          <p class="text-sm text-slate-500">暂无已删除的文件</p>
+        </div>
+      </div>
     </div>
 
     <!-- 底部栏 - 白色背景 -->
-    <div class="mt-4 bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
-      <div class="flex items-center gap-6 text-sm">
-        <span class="text-slate-600">
-          共 <span class="font-semibold text-slate-900">{{ total }}</span> 项文件
-        </span>
-        <span v-if="selectedRows.length > 0" class="text-blue-600 font-medium">
-          已选中 {{ selectedRows.length }} 项
+    <div class="bg-white border-t border-slate-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+      <div class="text-sm text-slate-500">
+        共 <span class="font-medium text-slate-900">{{ total }}</span> 项文件
+        <span v-if="selectedRows.length > 0" class="ml-2 text-blue-600">
+          已选中 <span class="font-medium">{{ selectedRows.length }}</span> 项
         </span>
       </div>
 
@@ -164,9 +176,11 @@
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="total"
-          layout="prev, pager, next, sizes"
+          layout="total, sizes, prev, pager, next, jumper"
           background
-          class="custom-pagination"
+          class="!font-sans"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
       />
     </div>
   </div>
@@ -195,7 +209,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(6)
 
-// 模拟数据 - 参考图片中的数据格式
+// 模拟数据
 const tableData = ref([
   {
     id: 1,
@@ -447,46 +461,77 @@ const handleClearAll = async () => {
     // 取消操作
   }
 }
+
+// 分页
+const handleSizeChange = (val) => {
+  pageSize.value = val
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+}
 </script>
 
 <style scoped>
-/* 表格样式优化 */
+/* 表格样式优化 - 参考安全外链页面 */
 :deep(.recovery-table) {
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: #ffffff;
-  --el-table-row-hover-bg-color: #f8fafc;
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-header-text-color: #475569;
+  --el-table-row-hover-bg-color: #f1f5f9;
+  --el-table-border-color: transparent;
+  --el-table-text-color: #334155;
 }
 
-:deep(.recovery-table .el-table__header-wrapper th) {
+:deep(.recovery-table .el-table__header th) {
   font-weight: 600;
-  color: #64748b;
+  font-size: 0.875rem;
+  height: 48px;
   border-bottom: 1px solid #e2e8f0;
-  padding: 12px 16px;
-}
-
-:deep(.recovery-table .el-table__row) {
-  transition: background-color 0.2s;
-}
-
-:deep(.recovery-table .el-table__row:hover) {
   background-color: #f8fafc;
 }
 
-:deep(.recovery-table .el-table__cell) {
-  padding: 8px 16px;
+:deep(.recovery-table .el-table__row) {
+  transition: all 0.2s ease;
+}
+
+:deep(.recovery-table .el-table__row td) {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 0;
+  vertical-align: middle;
+}
+
+:deep(.recovery-table .el-table__row:hover td) {
+  background-color: #f8fafc;
+}
+
+/* 修复 checkbox 对齐问题 */
+:deep(.recovery-table .el-table-column--selection .cell) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+}
+
+:deep(.recovery-table .el-checkbox) {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 :deep(.recovery-table .el-checkbox__inner) {
   border-color: #cbd5e1;
   border-radius: 4px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
 }
 
-:deep(.recovery-table .el-checkbox__inner::after) {
-  left: 5px;
-  top: 2px;
+:deep(.recovery-table .el-checkbox__input) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 :deep(.recovery-table .el-checkbox__input.is-checked .el-checkbox__inner) {
@@ -494,55 +539,13 @@ const handleClearAll = async () => {
   border-color: #2563eb;
 }
 
-/* 分页样式优化 - 更简洁 */
-:deep(.custom-pagination .el-pagination__total) {
-  display: none;
+/* 分页样式优化 */
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
+  background-color: #2563eb;
 }
 
-:deep(.custom-pagination .el-pager li) {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  margin: 0 4px;
-  color: #475569;
-  font-weight: 500;
-  min-width: 32px;
-  height: 32px;
-  line-height: 32px;
-  transition: all 0.2s;
-}
-
-:deep(.custom-pagination .el-pager li:hover) {
-  border-color: #cbd5e1;
-  color: #0f172a;
-}
-
-:deep(.custom-pagination .el-pager li.is-active) {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: white;
-}
-
-:deep(.custom-pagination .el-pagination__sizes .el-input__wrapper) {
-  box-shadow: 0 0 0 1px #e2e8f0 inset;
-  border-radius: 6px;
-}
-
-:deep(.custom-pagination .btn-prev),
-:deep(.custom-pagination .btn-next) {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #475569;
-  min-width: 32px;
-  height: 32px;
-  padding: 0;
-}
-
-:deep(.custom-pagination .btn-prev:hover),
-:deep(.custom-pagination .btn-next:hover) {
-  color: #0f172a;
-  border-color: #cbd5e1;
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
+  color: #2563eb;
 }
 
 /* 消息框样式 */
