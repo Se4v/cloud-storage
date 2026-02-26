@@ -165,7 +165,7 @@
     <!-- 底部栏 - 白色背景 -->
     <div class="bg-white border-t border-slate-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
       <div class="text-sm text-slate-500">
-        共 <span class="font-medium text-slate-900">{{ total }}</span> 项文件
+        共 <span class="font-medium text-slate-900">{{ total }}</span> 项数据
         <span v-if="selectedRows.length > 0" class="ml-2 text-blue-600">
           已选中 <span class="font-medium">{{ selectedRows.length }}</span> 项
         </span>
