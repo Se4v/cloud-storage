@@ -49,10 +49,10 @@
               <!-- 组织架构树（固定高度，带滚动条） -->
               <div
                   v-show="isEnterpriseExpanded"
-                  class="mt-1 bg-slate-50/50 rounded-lg border border-slate-100 overflow-hidden"
-                  style="max-height: 320px;"
+                  class="mt-1 bg-slate-50/50 rounded-lg border border-slate-100 overflow-auto custom-scrollbar"
+                  style="max-height: 300px;"
               >
-                <div class="h-full overflow-y-auto overflow-x-hidden custom-scrollbar p-2">
+                <div class="p-2 inline-block min-w-full">
                   <el-tree
                       ref="treeRef"
                       :data="orgTree"
@@ -87,7 +87,7 @@
                           <Folder />
                         </el-icon>
                         <span
-                            class="text-sm truncate flex-1 select-none"
+                            class="text-sm flex-1 select-none whitespace-nowrap"
                             :class="[
                             node.isCurrent ? 'text-blue-600 font-semibold' : 'text-slate-700',
                             data.type === 'company' && 'font-semibold text-slate-900'
@@ -287,6 +287,18 @@ const orgTree = [
       {
         id: 'dept_3',
         label: '财务部',
+        type: 'dept',
+        children: []
+      },
+      {
+        id: 'dept_4',
+        label: '人力资源部',
+        type: 'dept',
+        children: []
+      },
+      {
+        id: 'dept_4',
+        label: '人力资源部',
         type: 'dept',
         children: []
       },

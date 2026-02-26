@@ -108,7 +108,7 @@
         >
           <el-table-column type="selection" width="55" align="center" />
 
-          <el-table-column label="项目名称" min-width="400">
+          <el-table-column label="项目名称" min-width="320">
             <template #default="{ row }">
               <div
                   class="flex items-center gap-3 cursor-pointer group"
@@ -130,16 +130,15 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="修改时间" width="180">
+          <el-table-column label="修改时间" width="260">
             <template #default="{ row }">
               <div class="flex items-center gap-2 text-sm text-slate-600">
-                <el-icon class="text-slate-400"><Clock /></el-icon>
                 <span>{{ formatDate(row.modifiedTime) }}</span>
               </div>
             </template>
           </el-table-column>
 
-          <el-table-column label="大小" width="120" align="right">
+          <el-table-column label="大小" width="120">
             <template #default="{ row }">
               <span class="text-sm text-slate-600 font-medium tabular-nums">
                 {{ row.type === 'folder' ? '-' : formatSize(row.size) }}
@@ -339,7 +338,6 @@ import {
   DocumentCopy,
   ArrowDown,
   Search,
-  Clock,
   MoreFilled,
   HomeFilled
 } from '@element-plus/icons-vue'
