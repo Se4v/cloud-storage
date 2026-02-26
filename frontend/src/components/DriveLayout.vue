@@ -168,7 +168,11 @@
         </div>
 
         <!-- 用户头像 -->
-        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer border border-transparent hover:border-slate-200">
+        <div
+            class="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all
+            cursor-pointer border border-transparent hover:border-slate-200"
+            @click="handleMenuClick(accountMenu[0])"
+        >
           <div class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
             张
           </div>
@@ -230,7 +234,8 @@ import {
   ArrowRight,
   ArrowDown,
   OfficeBuilding,
-  Share
+  Share,
+  User
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -310,6 +315,10 @@ const fileMenu = [
   { key: 'recovery', label: '误删恢复', icon: Delete, title: '误删恢复', route: '/drive/recovery' }
 ]
 
+const accountMenu = [
+  { key: 'profile', label: '个人中心', icon: User, title: '个人中心', route: '/drive/profile' }
+]
+
 // 是否在企业空间相关页面
 const isEnterpriseActive = computed(() => {
   return currentMenu.value === 'enterprise' || currentMenu.value.startsWith('enterprise')
@@ -335,7 +344,7 @@ const currentTitle = computed(() => {
     const path = findNodePath(orgTree, currentNodeId.value)
     return path ? path[path.length - 1] : '企业空间'
   }
-  const item = [...storageMenu, ...fileMenu].find(m => m.key === currentMenu.value)
+  const item = [...storageMenu, ...fileMenu, ...accountMenu].find(m => m.key === currentMenu.value)
   return item?.title || '个人空间'
 })
 

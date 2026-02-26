@@ -4,6 +4,7 @@ import DriveLayout from '@/components/DriveLayout.vue';
 import PersonalDrive from "@/views/PersonalDrive.vue";
 import EnterpriseDrive from "@/views/EnterpriseDrive.vue";
 import SafeExternalLinks from "@/views/SafeExternalLinks.vue";
+import Profile from '@/views/Profile.vue';
 
 const routes = [
     {
@@ -30,6 +31,11 @@ const routes = [
                 path: 'links',
                 name: 'SafeExternalLinks',
                 component: SafeExternalLinks
+            },
+            {
+                path: 'profile',
+                name: 'profile',
+                component: Profile
             }
         ]
     },
