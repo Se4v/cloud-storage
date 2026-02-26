@@ -1,19 +1,15 @@
 <template>
-  <div class="h-full overflow-auto bg-slate-50/50 p-4 md:p-8">
-    <div class="max-w-5xl mx-auto space-y-6">
-      <!-- 页面标题 -->
-      <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">个人中心</h1>
-        <p class="text-slate-500 mt-1 text-sm">管理您的账户信息、头像和安全设置</p>
-      </div>
-
+  <div class="h-full overflow-auto bg-slate-50/50 p-6 md:p-8">
+    <div class="max-w-5xl mx-auto">
+      <!-- 内容区域：去除标题后直接展示卡片 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- 左侧：个人资料 -->
         <div class="lg:col-span-2 space-y-6">
           <!-- 基本信息卡片 -->
           <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">基本信息</h3>
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">个人资料</h3>
+              <span class="text-xs text-slate-400">ID: {{ userInfo.username }}</span>
             </div>
 
             <div class="p-6 space-y-6">
@@ -21,7 +17,7 @@
               <div class="flex items-center gap-6">
                 <div class="relative group cursor-pointer" @click="triggerUpload">
                   <div
-                      class="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-md ring-4 ring-white"
+                      class="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-md ring-4 ring-slate-50"
                       v-if="!userInfo.avatar"
                   >
                     {{ userInfo.realName.charAt(0) }}
@@ -29,12 +25,12 @@
                   <img
                       v-else
                       :src="userInfo.avatar"
-                      class="w-24 h-24 rounded-full object-cover ring-4 ring-white shadow-md"
+                      class="w-20 h-20 rounded-full object-cover ring-4 ring-slate-50 shadow-md"
                       alt="avatar"
                   />
                   <!-- 悬停遮罩 -->
                   <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <el-icon class="text-white" :size="24"><Camera /></el-icon>
+                    <el-icon class="text-white" :size="20"><Camera /></el-icon>
                   </div>
                   <!-- 上传按钮 -->
                   <el-upload
@@ -51,10 +47,10 @@
                     </template>
                   </el-upload>
                 </div>
-                <div>
+                <div class="flex-1 min-w-0">
                   <h4 class="text-lg font-semibold text-slate-900">{{ userInfo.realName }}</h4>
-                  <p class="text-sm text-slate-500 mt-0.5">{{ userInfo.username }}</p>
-                  <p class="text-xs text-slate-400 mt-2">点击头像更换，支持 JPG、PNG 格式</p>
+                  <p class="text-sm text-slate-500 mt-0.5 truncate">{{ userInfo.email }}</p>
+                  <p class="text-xs text-slate-400 mt-2">点击头像更换照片</p>
                 </div>
               </div>
 
@@ -197,7 +193,7 @@
 
         <!-- 右侧：安全设置 -->
         <div class="lg:col-span-1">
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:sticky lg:top-6">
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
               <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">安全设置</h3>
             </div>
