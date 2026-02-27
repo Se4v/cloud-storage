@@ -65,7 +65,7 @@
 
     <!-- 右侧登录表单区 -->
     <div class="w-full lg:w-1/2 xl:w-2/5 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-slate-50">
-      <div class="w-full max-w-sm space-y-6">
+      <div class="w-full max-w-sm">
         <!-- 移动端 Logo -->
         <div class="lg:hidden flex items-center justify-center gap-2 mb-8">
           <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
@@ -76,78 +76,111 @@
           <span class="text-xl font-bold text-slate-900 tracking-tight">Enterprise Cloud</span>
         </div>
 
-        <div class="space-y-2 text-center lg:text-left">
-          <h2 class="text-2xl font-semibold tracking-tight text-slate-900">欢迎回来</h2>
-          <p class="text-sm text-slate-500">
-            请输入您的企业账号以继续访问
-          </p>
-        </div>
-
-        <!-- 登录表单 -->
-        <el-form
-            ref="loginFormRef"
-            :model="loginForm"
-            :rules="loginRules"
-            class="space-y-4"
-            @keyup.enter="handleLogin"
-        >
-          <el-form-item prop="email" class="!mb-6">
-            <el-input
-                v-model="loginForm.email"
-                placeholder="name@company.com"
-                size="large"
-                class="!h-11 !rounded-lg"
-            >
-              <template #prefix>
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
-              </template>
-            </el-input>
-          </el-form-item>
-
-          <el-form-item prop="password" class="!mb-6">
-            <el-input
-                v-model="loginForm.password"
-                type="password"
-                placeholder="••••••••"
-                size="large"
-                show-password
-                class="!h-11 !rounded-lg"
-            >
-              <template #prefix>
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </template>
-            </el-input>
-          </el-form-item>
-
-          <div class="flex items-center justify-between">
-            <el-checkbox v-model="loginForm.remember" class="!text-sm !text-slate-600">
-              记住我
-            </el-checkbox>
-            <a href="#" class="text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors">
-              忘记密码？
-            </a>
+        <!-- Card 卡片容器 -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
+          <!-- 头部标题 -->
+          <div class="space-y-2 text-center">
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900">欢迎回来</h2>
+            <p class="text-sm text-slate-500">
+              请输入您的企业账号以继续访问
+            </p>
           </div>
 
-          <el-button
-              type="primary"
-              size="large"
-              class="!w-full !h-11 !rounded-lg !bg-slate-900 !border-slate-900 hover:!bg-slate-800 transition-all duration-200 !text-sm !font-medium"
-              :loading="loading"
-              @click="handleLogin"
-          >
-            登录
-          </el-button>
-        </el-form>
+          <!-- 用户/管理中心切换 - shadcn 风格 Segmented Control -->
+          <div class="flex justify-center">
+            <div class="w-full bg-slate-100 p-1 rounded-lg flex gap-1">
+              <button
+                  @click="loginType = 'user'"
+                  :class="[
+                  'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
+                  loginType === 'user'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                ]"
+              >
+                用户登录
+              </button>
+              <button
+                  @click="loginType = 'admin'"
+                  :class="[
+                  'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
+                  loginType === 'admin'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                ]"
+              >
+                管理中心
+              </button>
+            </div>
+          </div>
 
-        <div class="text-center text-sm text-slate-500">
-          还没有账号？
-          <a href="#" class="font-semibold text-slate-900 hover:text-slate-700 transition-colors">
-            联系管理员开通
-          </a>
+          <!-- 登录表单 -->
+          <el-form
+              ref="loginFormRef"
+              :model="loginForm"
+              :rules="loginRules"
+              class="space-y-4"
+              @keyup.enter="handleLogin"
+          >
+            <el-form-item prop="username" class="!mb-7">
+              <el-input
+                  v-model="loginForm.username"
+                  placeholder="请输入用户名"
+                  size="large"
+                  class="!h-11"
+              >
+                <template #prefix>
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </template>
+              </el-input>
+            </el-form-item>
+
+            <el-form-item prop="password" class="!mb-7">
+              <el-input
+                  v-model="loginForm.password"
+                  type="password"
+                  placeholder="••••••••"
+                  size="large"
+                  show-password
+                  class="!h-11"
+              >
+                <template #prefix>
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </template>
+              </el-input>
+            </el-form-item>
+
+            <div class="flex items-center justify-end pt-1">
+              <button
+                  type="button"
+                  class="text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors"
+                  @click="handleForgotPassword"
+              >
+                忘记密码？
+              </button>
+            </div>
+
+            <el-button
+                type="primary"
+                size="large"
+                class="!w-full !h-11 !rounded-lg !bg-slate-900 !border-slate-900 hover:!bg-slate-800 transition-all duration-200 !text-sm !font-medium !mt-2"
+                :loading="loading"
+                @click="handleLogin"
+            >
+              {{ loginType === 'admin' ? '进入管理中心' : '登录' }}
+            </el-button>
+          </el-form>
+
+          <div class="text-center text-sm text-slate-500 pt-2">
+            还没有账号？
+            <a href="#" class="font-semibold text-slate-900 hover:text-slate-700 transition-colors">
+              联系管理员开通
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -156,21 +189,21 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const loginFormRef = ref(null)
 const loading = ref(false)
+const loginType = ref('user') // 'user' 或 'admin'
 
 const loginForm = reactive({
-  email: '',
-  password: '',
-  remember: false
+  username: '',
+  password: ''
 })
 
 const loginRules = {
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -188,7 +221,8 @@ const handleLogin = async () => {
         // 模拟登录请求
         setTimeout(() => {
           loading.value = false
-          ElMessage.success('登录成功，正在跳转...')
+          const typeText = loginType.value === 'admin' ? '管理中心' : '用户端'
+          ElMessage.success(`${typeText}登录成功，正在跳转...`)
           // 这里添加实际的路由跳转逻辑
         }, 1500)
       }
@@ -196,6 +230,18 @@ const handleLogin = async () => {
   } catch (error) {
     console.error('表单验证失败:', error)
   }
+}
+
+const handleForgotPassword = () => {
+  ElMessageBox.alert(
+      '请联系您的企业管理员重置密码。\n\n管理员联系方式：\n• 内部办公系统：搜索"IT服务台"\n• 邮箱：admin@company.com\n• 分机：8888',
+      '密码重置提示',
+      {
+        confirmButtonText: '我知道了',
+        type: 'info',
+        customClass: 'forgot-password-dialog'
+      }
+  )
 }
 </script>
 
@@ -206,29 +252,23 @@ const handleLogin = async () => {
   border-radius: 0.5rem;
   background-color: white;
   padding: 0 12px;
+  transition: all 0.2s;
 }
 
 :deep(.el-input__wrapper.is-focus) {
   box-shadow: 0 0 0 2px #0f172a !important;
+  border-color: #0f172a;
 }
 
 :deep(.el-input__inner) {
   color: #0f172a;
   font-size: 0.875rem;
   height: 2.75rem;
+  font-weight: 400;
 }
 
 :deep(.el-input__inner::placeholder) {
   color: #94a3b8;
-}
-
-:deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
-  color: #0f172a;
-}
-
-:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-  background-color: #0f172a;
-  border-color: #0f172a;
 }
 
 :deep(.el-form-item__error) {
@@ -236,6 +276,24 @@ const handleLogin = async () => {
   font-size: 0.75rem;
   margin-top: 0.25rem;
   padding-left: 0.25rem;
+}
+
+/* 忘记密码弹窗自定义样式 */
+:global(.forgot-password-dialog .el-message-box__content) {
+  white-space: pre-line;
+  line-height: 1.6;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+:global(.forgot-password-dialog .el-message-box__title) {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+:global(.forgot-password-dialog .el-button--primary) {
+  background-color: #0f172a;
+  border-color: #0f172a;
 }
 
 /* 动画效果 */
