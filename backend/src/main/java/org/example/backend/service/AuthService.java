@@ -2,7 +2,7 @@ package org.example.backend.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.common.security.MyUserDetails;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.common.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,9 +30,9 @@ public class AuthService {
     private static final String AUTH_USER_KEY = "auth:user:";
 
     public String login(String username, String password) {
-        MyUserDetails userDetails = null;
+        GlobalUserDetails userDetails = null;
         try {
-            userDetails = (MyUserDetails) userDetailsService.loadUserByUsername(username);
+            userDetails = (GlobalUserDetails) userDetailsService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
             throw new BusinessException("Username or password is incorrect");
         }
@@ -45,10 +45,9 @@ public class AuthService {
 
         String key = AUTH_USER_KEY + token;
         redisTemplate.opsForHash().putAll(key, Map.of(
-                "userId", userDetails.getUserId(),
+                "userId", String.valueOf(userDetails.getUserId()),
                 "username", userDetails.getUsername(),
-                "roles", userDetails.getRoles(),
-                "permissions", userDetails.getPermissions()
+                "roles", userDetails.getRoles()
         ));
         redisTemplate.expire(AUTH_USER_KEY + token, 3, TimeUnit.HOURS);
 

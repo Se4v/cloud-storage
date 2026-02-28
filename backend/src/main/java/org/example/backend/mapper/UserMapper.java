@@ -12,7 +12,6 @@ public interface UserMapper extends BaseMapper<User> {
 
     User selectByUsername(String username);
 
-    List<String> selectRolesByUserId(Long id);
+    List<String> selectGlobalRolesByUserId(Long id);
 
-    List<String> selectPermissionsByUserId(Long id);
 }

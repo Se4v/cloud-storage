@@ -1,7 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.MyUserDetails;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -25,8 +25,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public Result<Void> logout(@AuthenticationPrincipal MyUserDetails userDetails) {
-        authService.logout(userDetails.getToken());
+    public Result<Void> logout() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GlobalUserDetails globalUserDetails = (GlobalUserDetails) auth.getPrincipal();
+
+        authService.logout(globalUserDetails.getToken());
 
         return Result.success();
     }

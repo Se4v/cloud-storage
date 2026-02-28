@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class MyUserDetailsService implements UserDetailsService {
+public class GlobalUserDetailsService implements UserDetailsService {
     @Autowired
     private UserMapper userMapper;
 
@@ -22,9 +22,8 @@ public class MyUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("用户不存在/用户禁用");
         }
 
-        List<String> roles = userMapper.selectRolesByUserId(user.getId());
-        List<String> permissions = userMapper.selectPermissionsByUserId(user.getId());
+        List<String> roles = userMapper.selectGlobalRolesByUserId(user.getId());
 
-        return new MyUserDetails(user.getId(), user.getUsername(), user.getPassword(), roles, permissions, null);
+        return new GlobalUserDetails(user.getId(), user.getUsername(), user.getPassword(), roles, null);
     }
 }

@@ -1,105 +1,87 @@
-package org.example.backend.common.security;
+package org.example.backend.common.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.common.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component
-public class JwtFilter extends OncePerRequestFilter {
+public class GlobalFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private ObjectMapper objectMapper;
+
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private static final String AUTH_TOKEN_KEY = "auth:token:";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        // uri校验
-        String uri = request.getRequestURI();
-        if (uri.equals("/auth/login")) {
+        // 精确匹配
+        if (request.getRequestURI().equals("/auth/login")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 模式匹配
+        if (pathMatcher.match("/api/enterprise/**", request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
         // Header校验
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        if (!authHeader.startsWith("Bearer ")) {
-            sendResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token无效", null);
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
             return;
         }
 
         try {
             // Token校验
-            String token = authHeader.substring(7);
+            String token = header.substring(7);
             if (!jwtUtil.validateToken(token)) {
-                sendResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token无效", null);
+                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
                 return;
             }
 
             // Redis获取用户信息
-            String key = "auth:token:" + token;
-            Map<Object, Object> userInfo = redisTemplate.opsForHash().entries(key);
+            Map<Object, Object> userInfo = redisTemplate.opsForHash().entries(AUTH_TOKEN_KEY + token);
             if (userInfo.isEmpty()) {
-                sendResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token无效", null);
+                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
                 return;
             }
-            Long userId = (Long) userInfo.get("userId");
-            String userName = (String) userInfo.get("userName");
+            Long userId = Long.valueOf((String) userInfo.get("userId"));
+            String userName = String.valueOf(userInfo.get("userName"));
             @SuppressWarnings("unchecked") List<String> roles = (List<String>) userInfo.get("roles");
-            @SuppressWarnings("unchecked") List<String> permissions = (List<String>) userInfo.get("permissions");
 
             // 构建认证信息
-            UserDetails userDetails = new MyUserDetails(userId, userName, null, roles, permissions, token);
+            UserDetails userDetails = new GlobalUserDetails(userId, userName, null, roles, token);
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } catch (Exception e) {
-            sendResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token无效", null);
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
             return;
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private void sendResponse(HttpServletResponse response,
-                              int code,
-                              String msg,
-                              Object data) throws IOException {
-        response.setStatus(code);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", code);
-        body.put("msg", msg);
-        body.put("data", data);
-
-        objectMapper.writeValue(response.getOutputStream(), body);
     }
 }
