@@ -7,7 +7,6 @@ import lombok.Data;
 @Builder
 public class NoticeView {
     private String noticeId;
-    private String senderName;
     private String title;
     private String content;
     private String sendTime;

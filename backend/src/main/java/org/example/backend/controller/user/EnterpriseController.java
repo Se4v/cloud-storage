@@ -1,7 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.MyUserDetails;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.DirectUploadArgs;
 import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.args.MergeChunksArgs;
@@ -31,25 +31,25 @@ public class EnterpriseController {
 
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args,
-                                             @AuthenticationPrincipal MyUserDetails userDetails) {
+                                             @AuthenticationPrincipal GlobalUserDetails userDetails) {
         return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
     }
 
     @PostMapping("/direct-upload")
     public Result<DirectUploadView> directUpload(DirectUploadArgs args,
-                                                 @AuthenticationPrincipal MyUserDetails userDetails) {
+                                                 @AuthenticationPrincipal GlobalUserDetails userDetails) {
         return Result.success(uploadService.directUpload(args, userDetails.getUserId()));
     }
 
     @PostMapping("/chunk-upload")
     public Result<RecordChunksView> chunkUpload(@RequestBody RecordChunksArgs args,
-                                                @AuthenticationPrincipal MyUserDetails userDetails) {
+                                                @AuthenticationPrincipal GlobalUserDetails userDetails) {
         return Result.success(uploadService.recordChunks(args, userDetails.getUserId()));
     }
 
     @PostMapping("/merge-chunk")
     public Result<MergeChunksView> mergeChunk(@RequestBody MergeChunksArgs args,
-                                              @AuthenticationPrincipal MyUserDetails userDetails) {
+                                              @AuthenticationPrincipal GlobalUserDetails userDetails) {
         return Result.success(uploadService.mergeChunks(args.getUploadId(), userDetails.getUserId()));
     }
 

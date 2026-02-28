@@ -1,7 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.MyUserDetails;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.CreateShareLinkArgs;
 import org.example.backend.model.args.UpdateShareLinkArgs;
 import org.example.backend.model.result.ShareDetailResult;
@@ -23,7 +23,7 @@ public class ShareController {
     @GetMapping
     public Result<List<ShareView>> getAllShareLinks() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
         List<ShareDetailResult> results = shareService.getAllShareLinks(userDetails.getUserId());
 
@@ -47,7 +47,7 @@ public class ShareController {
     @PostMapping("/create")
     public Result<Void> createShareLink(@RequestBody CreateShareLinkArgs args) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
         shareService.createShareLink(args, userDetails.getUserId());
 

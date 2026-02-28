@@ -43,9 +43,6 @@ public class Entry implements Serializable {
     @TableField("file_ext")
     private String fileExt;
 
-    @TableField("is_enabled")
-    private Integer enabled;
-
     @TableField("status")
     private Integer status;
 

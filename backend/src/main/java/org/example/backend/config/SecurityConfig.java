@@ -1,7 +1,7 @@
 package org.example.backend.config;
 
-import org.example.backend.common.security.JwtFilter;
-import org.example.backend.common.security.MyUserDetailsService;
+import org.example.backend.common.security.filter.GlobalFilter;
+import org.example.backend.common.security.GlobalUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,9 +25,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
     @Autowired
-    private MyUserDetailsService myUserDetailsService;
+    private GlobalUserDetailsService globalUserDetailsService;
     @Autowired
-    private JwtFilter jwtFilter;
+    private GlobalFilter globalFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -64,7 +64,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 // 添加JWT过滤器
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(globalFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -91,7 +91,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(myUserDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(globalUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(provider);
     }

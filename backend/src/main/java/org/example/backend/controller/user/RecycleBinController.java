@@ -1,7 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.MyUserDetails;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.result.RecycleDetailResult;
 import org.example.backend.model.view.RecycleBinView;
 import org.example.backend.service.RecycleBinService;
@@ -22,7 +22,7 @@ public class RecycleBinController {
 
     public Result<List<RecycleBinView>> getRecycleBinEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
         List<RecycleDetailResult> results = recycleBinService.getEntries(userDetails.getUserId());
 
@@ -55,7 +55,7 @@ public class RecycleBinController {
 
     public Result<Void> clear() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
         recycleBinService.clear(userDetails.getUserId());
 

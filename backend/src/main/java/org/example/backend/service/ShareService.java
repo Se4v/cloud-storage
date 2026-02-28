@@ -36,15 +36,14 @@ public class ShareService {
         }
 
         int count = shareMapper.insert(Share.builder()
-                        .shareLinkName(args.getShareLinkName())
                         .driveId(args.getDriveId())
                         .entryId(existEntry.getId())
                         .entryType(existEntry.getEntryType())
                         .userId(userId)
-                        .shareLinkKey(generateShareLinkKey())
+                        .linkName(args.getLinkName())
+                        .linkKey(generateLinkKey())
+                        .linkType(args.getLinkType())
                         .accessCode(args.getAccessCode())
-                        .shareLinkType(args.getShareLinkType())
-                        .valid(1)
                         .deleted(0)
                         .expiredAt(args.getExpireTime())
                         .build());
@@ -61,10 +60,10 @@ public class ShareService {
         }
 
         Share share = Share.builder()
-                .shareLinkName(args.getShareLinkName())
+                .linkName(args.getLinkName())
+                .linkType(args.getLinkType())
                 .accessCode(args.getAccessCode())
-                .shareLinkType(args.getShareLinkType())
-                .valid(args.getValid())
+                .deleted(args.getDeleted())
                 .expiredAt(args.getExpireTime())
                 .build();
 
@@ -86,7 +85,7 @@ public class ShareService {
         }
     }
 
-    private String generateShareLinkKey() {
+    private String generateLinkKey() {
         UUID uuid = UUID.randomUUID();
         return uuid.toString().replace("-", "");
     }

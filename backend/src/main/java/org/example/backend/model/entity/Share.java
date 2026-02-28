@@ -19,9 +19,6 @@ public class Share implements Serializable {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @TableField("share_link_name")
-    private String shareLinkName;
-
     @TableField("drive_id")
     private Long driveId;
 
@@ -34,17 +31,17 @@ public class Share implements Serializable {
     @TableField("user_id")
     private Long userId;
 
-    @TableField("share_link_key")
-    private String shareLinkKey;
+    @TableField("link_name")
+    private String linkName;
+
+    @TableField("link_key")
+    private String linkKey;
+
+    @TableField("link_type")
+    private Integer linkType;
 
     @TableField("access_code")
     private String accessCode;
-
-    @TableField("share_link_type")
-    private Integer shareLinkType;
-
-    @TableField("is_valid")
-    private Integer valid;
 
     @TableField("is_deleted")
     private Integer deleted;

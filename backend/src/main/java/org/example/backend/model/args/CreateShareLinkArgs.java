@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 public class CreateShareLinkArgs {
     private Long entryId;
     private Long driveId;
-    private String shareLinkName;
+    private String linkName;
     private String accessCode;
-    private Integer shareLinkType;
+    private Integer linkType;
     private LocalDateTime expireTime;
 }
