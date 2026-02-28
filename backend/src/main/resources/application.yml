@@ -19,7 +19,7 @@ spring:
 logging:
   level:
     root: info
-    org.example.storagebackend: debug
+    org.example.backend: debug
     org.springframework: warn
   file:
     name: ./logs/app.log
@@ -44,5 +44,5 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 jwt:
-  secret-key:
-  expiration:
+  secret-key: 1234567890abcdefghjklmnoprstuvwxyz
+  expiration: 3600000

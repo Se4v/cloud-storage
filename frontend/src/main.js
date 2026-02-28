@@ -1,5 +1,4 @@
 import { createApp } from 'vue'
-import axios from 'axios'
 import ElementPlus from 'element-plus'
 import App from './App.vue'
 import router from './router'

@@ -189,11 +189,14 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from "axios";
 
 const loginFormRef = ref(null)
 const loading = ref(false)
 const loginType = ref('user') // 'user' 或 'admin'
+const router = useRouter()
 
 const loginForm = reactive({
   username: '',
@@ -214,21 +217,41 @@ const loginRules = {
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
+  const valid = await loginFormRef.value.validate().catch(() => false)
+  if (!valid) return
+
+  loading.value = true
   try {
-    await loginFormRef.value.validate((valid) => {
-      if (valid) {
-        loading.value = true
-        // 模拟登录请求
-        setTimeout(() => {
-          loading.value = false
-          const typeText = loginType.value === 'admin' ? '管理中心' : '用户端'
-          ElMessage.success(`${typeText}登录成功，正在跳转...`)
-          // 这里添加实际的路由跳转逻辑
-        }, 1500)
-      }
+    // 调用后端登录接口
+    const response = await axios.post('http://localhost:8080/api/auth/login', {
+      username: loginForm.username,
+      password: loginForm.password
     })
+
+    // 后端返回 Result<String>，token 在 data 中
+    const { code, data: token, msg } = response.data
+
+    if (code === 200 && token) {
+      // 保存 token
+      localStorage.setItem('token', token)
+
+      // 根据登录类型跳转到不同页面
+      if (loginType.value === 'admin') {
+        ElMessage.success('管理中心登录成功，正在跳转...')
+        await router.push('/admin')
+      } else {
+        ElMessage.success('用户端登录成功，正在跳转...')
+        await router.push('/user')
+      }
+    } else {
+      ElMessage.error(msg || '登录失败')
+    }
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error('登录失败:', error)
+    const errorMsg = error.response?.data?.msg || error.message || '登录失败，请检查网络连接'
+    ElMessage.error(errorMsg)
+  } finally {
+    loading.value = false
   }
 }
 

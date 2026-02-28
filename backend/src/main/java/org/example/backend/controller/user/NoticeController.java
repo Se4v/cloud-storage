@@ -42,10 +42,7 @@ public class NoticeController {
 
     @PostMapping("/all")
     public Result<?> getAllNotices() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-
-        List<Notice> results = noticeService.getNotices(userDetails.getUserId());
+        List<Notice> results = noticeService.getNotices();
 
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> {

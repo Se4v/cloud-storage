@@ -82,6 +82,13 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- OkHttp (MinIO 依赖) -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
+
         <!-- Mybatis Plus -->
         <dependency>
             <groupId>com.baomidou</groupId>

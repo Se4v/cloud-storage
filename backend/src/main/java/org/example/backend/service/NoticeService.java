@@ -30,7 +30,7 @@ public class NoticeService {
         return noticeMapper.selectList(queryWrapper);
     }
 
-    public List<Notice> getNotices(Long userId) {
+    public List<Notice> getNotices() {
         LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Notice::getTargetId, ALL_USER)
                 .eq(Notice::getStatus, STATELESS)

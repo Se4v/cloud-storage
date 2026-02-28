@@ -17,8 +17,5 @@ public class OrgService {
         LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Member::getUserId, userId);
         List<Member> members = memberMapper.selectList(queryWrapper);
-
-
-        return null;
     }
 }

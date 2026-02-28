@@ -10,17 +10,15 @@ import org.example.backend.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/user/profile")
+@RequestMapping("/api/profile")
 public class ProfileController {
     @Autowired
     private ProfileService profileService;
 
-    @RequestMapping()
+    @GetMapping()
     public Result<ProfileView> getProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
@@ -30,7 +28,7 @@ public class ProfileController {
         return Result.success("", view);
     }
 
-    @RequestMapping()
+    @GetMapping("/avatar")
     public Result<?> getAvatar() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
@@ -40,7 +38,7 @@ public class ProfileController {
         return Result.success("", avatarUrl);
     }
 
-    @RequestMapping()
+    @PostMapping()
     public Result<Void> updateProfile(@RequestBody UpdateProfileArgs args) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
@@ -50,7 +48,7 @@ public class ProfileController {
         return Result.success("");
     }
 
-    @RequestMapping()
+    @PostMapping("/upload")
     public Result<Void> uploadAvatar(@RequestBody UploadAvatarArgs args) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
@@ -60,7 +58,7 @@ public class ProfileController {
         return Result.success("");
     }
 
-    @RequestMapping()
+    @PostMapping("/password")
     public Result<Void> changePassword(@RequestBody ChangePasswordArgs args) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();

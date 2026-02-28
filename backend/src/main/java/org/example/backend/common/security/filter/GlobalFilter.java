@@ -1,6 +1,5 @@
 package org.example.backend.common.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +35,7 @@ public class GlobalFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         // 精确匹配
-        if (request.getRequestURI().equals("/auth/login")) {
+        if (pathMatcher.match("/api/auth/login", request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
