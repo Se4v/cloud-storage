@@ -6,6 +6,7 @@ import EnterpriseDrive from "@/views/EnterpriseDrive.vue";
 import SafeExternalLinks from "@/views/SafeExternalLinks.vue";
 import Profile from '@/views/Profile.vue';
 import Recovery from "@/views/Recovery.vue";
+import AdminLayout from "@/components/AdminLayout.vue";
 
 const routes = [
     {
@@ -15,7 +16,7 @@ const routes = [
     },
     {
         path: '/drive',
-        name: 'r',
+        name: 'drive',
         component: DriveLayout,
         children: [
             {
@@ -45,6 +46,14 @@ const routes = [
             }
         ]
     },
+    {
+        path: '/admin',
+        name: 'admin',
+        component: AdminLayout,
+        children: [
+
+        ]
+    }
 
 ]
 
