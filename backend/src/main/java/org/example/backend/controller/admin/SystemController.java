@@ -1,11 +1,9 @@
-package org.example.backend.controller.user;
+package org.example.backend.controller.admin;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/drive")
-public class DriveController {
-
-
+@RequestMapping("/api/system")
+public class SystemController {
 }

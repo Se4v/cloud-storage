@@ -29,6 +29,10 @@ public class EnterpriseController {
     @Autowired
     private EntryService entryService;
 
+    public Result<?> getUserOwnedOrgTree() {
+        return null;
+    }
+
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args,
                                              @AuthenticationPrincipal GlobalUserDetails userDetails) {

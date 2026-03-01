@@ -20,7 +20,7 @@ public class NoticeController {
     private NoticeService noticeService;
 
     @PostMapping("/unread")
-    public Result<List<NoticeView>> getUnreadNotices() {
+    public Result<List<NoticeView>> listUnreadNotices() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
@@ -41,7 +41,7 @@ public class NoticeController {
     }
 
     @PostMapping("/all")
-    public Result<?> getAllNotices() {
+    public Result<?> listAllNotices() {
         List<Notice> results = noticeService.getNotices();
 
         List<NoticeView> noticeViews = results.stream()
@@ -64,12 +64,4 @@ public class NoticeController {
 
         return Result.success();
     }
-
-    @PostMapping("/create")
-    public Result<Void> createNotice(@RequestBody CreateNoticeArgs args) {
-        noticeService.createNotice(args);
-
-        return Result.success();
-    }
-
 }

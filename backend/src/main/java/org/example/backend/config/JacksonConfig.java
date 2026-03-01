@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.TimeZone;
 
-@Configuration
 public class JacksonConfig {
     @Bean
     @Primary
@@ -21,10 +20,6 @@ public class JacksonConfig {
 
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        objectMapper.activateDefaultTyping(
-                objectMapper.getPolymorphicTypeValidator(),
-                ObjectMapper.DefaultTyping.NON_FINAL
-        );
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));

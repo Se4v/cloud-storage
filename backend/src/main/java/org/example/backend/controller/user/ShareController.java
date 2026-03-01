@@ -20,8 +20,8 @@ public class ShareController {
     @Autowired
     private ShareService shareService;
 
-    @GetMapping
-    public Result<List<ShareView>> getAllShareLinks() {
+    @GetMapping()
+    public Result<List<ShareView>> listLinks() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
@@ -45,7 +45,7 @@ public class ShareController {
     }
 
     @PostMapping("/create")
-    public Result<Void> createShareLink(@RequestBody CreateShareLinkArgs args) {
+    public Result<Void> createLink(@RequestBody CreateShareLinkArgs args) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
@@ -55,14 +55,14 @@ public class ShareController {
     }
 
     @PostMapping("/update")
-    public Result<Void> updateShareLink(@RequestBody UpdateShareLinkArgs args) {
+    public Result<Void> updateLink(@RequestBody UpdateShareLinkArgs args) {
         shareService.updateShareLink(args);
 
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteShareLinks(@RequestBody List<Long> shareIds) {
+    public Result<Void> deleteLinks(@RequestBody List<Long> shareIds) {
         shareService.deleteShareLinks(shareIds);
 
         return Result.success();

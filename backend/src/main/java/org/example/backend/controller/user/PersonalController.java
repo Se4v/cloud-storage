@@ -87,4 +87,9 @@ public class PersonalController {
     public Result<?> deleteEntries() {
         return Result.success();
     }
+
+    @GetMapping("/usage")
+    public Result<?> getPersonalDriveUsage() {
+        return null;
+    }
 }

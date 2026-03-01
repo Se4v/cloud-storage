@@ -2,6 +2,7 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
+import org.example.backend.model.args.LoginArgs;
 import org.example.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,8 +19,8 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public Result<String> login(@RequestBody String username, @RequestBody String password) {
-        String token = authService.login(username, password);
+    public Result<String> login(@RequestBody LoginArgs args) {
+        String token = authService.login(args.getUsername(), args.getPassword());
 
         return Result.success("", token);
     }

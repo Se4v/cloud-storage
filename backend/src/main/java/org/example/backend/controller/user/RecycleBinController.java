@@ -20,7 +20,7 @@ public class RecycleBinController {
     @Autowired
     private RecycleBinService recycleBinService;
 
-    public Result<List<RecycleBinView>> getRecycleBinEntries() {
+    public Result<List<RecycleBinView>> listEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
@@ -48,12 +48,12 @@ public class RecycleBinController {
         return Result.success();
     }
 
-    public Result<Void> permanentlyDeleteEntries(@RequestBody List<Long> ids) {
+    public Result<Void> deleteEntries(@RequestBody List<Long> ids) {
         recycleBinService.permanentlyDeleteEntries(ids);
         return Result.success();
     }
 
-    public Result<Void> clear() {
+    public Result<Void> clearEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 

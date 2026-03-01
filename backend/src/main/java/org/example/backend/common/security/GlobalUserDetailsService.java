@@ -1,5 +1,6 @@
 package org.example.backend.common.security;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.example.backend.mapper.UserMapper;
 import org.example.backend.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,9 @@ public class GlobalUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userMapper.selectByUsername(username);
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getUsername, username);
+        User user = userMapper.selectOne(queryWrapper);
         if (user == null || user.getEnabled() == 0) {
             throw new UsernameNotFoundException("用户不存在/用户禁用");
         }
