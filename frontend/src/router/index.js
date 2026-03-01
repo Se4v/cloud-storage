@@ -7,6 +7,7 @@ import SafeExternalLinks from "@/views/SafeExternalLinks.vue";
 import Profile from '@/views/Profile.vue';
 import Recovery from "@/views/Recovery.vue";
 import AdminLayout from "@/components/AdminLayout.vue";
+import NoticeMange from "@/views/admin/NoticeMange.vue";
 
 const routes = [
     {
@@ -51,7 +52,11 @@ const routes = [
         name: 'admin',
         component: AdminLayout,
         children: [
-
+            {
+                path: 'notice',
+                name: 'NoticeMange',
+                component: NoticeMange
+            },
         ]
     }
 
