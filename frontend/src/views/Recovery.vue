@@ -106,7 +106,6 @@
           >
             <template #default="{ row }">
               <div class="flex items-center gap-1.5 text-sm text-slate-600">
-                <el-icon :size="14" class="text-slate-400"><Clock /></el-icon>
                 <span class="whitespace-nowrap">{{ row.deleteTime }}</span>
               </div>
             </template>

@@ -149,20 +149,20 @@
 
       <!-- 用户信息 & 存储空间（始终固定在底部） -->
       <div class="p-4 border-t border-slate-200 bg-slate-50/50 flex-shrink-0 mt-auto">
-        <!-- 存储空间 -->
+        <!-- 存储空间 - 始终显示个人空间存储信息 -->
         <div class="mb-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-semibold text-slate-700">
-              {{ isEnterpriseActive ? '企业存储' : '存储空间' }}
+              存储空间
             </span>
             <span class="text-xs font-medium text-slate-500 tabular-nums">
-              {{ isEnterpriseActive ? '2.4G / 10G' : '40M / 1G' }}
+              40M / 1G
             </span>
           </div>
           <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
             <div
                 class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 shadow-sm"
-                :style="{ width: isEnterpriseActive ? '24%' : '4%' }"
+                style="width: 4%"
             ></div>
           </div>
         </div>

@@ -1,102 +1,109 @@
 <template>
   <div class="h-full flex flex-col bg-slate-50">
-    <!-- 面包屑 & 工具栏 -->
-    <div class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col gap-4">
-      <!-- 面包屑导航 -->
-      <div class="flex items-center gap-2 text-sm text-slate-500">
-        <el-icon class="text-slate-400 cursor-pointer hover:text-blue-600"><HomeFilled /></el-icon>
-        <span class="text-slate-300">/</span>
-        <span class="font-medium text-slate-900">企业空间</span>
-        <template v-if="currentPath.length > 0">
-          <span class="text-slate-300">/</span>
-          <span v-for="(item, index) in currentPath" :key="index" class="flex items-center gap-2">
-            <span class="font-medium text-slate-900">{{ item }}</span>
-            <span v-if="index < currentPath.length - 1" class="text-slate-300">/</span>
-          </span>
-        </template>
-      </div>
+    <!-- 工具栏 -->
+    <div class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <button
+            @click="handleUpload"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow"
+        >
+          <el-icon><Upload /></el-icon>
+          上传
+        </button>
 
-      <!-- 操作工具栏 -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <button
-              @click="handleUpload"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow"
-          >
-            <el-icon><Upload /></el-icon>
-            上传
-          </button>
+        <button
+            @click="handleCreateFolder"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
+        >
+          <el-icon><Plus /></el-icon>
+          新建
+        </button>
 
+        <button
+            @click="handleBatchDownload"
+            :disabled="selectedFiles.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <el-icon><Download /></el-icon>
+          下载
+        </button>
+
+        <button
+            @click="handleShare"
+            :disabled="selectedFiles.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <el-icon><Share /></el-icon>
+          分享
+        </button>
+
+        <el-dropdown trigger="click">
           <button
-              @click="handleCreateFolder"
               class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
           >
-            <el-icon><Plus /></el-icon>
-            新建
+            <span>更多</span>
+            <el-icon><ArrowDown /></el-icon>
           </button>
+          <template #dropdown>
+            <el-dropdown-menu class="min-w-[160px]">
+              <el-dropdown-item @click="handleMove" :disabled="selectedFiles.length === 0">
+                <el-icon class="mr-2"><Folder /></el-icon>移动到
+              </el-dropdown-item>
+              <el-dropdown-item @click="handleCopy" :disabled="selectedFiles.length === 0">
+                <el-icon class="mr-2"><DocumentCopy /></el-icon>复制
+              </el-dropdown-item>
+              <el-dropdown-item @click="handleRename" :disabled="selectedFiles.length !== 1">
+                <el-icon class="mr-2"><EditPen /></el-icon>重命名
+              </el-dropdown-item>
+              <el-dropdown-item divided @click="handleBatchDelete" :disabled="selectedFiles.length === 0" class="text-red-600">
+                <el-icon class="mr-2"><Delete /></el-icon>删除
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
 
-          <button
-              @click="handleBatchDownload"
-              :disabled="selectedFiles.length === 0"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <el-icon><Download /></el-icon>
-            下载
-          </button>
-
-          <button
-              @click="handleShare"
-              :disabled="selectedFiles.length === 0"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <el-icon><Share /></el-icon>
-            分享
-          </button>
-
-          <el-dropdown trigger="click">
-            <button
-                class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
-            >
-              <span>更多</span>
-              <el-icon><ArrowDown /></el-icon>
-            </button>
-            <template #dropdown>
-              <el-dropdown-menu class="min-w-[160px]">
-                <el-dropdown-item @click="handleMove" :disabled="selectedFiles.length === 0">
-                  <el-icon class="mr-2"><Folder /></el-icon>移动到
-                </el-dropdown-item>
-                <el-dropdown-item @click="handleCopy" :disabled="selectedFiles.length === 0">
-                  <el-icon class="mr-2"><DocumentCopy /></el-icon>复制
-                </el-dropdown-item>
-                <el-dropdown-item @click="handleRename" :disabled="selectedFiles.length !== 1">
-                  <el-icon class="mr-2"><EditPen /></el-icon>重命名
-                </el-dropdown-item>
-                <el-dropdown-item divided @click="handleBatchDelete" :disabled="selectedFiles.length === 0" class="text-red-600">
-                  <el-icon class="mr-2"><Delete /></el-icon>删除
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-
-        <!-- 搜索框 -->
-        <div class="relative w-64">
-          <el-input
-              v-model="searchQuery"
-              placeholder="搜索文件..."
-              class="w-full"
-              clearable
-          >
-            <template #prefix>
-              <el-icon class="text-slate-400"><Search /></el-icon>
-            </template>
-          </el-input>
-        </div>
+      <!-- 搜索框 -->
+      <div class="relative w-64">
+        <el-input
+            v-model="searchQuery"
+            placeholder="搜索文件..."
+            class="w-full"
+            clearable
+        >
+          <template #prefix>
+            <el-icon class="text-slate-400"><Search /></el-icon>
+          </template>
+        </el-input>
       </div>
     </div>
 
     <!-- 文件列表 -->
     <div class="flex-1 overflow-auto p-6">
+      <!-- 面包屑导航 - 移到列表上方，显示文件夹路径 -->
+      <div class="mb-4 flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-3 rounded-lg border border-slate-200 shadow-sm">
+        <el-icon class="text-slate-400 cursor-pointer hover:text-blue-600" @click="goToRoot"><HomeFilled /></el-icon>
+        <span class="text-slate-300">/</span>
+        <span
+            class="font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
+            @click="goToRoot"
+        >
+          企业空间
+        </span>
+        <template v-if="currentPath.length > 0">
+          <span v-for="(item, index) in currentPath" :key="index" class="flex items-center gap-2">
+            <span class="text-slate-300">/</span>
+            <span
+                class="font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
+                :class="{ 'text-slate-900': index === currentPath.length - 1, 'text-slate-600 hover:text-blue-600': index !== currentPath.length - 1 }"
+                @click="goToPath(index)"
+            >
+              {{ item }}
+            </span>
+          </span>
+        </template>
+      </div>
+
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <el-table
             ref="tableRef"
@@ -149,7 +156,8 @@
 
           <el-table-column label="操作" width="150" align="center">
             <template #default="{ row }">
-              <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" :class="{ 'opacity-100': selectedFiles.includes(row) }">
+              <!-- 操作按钮直接显示，不用隐藏 -->
+              <div class="flex items-center justify-center gap-1">
                 <button
                     @click.stop="handleDownload(row)"
                     class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -391,8 +399,8 @@ import {
   HomeFilled
 } from '@element-plus/icons-vue'
 
-// 面包屑路径
-const currentPath = ref(['家电产品部', '家电产品二部'])
+// 面包屑路径 - 改为空数组，表示当前在根目录
+const currentPath = ref([])
 
 // 文件数据
 const fileList = ref([
@@ -571,6 +579,19 @@ const handleOpenFile = (file) => {
   } else {
     ElMessage.info(`预览文件: ${file.name}`)
   }
+}
+
+// 面包屑导航 - 返回根目录
+const goToRoot = () => {
+  currentPath.value = []
+  ElMessage.success('返回根目录')
+}
+
+// 面包屑导航 - 点击某个路径层级
+const goToPath = (index) => {
+  // 保留从0到index的路径，删除后面的
+  currentPath.value = currentPath.value.slice(0, index + 1)
+  ElMessage.success(`导航到: ${currentPath.value[index] || '根目录'}`)
 }
 
 // 上传
