@@ -31,6 +31,9 @@ public class Member implements Serializable {
     @TableField("is_leader")
     private Integer leader;
 
+    @TableField("is_deleted")
+    private Integer deleted;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
 

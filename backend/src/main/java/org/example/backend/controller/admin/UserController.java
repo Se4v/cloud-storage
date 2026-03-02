@@ -19,7 +19,7 @@ public class UserController {
         return null;
     }
 
-    public Result<Void> listUsers() {
+    public Result<Void> listAllUsers() {
         return null;
     }
 

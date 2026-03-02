@@ -11,7 +11,7 @@ public class StorageController {
         return null;
     }
 
-    public Result<Void> listStorageItems() {
+    public Result<Void> listAllStorageItems() {
         return null;
     }
 }

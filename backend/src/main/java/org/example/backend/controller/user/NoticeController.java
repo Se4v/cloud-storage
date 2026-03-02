@@ -27,14 +27,12 @@ public class NoticeController {
         List<Notice> results = noticeService.listUnreadAlerts(userDetails.getUserId());
 
         List<NoticeView> noticeViews = results.stream()
-                .map(result -> {
-                    return NoticeView.builder()
-                            .noticeId(String.valueOf(result.getId()))
-                            .title(result.getTitle())
-                            .content(result.getContent())
-                            .createdAt(String.valueOf(result.getCreatedAt()))
-                            .build();
-                })
+                .map(result -> NoticeView.builder()
+                        .noticeId(String.valueOf(result.getId()))
+                        .title(result.getTitle())
+                        .content(result.getContent())
+                        .createdAt(String.valueOf(result.getCreatedAt()))
+                        .build())
                 .toList();
 
         return Result.success("", noticeViews);
@@ -45,14 +43,12 @@ public class NoticeController {
         List<Notice> results = noticeService.listNotices();
 
         List<NoticeView> noticeViews = results.stream()
-                .map(result -> {
-                    return NoticeView.builder()
-                            .noticeId(String.valueOf(result.getId()))
-                            .title(result.getTitle())
-                            .content(result.getContent())
-                            .createdAt(String.valueOf(result.getCreatedAt()))
-                            .build();
-                })
+                .map(result -> NoticeView.builder()
+                        .noticeId(String.valueOf(result.getId()))
+                        .title(result.getTitle())
+                        .content(result.getContent())
+                        .createdAt(String.valueOf(result.getCreatedAt()))
+                        .build())
                 .toList();
 
         return Result.success("", noticeViews);

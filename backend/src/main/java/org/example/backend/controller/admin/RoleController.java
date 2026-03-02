@@ -19,7 +19,7 @@ public class RoleController {
         return null;
     }
 
-    public Result<Void> listRoles() {
+    public Result<Void> listAllRoles() {
         return null;
     }
 
