@@ -9,5 +9,6 @@ public class NoticeView {
     private String noticeId;
     private String title;
     private String content;
-    private String sendTime;
+    private String expiredAt;
+    private String createdAt;
 }

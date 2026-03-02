@@ -20,11 +20,11 @@ public class NoticeController {
     private NoticeService noticeService;
 
     @PostMapping("/unread")
-    public Result<List<NoticeView>> listUnreadNotices() {
+    public Result<List<NoticeView>> listUnreadAlerts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        List<Notice> results = noticeService.getUnreadAlerts(userDetails.getUserId());
+        List<Notice> results = noticeService.listUnreadAlerts(userDetails.getUserId());
 
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> {
@@ -32,7 +32,7 @@ public class NoticeController {
                             .noticeId(String.valueOf(result.getId()))
                             .title(result.getTitle())
                             .content(result.getContent())
-                            .sendTime(String.valueOf(result.getCreatedAt()))
+                            .createdAt(String.valueOf(result.getCreatedAt()))
                             .build();
                 })
                 .toList();
@@ -40,9 +40,9 @@ public class NoticeController {
         return Result.success("", noticeViews);
     }
 
-    @PostMapping("/all")
-    public Result<?> listAllNotices() {
-        List<Notice> results = noticeService.getNotices();
+    @GetMapping("")
+    public Result<?> listNotices() {
+        List<Notice> results = noticeService.listNotices();
 
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> {
@@ -50,7 +50,7 @@ public class NoticeController {
                             .noticeId(String.valueOf(result.getId()))
                             .title(result.getTitle())
                             .content(result.getContent())
-                            .sendTime(String.valueOf(result.getCreatedAt()))
+                            .createdAt(String.valueOf(result.getCreatedAt()))
                             .build();
                 })
                 .toList();

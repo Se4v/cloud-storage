@@ -31,8 +31,11 @@ public class Notice implements Serializable {
     @TableField("target_id")
     private Long targetId;
 
-    @TableField("status")
-    private Integer status;
+    @TableField("is_read")
+    private Integer read;
+
+    @TableField("is_deleted")
+    private Integer deleted;
 
     @TableField("expired_at")
     private LocalDateTime expiredAt;

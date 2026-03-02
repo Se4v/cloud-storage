@@ -18,4 +18,6 @@ public class OrgService {
         queryWrapper.eq(Member::getUserId, userId);
         List<Member> members = memberMapper.selectList(queryWrapper);
     }
+
+
 }
