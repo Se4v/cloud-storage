@@ -40,6 +40,9 @@ public class User implements Serializable {
     @TableField("is_enabled")
     private Integer enabled;
 
+    @TableField("is_deleted")
+    private Integer deleted;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
 
