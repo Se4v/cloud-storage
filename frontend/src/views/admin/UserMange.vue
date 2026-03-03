@@ -24,23 +24,22 @@
         >
           <el-icon :size="16"><Delete /></el-icon>
           批量删除
-          <span v-if="selectedUsers.length > 0" class="ml-1 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
-            {{ selectedUsers.length }}
-          </span>
         </button>
       </div>
 
       <!-- 右侧：搜索筛选 -->
       <div class="flex flex-col sm:flex-row gap-3">
-        <div class="relative">
-          <el-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" :size="16">
-            <Search />
-          </el-icon>
+        <div class="relative w-full sm:w-64">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <el-icon class="text-slate-400" :size="16">
+              <Search />
+            </el-icon>
+          </div>
           <input
               v-model="searchQuery"
               type="text"
               placeholder="搜索用户名、姓名或手机号..."
-              class="w-full sm:w-64 h-9 pl-9 pr-4 rounded-md border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              class="w-full h-9 pl-9 pr-4 rounded-md border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               @keyup.enter="handleSearch"
           />
         </div>
@@ -85,9 +84,8 @@
                   class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
             </th>
-            <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">用户名</th>
-            <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">姓名</th>
-            <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">手机号</th>
+            <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">用户</th>
+            <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">联系方式</th>
             <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">空间配额</th>
             <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">状态</th>
             <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">操作</th>
@@ -108,13 +106,16 @@
               />
             </td>
             <td class="px-6 py-4">
-              <span class="font-medium text-slate-900">{{ user.username }}</span>
+              <div class="flex flex-col">
+                <span class="font-medium text-slate-900">{{ user.username }}</span>
+                <span class="text-xs text-slate-500 mt-0.5">{{ user.realName || '-' }}</span>
+              </div>
             </td>
             <td class="px-6 py-4">
-              <span class="text-slate-700">{{ user.realName || '-' }}</span>
-            </td>
-            <td class="px-6 py-4">
-              <span class="text-slate-700">{{ user.phone || '-' }}</span>
+              <div class="flex flex-col">
+                <span class="text-slate-900">{{ user.phone || '-' }}</span>
+                <span class="text-xs text-slate-500 mt-0.5">{{ user.email || '-' }}</span>
+              </div>
             </td>
             <td class="px-6 py-4">
               <span class="text-slate-700 font-medium">{{ formatStorage(user.storageQuota) }}</span>
@@ -178,7 +179,7 @@
 
           <!-- 空状态 -->
           <tr v-if="tableData.length === 0">
-            <td colspan="7" class="px-6 py-12 text-center">
+            <td colspan="6" class="px-6 py-12 text-center">
               <div class="flex flex-col items-center justify-center text-slate-400">
                 <el-icon :size="48" class="mb-2 opacity-50"><User /></el-icon>
                 <p class="text-sm">暂无用户数据</p>
@@ -198,7 +199,10 @@
       <!-- 分页 -->
       <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
         <div class="text-sm text-slate-500">
-          共 {{ total }} 条记录
+          <span>共 {{ total }} 条记录</span>
+          <span v-if="selectedUsers.length > 0" class="ml-3 text-blue-600 font-medium">
+            共选中 {{ selectedUsers.length }} 项数据
+          </span>
         </div>
         <el-pagination
             v-model:current-page="currentPage"
@@ -214,7 +218,7 @@
       </div>
     </div>
 
-    <!-- 优化后的角色分配抽屉 -->
+    <!-- 角色分配抽屉 -->
     <el-drawer
         v-model="roleDrawerVisible"
         :title="`分配角色 - ${currentUser?.username || ''}`"

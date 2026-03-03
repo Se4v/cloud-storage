@@ -9,6 +9,9 @@ import Recovery from "@/views/Recovery.vue";
 import AdminLayout from "@/components/AdminLayout.vue";
 import NoticeMange from "@/views/admin/NoticeMange.vue";
 import UserMange from "@/views/admin/UserMange.vue";
+import PermissionMange from "@/views/admin/PermissionMange.vue";
+import RoleMange from "@/views/admin/RoleMange.vue";
+import OrgMange from "@/views/admin/OrgMange.vue";
 
 const routes = [
     {
@@ -63,6 +66,21 @@ const routes = [
                 name: 'UserMange',
                 component: UserMange
             },
+            {
+                path: 'permission',
+                name: 'PermissionMange',
+                component: PermissionMange
+            },
+            {
+                path: 'role',
+                name: 'RoleMange',
+                component: RoleMange
+            },
+            {
+                path: 'org',
+                name: 'OrgMange',
+                component: OrgMange
+            }
         ]
     }
 
