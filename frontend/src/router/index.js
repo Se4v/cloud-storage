@@ -8,6 +8,7 @@ import Profile from '@/views/Profile.vue';
 import Recovery from "@/views/Recovery.vue";
 import AdminLayout from "@/components/AdminLayout.vue";
 import NoticeMange from "@/views/admin/NoticeMange.vue";
+import UserMange from "@/views/admin/UserMange.vue";
 
 const routes = [
     {
@@ -56,6 +57,11 @@ const routes = [
                 path: 'notice',
                 name: 'NoticeMange',
                 component: NoticeMange
+            },
+            {
+                path: 'user',
+                name: 'UserMange',
+                component: UserMange
             },
         ]
     }
