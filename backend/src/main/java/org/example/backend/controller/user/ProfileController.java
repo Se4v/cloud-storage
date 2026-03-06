@@ -19,6 +19,10 @@ public class ProfileController {
     @Autowired
     private ProfileService profileService;
 
+    /**
+     * 获取个人信息
+     * @return
+     */
     @GetMapping
     public Result<ProfileView> getProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -37,6 +41,10 @@ public class ProfileController {
         return Result.success("", view);
     }
 
+    /**
+     * 获取头像链接
+     * @return
+     */
     @GetMapping("/avatar")
     public Result<String> getAvatar() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -47,6 +55,11 @@ public class ProfileController {
         return Result.success("", avatarUrl);
     }
 
+    /**
+     * 更新个人信息
+     * @param args
+     * @return
+     */
     @PostMapping
     public Result<Void> updateProfile(@RequestBody UpdateProfileArgs args) {
         profileService.updateProfile(args);
@@ -54,6 +67,11 @@ public class ProfileController {
         return Result.success("");
     }
 
+    /**
+     * 上传头像
+     * @param args
+     * @return
+     */
     @PostMapping("/avatar")
     public Result<Void> uploadAvatar(@ModelAttribute UploadAvatarArgs args) {
         profileService.uploadAvatar(args);
@@ -61,6 +79,11 @@ public class ProfileController {
         return Result.success("");
     }
 
+    /**
+     * 修改密码
+     * @param args
+     * @return
+     */
     @PostMapping("/password")
     public Result<Void> updatePassword(@RequestBody ChangePasswordArgs args) {
         profileService.updatePassword(args);

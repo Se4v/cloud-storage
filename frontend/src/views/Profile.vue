@@ -20,7 +20,7 @@
                       class="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-md ring-4 ring-slate-50"
                       v-if="!userInfo.avatar"
                   >
-                    {{ userInfo.realName.charAt(0) }}
+                    {{ userInfo.realName ? userInfo.realName.charAt(0) : '?' }}
                   </div>
                   <img
                       v-else
@@ -260,7 +260,7 @@
                   </div>
                   <div>
                     <p class="font-medium text-slate-900">账户安全</p>
-                    <p class="text-xs text-slate-500 mt-0.5">上次登录：2024-01-15 14:30</p>
+                    <p class="text-xs text-slate-500 mt-0.5">用户ID: {{ userInfo.userId }}</p>
                   </div>
                 </div>
               </div>
@@ -273,8 +273,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick } from 'vue'
+import { ref, reactive, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import {
   User,
   Message,
@@ -287,6 +288,19 @@ import {
   CircleCheck
 } from '@element-plus/icons-vue'
 
+// API 基础配置
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取请求配置（包含认证头）
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
+  }
+}
+
 // 上传组件引用
 const uploadRef = ref(null)
 const emailInputRef = ref(null)
@@ -295,11 +309,12 @@ const passwordFormRef = ref(null)
 
 // 用户信息
 const userInfo = reactive({
-  username: 'zhangsan',
-  realName: '张三',
-  email: 'zhangsan@company.com',
-  phone: '13800138000',
-  avatar: '' // 空则显示文字头像
+  userId: '',
+  username: '',
+  realName: '',
+  email: '',
+  phone: '',
+  avatar: ''
 })
 
 // 编辑状态
@@ -340,16 +355,42 @@ const passwordRules = {
   ]
 }
 
+// 获取个人信息
+const fetchProfile = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/profile`, getAuthConfig())
+    const { code, data, msg } = response.data
+    
+    if (code === 200 && data) {
+      userInfo.userId = data.userId
+      userInfo.username = data.username
+      userInfo.realName = data.realName
+      userInfo.email = data.email
+      userInfo.phone = data.mobile || ''
+      userInfo.avatar = data.avatar || ''
+    } else {
+      ElMessage.error(msg || '获取个人信息失败')
+    }
+  } catch (error) {
+    console.error('获取个人信息失败:', error)
+    const errorMsg = error.response?.data?.msg || error.message || '获取个人信息失败，请检查网络连接'
+    ElMessage.error(errorMsg)
+  }
+}
+
+// 页面加载时获取个人信息
+onMounted(() => {
+  fetchProfile()
+})
+
 // 触发头像上传
 const triggerUpload = () => {
-  // 模拟点击 upload 组件的触发器
   const input = document.querySelector('.el-upload input')
   if (input) input.click()
 }
 
 // 处理头像变更
-const handleAvatarChange = (file) => {
-  // 前端预览（实际项目中应上传至服务器）
+const handleAvatarChange = async (file) => {
   const isJPG = file.raw.type === 'image/jpeg'
   const isPNG = file.raw.type === 'image/png'
   const isLt2M = file.raw.size / 1024 / 1024 < 2
@@ -363,13 +404,35 @@ const handleAvatarChange = (file) => {
     return
   }
 
-  // 本地预览
-  const reader = new FileReader()
-  reader.readAsDataURL(file.raw)
-  reader.onload = () => {
-    userInfo.avatar = reader.result
-    ElMessage.success('头像更新成功')
-    // 实际项目中这里调用 API 上传文件
+  // 构建 FormData 上传头像
+  const formData = new FormData()
+  formData.append('file', file.raw)
+  formData.append('fileName', file.name)
+  formData.append('mimeType', file.raw.type)
+  formData.append('fileSize', file.raw.size)
+
+  try {
+    const config = getAuthConfig()
+    config.headers['Content-Type'] = 'multipart/form-data'
+    
+    const response = await axios.post(`${API_BASE_URL}/api/profile/avatar`, formData, config)
+    const { code, msg } = response.data
+    
+    if (code === 200) {
+      // 本地预览
+      const reader = new FileReader()
+      reader.readAsDataURL(file.raw)
+      reader.onload = () => {
+        userInfo.avatar = reader.result
+        ElMessage.success('头像更新成功')
+      }
+    } else {
+      ElMessage.error(msg || '头像上传失败')
+    }
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    const errorMsg = error.response?.data?.msg || error.message || '头像上传失败，请重试'
+    ElMessage.error(errorMsg)
   }
 }
 
@@ -405,13 +468,27 @@ const saveField = async (field) => {
 
   saving.value = true
   try {
-    // 模拟 API 调用
-    await new Promise(resolve => setTimeout(resolve, 800))
-    userInfo[field] = tempValue.value
-    ElMessage.success('修改成功')
-    editingField.value = ''
+    // 构建更新参数
+    const updateData = {
+      userId: userInfo.userId,
+      email: field === 'email' ? tempValue.value : userInfo.email,
+      mobile: field === 'phone' ? tempValue.value : userInfo.phone
+    }
+    
+    const response = await axios.post(`${API_BASE_URL}/api/profile`, updateData, getAuthConfig())
+    const { code, msg } = response.data
+    
+    if (code === 200) {
+      userInfo[field] = tempValue.value
+      ElMessage.success('修改成功')
+      editingField.value = ''
+    } else {
+      ElMessage.error(msg || '保存失败，请重试')
+    }
   } catch (error) {
-    ElMessage.error('保存失败，请重试')
+    console.error('保存失败:', error)
+    const errorMsg = error.response?.data?.msg || error.message || '保存失败，请重试'
+    ElMessage.error(errorMsg)
   } finally {
     saving.value = false
   }
@@ -431,15 +508,29 @@ const handleUpdatePassword = async () => {
     if (valid) {
       passwordLoading.value = true
       try {
-        // 模拟 API 调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        ElMessage.success('密码修改成功，请重新登录')
-        // 清空表单
-        passwordForm.oldPassword = ''
-        passwordForm.newPassword = ''
-        passwordForm.confirmPassword = ''
+        const passwordData = {
+          userId: userInfo.userId,
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword,
+          confirmPassword: passwordForm.confirmPassword
+        }
+        
+        const response = await axios.post(`${API_BASE_URL}/api/profile/password`, passwordData, getAuthConfig())
+        const { code, msg } = response.data
+        
+        if (code === 200) {
+          ElMessage.success('密码修改成功，请重新登录')
+          // 清空表单
+          passwordForm.oldPassword = ''
+          passwordForm.newPassword = ''
+          passwordForm.confirmPassword = ''
+        } else {
+          ElMessage.error(msg || '密码修改失败')
+        }
       } catch (error) {
-        ElMessage.error('密码修改失败')
+        console.error('密码修改失败:', error)
+        const errorMsg = error.response?.data?.msg || error.message || '密码修改失败'
+        ElMessage.error(errorMsg)
       } finally {
         passwordLoading.value = false
       }
