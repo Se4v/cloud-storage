@@ -6,9 +6,5 @@ import org.example.backend.model.entity.User;
 import java.util.List;
 
 public interface UserMapper extends BaseMapper<User> {
-    Integer updateSelectiveByUserId(User user, Long userId);
-
-    User selectByUserId(Long id);
-
     List<String> selectGlobalRolesByUserId(Long id);
 }

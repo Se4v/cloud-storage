@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class UpdateProfileArgs {
+    private Long userId;
     private String email;
     private String mobile;
 }

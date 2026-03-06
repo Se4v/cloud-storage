@@ -29,6 +29,7 @@ public class EnterpriseController {
     @Autowired
     private EntryService entryService;
 
+    @PostMapping("")
     public Result<?> getUserOwnedOrgTree() {
         return null;
     }

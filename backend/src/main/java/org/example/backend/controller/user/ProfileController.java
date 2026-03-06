@@ -5,6 +5,7 @@ import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.ChangePasswordArgs;
 import org.example.backend.model.args.UpdateProfileArgs;
 import org.example.backend.model.args.UploadAvatarArgs;
+import org.example.backend.model.entity.User;
 import org.example.backend.model.view.ProfileView;
 import org.example.backend.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +19,26 @@ public class ProfileController {
     @Autowired
     private ProfileService profileService;
 
-    @GetMapping()
+    @GetMapping
     public Result<ProfileView> getProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        ProfileView view = profileService.getProfile(userDetails.getUserId());
+        User user = profileService.getProfile(userDetails.getUserId());
+        ProfileView view = ProfileView.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .realName(user.getRealName())
+                .avatar(user.getAvatar())
+                .mobile(user.getMobile())
+                .email(user.getEmail())
+                .build();
 
         return Result.success("", view);
     }
 
     @GetMapping("/avatar")
-    public Result<?> getAvatar() {
+    public Result<String> getAvatar() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
@@ -38,32 +47,23 @@ public class ProfileController {
         return Result.success("", avatarUrl);
     }
 
-    @PostMapping()
+    @PostMapping
     public Result<Void> updateProfile(@RequestBody UpdateProfileArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-
-        profileService.updateProfile(args, userDetails.getUserId());
+        profileService.updateProfile(args);
 
         return Result.success("");
     }
 
-    @PostMapping("/upload")
-    public Result<Void> uploadAvatar(@RequestBody UploadAvatarArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-
-        profileService.uploadAvatar(args, userDetails.getUserId());
+    @PostMapping("/avatar")
+    public Result<Void> uploadAvatar(@ModelAttribute UploadAvatarArgs args) {
+        profileService.uploadAvatar(args);
 
         return Result.success("");
     }
 
     @PostMapping("/password")
-    public Result<Void> changePassword(@RequestBody ChangePasswordArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-
-        profileService.changePassword(args, userDetails.getUserId());
+    public Result<Void> updatePassword(@RequestBody ChangePasswordArgs args) {
+        profileService.updatePassword(args);
 
         return Result.success("");
     }
