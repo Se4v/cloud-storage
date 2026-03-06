@@ -143,18 +143,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   <label class="text-sm font-medium text-slate-700">手机号</label>
                   <div class="md:col-span-2">
-                    <div v-if="editingField !== 'phone'" class="flex items-center gap-3">
+                    <div v-if="editingField !== 'mobile'" class="flex items-center gap-3">
                       <el-input
-                          v-model="userInfo.phone"
+                          v-model="userInfo.mobile"
                           readonly
                           class="w-full"
-                          :prefix-icon="Phone"
+                          :prefix-icon="Iphone"
                       />
                       <el-button
                           text
                           type="primary"
                           class="!rounded-md"
-                          @click="startEdit('phone')"
+                          @click="startEdit('mobile')"
                       >
                         <el-icon class="mr-1"><Edit /></el-icon>
                         修改
@@ -165,14 +165,14 @@
                           v-model="tempValue"
                           placeholder="请输入新手机号"
                           class="w-full"
-                          :prefix-icon="Phone"
-                          ref="phoneInputRef"
+                          :prefix-icon="Iphone"
+                          ref="mobileInputRef"
                       />
                       <el-button
                           type="primary"
                           class="!rounded-md"
                           :loading="saving"
-                          @click="saveField('phone')"
+                          @click="saveField('mobile')"
                       >
                         <el-icon><Check /></el-icon>
                       </el-button>
@@ -279,7 +279,7 @@ import axios from 'axios'
 import {
   User,
   Message,
-  Phone,
+  Iphone,
   Lock,
   Camera,
   Edit,
@@ -304,7 +304,7 @@ const getAuthConfig = () => {
 // 上传组件引用
 const uploadRef = ref(null)
 const emailInputRef = ref(null)
-const phoneInputRef = ref(null)
+const mobileInputRef = ref(null)
 const passwordFormRef = ref(null)
 
 // 用户信息
@@ -313,7 +313,7 @@ const userInfo = reactive({
   username: '',
   realName: '',
   email: '',
-  phone: '',
+  mobile: '',
   avatar: ''
 })
 
@@ -366,7 +366,7 @@ const fetchProfile = async () => {
       userInfo.username = data.username
       userInfo.realName = data.realName
       userInfo.email = data.email
-      userInfo.phone = data.mobile || ''
+      userInfo.mobile = data.mobile || ''
       userInfo.avatar = data.avatar || ''
     } else {
       ElMessage.error(msg || '获取个人信息失败')
@@ -443,8 +443,8 @@ const startEdit = (field) => {
   nextTick(() => {
     if (field === 'email' && emailInputRef.value) {
       emailInputRef.value.focus()
-    } else if (field === 'phone' && phoneInputRef.value) {
-      phoneInputRef.value.focus()
+    } else if (field === 'mobile' && mobileInputRef.value) {
+      mobileInputRef.value.focus()
     }
   })
 }
@@ -461,7 +461,7 @@ const saveField = async (field) => {
     ElMessage.error('邮箱格式不正确')
     return
   }
-  if (field === 'phone' && !/^1[3-9]\d{9}$/.test(tempValue.value)) {
+  if (field === 'mobile' && !/^1[3-9]\d{9}$/.test(tempValue.value)) {
     ElMessage.error('手机号格式不正确')
     return
   }
@@ -472,7 +472,7 @@ const saveField = async (field) => {
     const updateData = {
       userId: userInfo.userId,
       email: field === 'email' ? tempValue.value : userInfo.email,
-      mobile: field === 'phone' ? tempValue.value : userInfo.phone
+      mobile: field === 'mobile' ? tempValue.value : userInfo.mobile
     }
     
     const response = await axios.post(`${API_BASE_URL}/api/profile`, updateData, getAuthConfig())
