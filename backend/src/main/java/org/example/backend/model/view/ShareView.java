@@ -7,8 +7,6 @@ import lombok.Data;
 @Builder
 public class ShareView {
     private String shareId;
-    private String driveId;
-    private String driveName;
     private String linkName;
     private String linkKey;
     private String expireTime;

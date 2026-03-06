@@ -3,7 +3,6 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.model.args.CreateShareLinkArgs;
@@ -17,9 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ShareService {
@@ -27,41 +24,23 @@ public class ShareService {
     private ShareMapper shareMapper;
     @Autowired
     private EntryMapper entryMapper;
-    @Autowired
-    private DriveMapper driveMapper;
 
     private static final int DELETED = 1;
     private static final int UNDELETED = 0;
 
     public List<ShareDetailResult> listLinks(Long userId) {
-        // 1查询分享链接列表
+        // 查询分享链接列表
         LambdaQueryWrapper<Share> shareQuery = new LambdaQueryWrapper<>();
         shareQuery.eq(Share::getUserId, userId);
         List<Share> shareList = shareMapper.selectList(shareQuery);
 
         if (shareList == null || shareList.isEmpty()) return List.of();
 
-        // 提取driveIds并查询对应的Drive信息
-        List<Long> driveIds = shareList.stream()
-                .map(Share::getDriveId)
-                .distinct()
-                .toList();
-
-
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.in(Drive::getId, driveIds);
-        List<Drive> driveList = driveMapper.selectList(driveQuery);
-
-        // Drive列表转为Map
-        Map<Long, Drive> driveMap = driveList.stream()
-                .collect(Collectors.toMap(Drive::getId, drive -> drive));
-
         // 合并数据
         List<ShareDetailResult> results = shareList.stream()
                 .map(share -> {
                     ShareDetailResult result = new ShareDetailResult();
                     result.setShareId(share.getId());
-                    result.setDriveId(share.getDriveId());
                     result.setLinkName(share.getLinkName());
                     result.setLinkKey(share.getLinkKey());
                     result.setExpiredAt(share.getExpiredAt());
@@ -113,7 +92,6 @@ public class ShareService {
         updateWrapper.set(args.getLinkName() != null, Share::getLinkName, args.getLinkName())
                 .set(args.getAccessCode() != null, Share::getAccessCode, args.getAccessCode())
                 .set(args.getLinkType() != null, Share::getLinkType, args.getLinkType())
-                .set(args.getDeleted() != null, Share::getDeleted, args.getDeleted())
                 .set(args.getExpiredAt() != null, Share::getExpiredAt, args.getExpiredAt())
                 .eq(Share::getId, args.getShareId());
 

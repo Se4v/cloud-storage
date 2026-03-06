@@ -8,8 +8,7 @@ import java.time.LocalDateTime;
 public class UpdateShareLinkArgs {
     private Long shareId;
     private String linkName;
-    private String accessCode;
     private Integer linkType;
-    private Integer deleted;
+    private String accessCode;
     private LocalDateTime expiredAt;
 }

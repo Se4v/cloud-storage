@@ -190,21 +190,17 @@ const linkList = ref([
     id: '1',
     name: '腾讯云企业网盘使用手册.pdf',
     type: 'file',
-    fileType: 'pdf',
     expireTime: '2022-09-22 11:08:34',
     createTime: '2022-09-21 11:08:34',
     isProtected: false,
-    status: 'expired'
   },
   {
     id: '2',
     name: '新建 Word 文档 (2).docx',
     type: 'file',
-    fileType: 'word',
     expireTime: '2022-09-15 10:46:56',
     createTime: '2022-09-14 10:46:56',
-    isProtected: true,
-    status: 'expired'
+    isProtected: true
   },
   {
     id: '3',
@@ -212,29 +208,20 @@ const linkList = ref([
     type: 'folder',
     expireTime: '2022-09-21 10:34:16',
     createTime: '2022-09-14 10:34:19',
-    isProtected: false,
-    status: 'expired'
+    isProtected: false
   }
 ])
 
 // 获取文件图标背景色
 const getFileIconBg = (row) => {
   if (row.type === 'folder') return 'bg-blue-100'
-  if (row.fileType === 'pdf') return 'bg-red-100'
-  if (row.fileType === 'word') return 'bg-blue-100'
-  if (row.fileType === 'excel') return 'bg-green-100'
-  if (row.fileType === 'image') return 'bg-purple-100'
-  return 'bg-blue-100'
+  return 'bg-slate-100'
 }
 
 // 获取文件图标颜色
 const getFileIconColor = (row) => {
   if (row.type === 'folder') return 'text-blue-600'
-  if (row.fileType === 'pdf') return 'text-red-600'
-  if (row.fileType === 'word') return 'text-blue-600'
-  if (row.fileType === 'excel') return 'text-green-600'
-  if (row.fileType === 'image') return 'text-purple-600'
-  return 'text-blue-600'
+  return 'text-slate-600'
 }
 
 // 获取过期状态
@@ -244,7 +231,18 @@ const getExpireStatus = (row) => {
     warning: { label: '即将过期', class: 'bg-amber-50 text-amber-700 border-amber-200' },
     active: { label: '有效', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
   }
-  return statusMap[row.status] || statusMap.active
+  
+  const now = new Date().getTime()
+  const expireTime = new Date(row.expireTime).getTime()
+  const sevenDays = 7 * 24 * 60 * 60 * 1000 // 7天的毫秒数
+  
+  if (now > expireTime) {
+    return statusMap.expired
+  } else if (expireTime - now < sevenDays) {
+    return statusMap.warning
+  } else {
+    return statusMap.active
+  }
 }
 
 // 选择变化
