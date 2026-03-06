@@ -75,12 +75,6 @@
                       <span>有密码</span>
                     </span>
                   </div>
-                  <!-- 第二行：大小和路径 -->
-                  <div class="mt-1 text-xs text-slate-500 flex items-center gap-2">
-                    <span>{{ row.size || '—' }}</span>
-                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                    <span class="truncate max-w-[200px]">{{ row.path }}</span>
-                  </div>
                 </div>
               </div>
             </template>
@@ -197,8 +191,6 @@ const linkList = ref([
     name: '腾讯云企业网盘使用手册.pdf',
     type: 'file',
     fileType: 'pdf',
-    size: '2.4 MB',
-    path: '/企业文档/产品资料',
     expireTime: '2022-09-22 11:08:34',
     createTime: '2022-09-21 11:08:34',
     isProtected: false,
@@ -209,8 +201,6 @@ const linkList = ref([
     name: '新建 Word 文档 (2).docx',
     type: 'file',
     fileType: 'word',
-    size: '156 KB',
-    path: '/个人文档/工作资料',
     expireTime: '2022-09-15 10:46:56',
     createTime: '2022-09-14 10:46:56',
     isProtected: true,
@@ -220,8 +210,6 @@ const linkList = ref([
     id: '3',
     name: '企业网盘移动端图标规范',
     type: 'folder',
-    size: null,
-    path: '/设计规范',
     expireTime: '2022-09-21 10:34:16',
     createTime: '2022-09-14 10:34:19',
     isProtected: false,
