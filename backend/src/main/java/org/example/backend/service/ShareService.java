@@ -1,12 +1,14 @@
 package org.example.backend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.model.args.CreateShareLinkArgs;
 import org.example.backend.model.args.UpdateShareLinkArgs;
+import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.result.ShareDetailResult;
@@ -15,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ShareService {
@@ -23,66 +27,108 @@ public class ShareService {
     private ShareMapper shareMapper;
     @Autowired
     private EntryMapper entryMapper;
+    @Autowired
+    private DriveMapper driveMapper;
 
-    public List<ShareDetailResult> getAllShareLinks(Long userId) {
-        return shareMapper.selectAllByUserId(userId);
+    private static final int DELETED = 1;
+    private static final int UNDELETED = 0;
+
+    public List<ShareDetailResult> listLinks(Long userId) {
+        // 1查询分享链接列表
+        LambdaQueryWrapper<Share> shareQuery = new LambdaQueryWrapper<>();
+        shareQuery.eq(Share::getUserId, userId);
+        List<Share> shareList = shareMapper.selectList(shareQuery);
+
+        if (shareList == null || shareList.isEmpty()) return List.of();
+
+        // 提取driveIds并查询对应的Drive信息
+        List<Long> driveIds = shareList.stream()
+                .map(Share::getDriveId)
+                .distinct()
+                .toList();
+
+
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.in(Drive::getId, driveIds);
+        List<Drive> driveList = driveMapper.selectList(driveQuery);
+
+        // Drive列表转为Map
+        Map<Long, Drive> driveMap = driveList.stream()
+                .collect(Collectors.toMap(Drive::getId, drive -> drive));
+
+        // 合并数据
+        List<ShareDetailResult> results = shareList.stream()
+                .map(share -> {
+                    ShareDetailResult result = new ShareDetailResult();
+                    result.setShareId(share.getId());
+                    result.setDriveId(share.getDriveId());
+                    result.setLinkName(share.getLinkName());
+                    result.setLinkKey(share.getLinkKey());
+                    result.setExpiredAt(share.getExpiredAt());
+                    result.setCreatedAt(share.getCreatedAt());
+
+                    Drive drive = driveMap.get(share.getDriveId());
+                    if (drive != null) {
+                        result.setDriveName(drive.getDriveName());
+                    } else {
+                        result.setDriveName("未知");
+                    }
+
+                    return result;
+                })
+                .toList();
+
+        return results;
     }
 
     @Transactional
-    public void createShareLink(CreateShareLinkArgs args, Long userId) {
-        Entry existEntry = entryMapper.selectById(args.getEntryId());
-        if (existEntry == null) {
-            throw new BusinessException("Entry does not exist");
-        }
+    public void createLink(CreateShareLinkArgs args, Long userId) {
+        // 判断文件条目是否存在
+        Entry entry = entryMapper.selectById(args.getEntryId());
+        if (entry == null) throw new BusinessException("文件条目不存在");
 
         int count = shareMapper.insert(Share.builder()
                         .driveId(args.getDriveId())
-                        .entryId(existEntry.getId())
-                        .entryType(existEntry.getEntryType())
+                        .entryId(entry.getId())
+                        .entryType(entry.getEntryType())
                         .userId(userId)
                         .linkName(args.getLinkName())
                         .linkKey(generateLinkKey())
                         .linkType(args.getLinkType())
                         .accessCode(args.getAccessCode())
-                        .deleted(0)
+                        .deleted(UNDELETED)
                         .expiredAt(args.getExpireTime())
                         .build());
-        if (count != 1) {
-            throw new BusinessException("Create share link failed");
-        }
+
+        if (count != 1) throw new BusinessException("Create share link failed");
     }
 
     @Transactional
-    public void updateShareLink(UpdateShareLinkArgs args) {
-        Share exist = shareMapper.selectById(args.getShareId());
-        if (exist == null || exist.getDeleted() == 1) {
-            throw new BusinessException("Share does not exist");
-        }
+    public void updateLink(UpdateShareLinkArgs args) {
+        // 判断分享链接是否存在
+        Share link = shareMapper.selectById(args.getShareId());
+        if (link == null || link.getDeleted() == DELETED) throw new BusinessException("分享链接不存在");
 
-        Share share = Share.builder()
-                .linkName(args.getLinkName())
-                .linkType(args.getLinkType())
-                .accessCode(args.getAccessCode())
-                .deleted(args.getDeleted())
-                .expiredAt(args.getExpireTime())
-                .build();
+        LambdaUpdateWrapper<Share> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.set(args.getLinkName() != null, Share::getLinkName, args.getLinkName())
+                .set(args.getAccessCode() != null, Share::getAccessCode, args.getAccessCode())
+                .set(args.getLinkType() != null, Share::getLinkType, args.getLinkType())
+                .set(args.getDeleted() != null, Share::getDeleted, args.getDeleted())
+                .set(args.getExpiredAt() != null, Share::getExpiredAt, args.getExpiredAt())
+                .eq(Share::getId, args.getShareId());
 
-        int count = shareMapper.updateByShareId(share, args.getShareId());
-        if (count != 1) {
-            throw new BusinessException("Update share link failed");
-        }
+        int count = shareMapper.update(updateWrapper);
+        if (count != 1) throw new BusinessException("更新分享链接信息失败");
     }
 
     @Transactional
-    public void deleteShareLinks(List<Long> shareIds) {
-        LambdaUpdateWrapper<Share> wrapper = Wrappers.<Share>lambdaUpdate();
-        wrapper.in(Share::getId, shareIds)
-                .set(Share::getDeleted, 1);
+    public void deleteLinks(List<Long> shareIds) {
+        LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.set(Share::getDeleted, DELETED)
+                .in(Share::getId, shareIds);
 
         int count = shareMapper.update(wrapper);
-        if (count != shareIds.size()) {
-            throw new BusinessException("Delete share link failed");
-        }
+        if (count != shareIds.size()) throw new BusinessException("删除分享链接失败");
     }
 
     private String generateLinkKey() {

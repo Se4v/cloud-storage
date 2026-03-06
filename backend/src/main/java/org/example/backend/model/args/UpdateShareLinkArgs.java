@@ -11,5 +11,5 @@ public class UpdateShareLinkArgs {
     private String accessCode;
     private Integer linkType;
     private Integer deleted;
-    private LocalDateTime expireTime;
+    private LocalDateTime expiredAt;
 }

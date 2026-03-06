@@ -21,7 +21,7 @@ public class ProfileController {
 
     /**
      * 获取个人信息
-     * @return
+     * @return 个人信息视图对象
      */
     @GetMapping
     public Result<ProfileView> getProfile() {
@@ -43,7 +43,7 @@ public class ProfileController {
 
     /**
      * 获取头像链接
-     * @return
+     * @return 头像URL字符串
      */
     @GetMapping("/avatar")
     public Result<String> getAvatar() {
@@ -57,8 +57,8 @@ public class ProfileController {
 
     /**
      * 更新个人信息
-     * @param args
-     * @return
+     * @param args 个人信息更新参数（不含密码、头像）
+     * @return 空响应
      */
     @PostMapping
     public Result<Void> updateProfile(@RequestBody UpdateProfileArgs args) {
@@ -69,8 +69,8 @@ public class ProfileController {
 
     /**
      * 上传头像
-     * @param args
-     * @return
+     * @param args 头像上传参数（包含头像文件）
+     * @return 空响应
      */
     @PostMapping("/avatar")
     public Result<Void> uploadAvatar(@ModelAttribute UploadAvatarArgs args) {
@@ -81,8 +81,8 @@ public class ProfileController {
 
     /**
      * 修改密码
-     * @param args
-     * @return
+     * @param args 密码修改参数（原密码、新密码）
+     * @return 空响应
      */
     @PostMapping("/password")
     public Result<Void> updatePassword(@RequestBody ChangePasswordArgs args) {

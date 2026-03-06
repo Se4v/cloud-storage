@@ -9,8 +9,8 @@ public class ShareView {
     private String shareId;
     private String driveId;
     private String driveName;
-    private String shareLinkName;
-    private String shareLinkKey;
+    private String linkName;
+    private String linkKey;
     private String expireTime;
     private String createTime;
 }

@@ -25,7 +25,7 @@ public class ShareController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        List<ShareDetailResult> results = shareService.getAllShareLinks(userDetails.getUserId());
+        List<ShareDetailResult> results = shareService.listLinks(userDetails.getUserId());
 
         List<ShareView> views = results.stream()
                 .map(result -> {
@@ -33,8 +33,8 @@ public class ShareController {
                             .shareId(result.getShareId().toString())
                             .driveId(result.getDriveId().toString())
                             .driveName(result.getDriveName())
-                            .shareLinkName(result.getShareLinkName())
-                            .shareLinkKey(result.getShareLinkKey())
+                            .linkName(result.getLinkName())
+                            .linkKey(result.getLinkKey())
                             .expireTime(result.getExpiredAt().toString())
                             .createTime(result.getCreatedAt().toString())
                             .build();
@@ -49,21 +49,21 @@ public class ShareController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        shareService.createShareLink(args, userDetails.getUserId());
+        shareService.createLink(args, userDetails.getUserId());
 
         return Result.success();
     }
 
     @PostMapping("/update")
     public Result<Void> updateLink(@RequestBody UpdateShareLinkArgs args) {
-        shareService.updateShareLink(args);
+        shareService.updateLink(args);
 
         return Result.success();
     }
 
     @PostMapping("/delete")
     public Result<Void> deleteLinks(@RequestBody List<Long> shareIds) {
-        shareService.deleteShareLinks(shareIds);
+        shareService.deleteLinks(shareIds);
 
         return Result.success();
     }
