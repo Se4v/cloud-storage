@@ -4,11 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 public class ShareView {
-    private String shareId;
-    private String linkName;
-    private String linkKey;
+    private String id;
+    private String name;
+    private String type;
+    private String key;
     private String expireTime;
     private String createTime;
+    private Boolean isProtected;
 }

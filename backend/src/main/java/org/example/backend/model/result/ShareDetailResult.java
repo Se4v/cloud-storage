@@ -6,10 +6,11 @@ import java.time.LocalDateTime;
 
 @Data
 public class ShareDetailResult {
-    private Long shareId;
+    private Long id;
     private String linkName;
+    private Integer entryType;
     private String linkKey;
-    private Boolean isProtected;
     private LocalDateTime expiredAt;
     private LocalDateTime createdAt;
+    private Boolean isProtected;
 }

@@ -29,15 +29,17 @@ public class ShareController {
 
         List<ShareView> views = results.stream()
                 .map(result -> {
-                    return ShareView.builder()
-                            .shareId(result.getShareId().toString())
-                            .driveId(result.getDriveId().toString())
-                            .driveName(result.getDriveName())
-                            .linkName(result.getLinkName())
-                            .linkKey(result.getLinkKey())
-                            .expireTime(result.getExpiredAt().toString())
-                            .createTime(result.getCreatedAt().toString())
-                            .build();
+                    ShareView shareView = new ShareView();
+
+                    shareView.setId(String.valueOf(result.getId()));
+                    shareView.setName(result.getLinkName());
+                    shareView.setType(result.getEntryType() == 1 ? "file" : "folder");
+                    shareView.setKey(result.getLinkKey());
+                    shareView.setExpireTime(String.valueOf(result.getExpiredAt()));
+                    shareView.setCreateTime(String.valueOf(result.getCreatedAt()));
+                    shareView.setIsProtected(result.getIsProtected());
+
+                    return shareView;
                 })
                 .toList();
 

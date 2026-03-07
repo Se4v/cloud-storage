@@ -37,27 +37,21 @@ public class ShareService {
         if (shareList == null || shareList.isEmpty()) return List.of();
 
         // 合并数据
-        List<ShareDetailResult> results = shareList.stream()
+        return shareList.stream()
                 .map(share -> {
                     ShareDetailResult result = new ShareDetailResult();
-                    result.setShareId(share.getId());
+
+                    result.setId(share.getId());
                     result.setLinkName(share.getLinkName());
+                    result.setEntryType(share.getEntryType());
                     result.setLinkKey(share.getLinkKey());
                     result.setExpiredAt(share.getExpiredAt());
                     result.setCreatedAt(share.getCreatedAt());
-
-                    Drive drive = driveMap.get(share.getDriveId());
-                    if (drive != null) {
-                        result.setDriveName(drive.getDriveName());
-                    } else {
-                        result.setDriveName("未知");
-                    }
+                    result.setIsProtected(!share.getAccessCode().isEmpty());
 
                     return result;
                 })
                 .toList();
-
-        return results;
     }
 
     @Transactional
@@ -88,6 +82,7 @@ public class ShareService {
         Share link = shareMapper.selectById(args.getShareId());
         if (link == null || link.getDeleted() == DELETED) throw new BusinessException("分享链接不存在");
 
+        // 更新链接信息
         LambdaUpdateWrapper<Share> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(args.getLinkName() != null, Share::getLinkName, args.getLinkName())
                 .set(args.getAccessCode() != null, Share::getAccessCode, args.getAccessCode())
