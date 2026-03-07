@@ -4,7 +4,7 @@ import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.CreateShareLinkArgs;
 import org.example.backend.model.args.UpdateShareLinkArgs;
-import org.example.backend.model.result.ShareDetailResult;
+import org.example.backend.model.entity.Share;
 import org.example.backend.model.view.ShareView;
 import org.example.backend.service.ShareService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,29 +15,29 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user/share")
+@RequestMapping("/api/link")
 public class ShareController {
     @Autowired
     private ShareService shareService;
 
-    @GetMapping()
+    @GetMapping
     public Result<List<ShareView>> listLinks() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        List<ShareDetailResult> results = shareService.listLinks(userDetails.getUserId());
+        List<Share> shareList = shareService.listLinks(userDetails.getUserId());
 
-        List<ShareView> views = results.stream()
-                .map(result -> {
+        List<ShareView> views = shareList.stream()
+                .map(share -> {
                     ShareView shareView = new ShareView();
 
-                    shareView.setId(String.valueOf(result.getId()));
-                    shareView.setName(result.getLinkName());
-                    shareView.setType(result.getEntryType() == 1 ? "file" : "folder");
-                    shareView.setKey(result.getLinkKey());
-                    shareView.setExpireTime(String.valueOf(result.getExpiredAt()));
-                    shareView.setCreateTime(String.valueOf(result.getCreatedAt()));
-                    shareView.setIsProtected(result.getIsProtected());
+                    shareView.setId(String.valueOf(share.getId()));
+                    shareView.setName(share.getLinkName());
+                    shareView.setType(share.getEntryType() == 1 ? "file" : "folder");
+                    shareView.setKey(share.getLinkKey());
+                    shareView.setExpireTime(String.valueOf(share.getExpiredAt()));
+                    shareView.setCreateTime(String.valueOf(share.getCreatedAt()));
+                    shareView.setIsProtected(!share.getAccessCode().isEmpty());
 
                     return shareView;
                 })

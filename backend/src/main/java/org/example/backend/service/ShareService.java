@@ -7,10 +7,8 @@ import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.model.args.CreateShareLinkArgs;
 import org.example.backend.model.args.UpdateShareLinkArgs;
-import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
-import org.example.backend.model.result.ShareDetailResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +26,7 @@ public class ShareService {
     private static final int DELETED = 1;
     private static final int UNDELETED = 0;
 
-    public List<ShareDetailResult> listLinks(Long userId) {
+    public List<Share> listLinks(Long userId) {
         // 查询分享链接列表
         LambdaQueryWrapper<Share> shareQuery = new LambdaQueryWrapper<>();
         shareQuery.eq(Share::getUserId, userId);
@@ -36,22 +34,7 @@ public class ShareService {
 
         if (shareList == null || shareList.isEmpty()) return List.of();
 
-        // 合并数据
-        return shareList.stream()
-                .map(share -> {
-                    ShareDetailResult result = new ShareDetailResult();
-
-                    result.setId(share.getId());
-                    result.setLinkName(share.getLinkName());
-                    result.setEntryType(share.getEntryType());
-                    result.setLinkKey(share.getLinkKey());
-                    result.setExpiredAt(share.getExpiredAt());
-                    result.setCreatedAt(share.getCreatedAt());
-                    result.setIsProtected(!share.getAccessCode().isEmpty());
-
-                    return result;
-                })
-                .toList();
+        return shareList;
     }
 
     @Transactional

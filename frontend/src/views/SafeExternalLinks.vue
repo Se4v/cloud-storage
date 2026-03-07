@@ -161,11 +161,48 @@
           @current-change="handleCurrentChange"
       />
     </div>
+
+    <!-- 编辑对话框 -->
+    <el-dialog
+        v-model="editDialogVisible"
+        title="编辑分享链接"
+        width="500px"
+        :close-on-click-modal="false"
+    >
+      <el-form :model="editForm" label-width="100px" class="mt-4">
+        <el-form-item label="链接名称">
+          <el-input v-model="editForm.linkName" placeholder="请输入链接名称" />
+        </el-form-item>
+        <el-form-item label="分享类型">
+          <el-radio-group v-model="editForm.linkType">
+            <el-radio :label="1">公开链接</el-radio>
+            <el-radio :label="2">加密链接</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="提取码" v-if="editForm.linkType === 2">
+          <el-input v-model="editForm.accessCode" placeholder="请输入提取码" maxlength="6" show-word-limit />
+        </el-form-item>
+        <el-form-item label="过期时间">
+          <el-date-picker
+              v-model="editForm.expiredAt"
+              type="datetime"
+              placeholder="选择过期时间"
+              value-format="YYYY-MM-DD HH:mm:ss"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSaveEdit" :loading="saving">保存</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document,
@@ -176,44 +213,50 @@ import {
   Edit,
   CopyDocument
 } from '@element-plus/icons-vue'
+import axios from 'axios'
 
 const loading = ref(false)
+const saving = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(20)
-const total = ref(3)
+const total = ref(0)
 const selectedLinks = ref([])
 const tableRef = ref(null)
+const linkList = ref([])
 
-// 模拟数据
-const linkList = ref([
-  {
-    id: '1',
-    name: '腾讯云企业网盘使用手册.pdf',
-    type: 'file',
-    key: 'abcd',
-    expireTime: '2022-09-22 11:08:34',
-    createTime: '2022-09-21 11:08:34',
-    isProtected: false,
-  },
-  {
-    id: '2',
-    name: '新建 Word 文档 (2).docx',
-    type: 'file',
-    key: 'abcd',
-    expireTime: '2022-09-15 10:46:56',
-    createTime: '2022-09-14 10:46:56',
-    isProtected: true
-  },
-  {
-    id: '3',
-    name: '企业网盘移动端图标规范',
-    type: 'folder',
-    key: 'abcd',
-    expireTime: '2022-09-21 10:34:16',
-    createTime: '2022-09-14 10:34:19',
-    isProtected: false
+// 编辑对话框
+const editDialogVisible = ref(false)
+const editForm = ref({
+  shareId: null,
+  linkName: '',
+  linkType: 1,
+  accessCode: '',
+  expiredAt: null
+})
+
+// 获取分享链接列表
+const fetchLinkList = async () => {
+  loading.value = true
+  try {
+    const response = await axios.get('/api/link')
+    if (response.data.code === 200) {
+      linkList.value = response.data.data || []
+      total.value = linkList.value.length
+    } else {
+      ElMessage.error(response.data.message || '获取列表失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取分享链接列表失败')
+    console.error(error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  fetchLinkList()
+})
 
 // 获取文件图标背景色
 const getFileIconBg = (row) => {
@@ -234,11 +277,11 @@ const getExpireStatus = (row) => {
     warning: { label: '即将过期', class: 'bg-amber-50 text-amber-700 border-amber-200' },
     active: { label: '有效', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
   }
-  
+
   const now = new Date().getTime()
   const expireTime = new Date(row.expireTime).getTime()
   const sevenDays = 7 * 24 * 60 * 60 * 1000 // 7天的毫秒数
-  
+
   if (now > expireTime) {
     return statusMap.expired
   } else if (expireTime - now < sevenDays) {
@@ -255,7 +298,34 @@ const handleSelectionChange = (selection) => {
 
 // 编辑
 const handleEdit = (row) => {
-  ElMessage.info(`编辑 ${row.name} 的设置`)
+  editForm.value = {
+    shareId: parseInt(row.id),
+    linkName: row.name,
+    linkType: row.isProtected ? 2 : 1,
+    accessCode: row.isProtected ? '******' : '',
+    expiredAt: row.expireTime
+  }
+  editDialogVisible.value = true
+}
+
+// 保存编辑
+const handleSaveEdit = async () => {
+  saving.value = true
+  try {
+    const response = await axios.post('/api/link/update', editForm.value)
+    if (response.data.code === 200) {
+      ElMessage.success('更新成功')
+      editDialogVisible.value = false
+      fetchLinkList()
+    } else {
+      ElMessage.error(response.data.message || '更新失败')
+    }
+  } catch (error) {
+    ElMessage.error('更新失败')
+    console.error(error)
+  } finally {
+    saving.value = false
+  }
 }
 
 // 复制链接
@@ -263,7 +333,7 @@ const handleCopyLink = async (row) => {
   const linkUrl = `http://localhost:8080/links/${row.key}`
   try {
     await navigator.clipboard.writeText(linkUrl)
-    ElMessage.success(`已复制分享链接：${linkUrl}`)
+    ElMessage.success(`已复制分享链接`)
   } catch (err) {
     ElMessage.error('复制失败，请手动复制')
   }
@@ -280,12 +350,18 @@ const handleDelete = (row) => {
         type: 'warning',
         confirmButtonClass: '!bg-red-600 !border-red-600 hover:!bg-red-700'
       }
-  ).then(() => {
-    const index = linkList.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      linkList.value.splice(index, 1)
-      total.value--
-      ElMessage.success('删除成功')
+  ).then(async () => {
+    try {
+      const response = await axios.post('/api/link/delete', [parseInt(row.id)])
+      if (response.data.code === 200) {
+        ElMessage.success('删除成功')
+        fetchLinkList()
+      } else {
+        ElMessage.error(response.data.message || '删除失败')
+      }
+    } catch (error) {
+      ElMessage.error('删除失败')
+      console.error(error)
     }
   })
 }
@@ -301,12 +377,21 @@ const handleBatchDelete = () => {
         type: 'warning',
         confirmButtonClass: '!bg-red-600 !border-red-600 hover:!bg-red-700'
       }
-  ).then(() => {
-    const ids = selectedLinks.value.map(item => item.id)
-    linkList.value = linkList.value.filter(item => !ids.includes(item.id))
-    total.value -= ids.length
-    selectedLinks.value = []
-    ElMessage.success('批量删除成功')
+  ).then(async () => {
+    try {
+      const ids = selectedLinks.value.map(item => parseInt(item.id))
+      const response = await axios.post('/api/link/delete', ids)
+      if (response.data.code === 200) {
+        ElMessage.success('批量删除成功')
+        selectedLinks.value = []
+        fetchLinkList()
+      } else {
+        ElMessage.error(response.data.message || '删除失败')
+      }
+    } catch (error) {
+      ElMessage.error('删除失败')
+      console.error(error)
+    }
   })
 }
 
