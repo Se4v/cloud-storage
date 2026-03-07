@@ -298,18 +298,6 @@ const orgTree = [
         label: '人力资源部',
         type: 'dept',
         children: []
-      },
-      {
-        id: 'dept_4',
-        label: '人力资源部',
-        type: 'dept',
-        children: []
-      },
-      {
-        id: 'dept_4',
-        label: '人力资源部',
-        type: 'dept',
-        children: []
       }
     ]
   }

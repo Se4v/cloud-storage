@@ -20,4 +20,6 @@ public interface NodeMapper extends BaseMapper<Node> {
             "WHERE n.enabled = 1 " +
             "ORDER BY n.parent_id ASC, n.id ASC")
     List<NodeDetailResult> selectNode();
+
+    List<Node> selectNodeWithParents(List<Long> id);
 }

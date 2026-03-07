@@ -58,12 +58,12 @@ public class PersonalController {
         return null;
     }
 
-    @GetMapping()
+    @GetMapping("/list")
     public Result<?> listEntries(Long parentId, Long userId) {
         return Result.success();
     }
 
-    @PostMapping("/")
+    @PostMapping("/create")
     public Result<?> createEntry() {
         return Result.success();
     }

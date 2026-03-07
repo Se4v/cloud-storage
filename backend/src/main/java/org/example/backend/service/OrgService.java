@@ -3,7 +3,6 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.NodeMapper;
 import org.example.backend.model.args.CreateNodeArgs;
@@ -11,14 +10,16 @@ import org.example.backend.model.args.UpdateNodeArgs;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.result.NodeDetailResult;
+import org.example.backend.model.view.NodeView;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrgService {
@@ -29,10 +30,63 @@ public class OrgService {
 
     private static final int DELETED = 1;
 
-    public void getUserOwnedOrgTree(Long userId) {
+    public List<NodeView> getOrgTree(Long userId) {
         LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Member::getUserId, userId);
         List<Member> members = memberMapper.selectList(queryWrapper);
+
+        List<Long> nodeIds = members.stream().map(Member::getNodeId).toList();
+
+        List<Node> nodeList = nodeMapper.selectNodeWithParents(nodeIds);
+
+        List<NodeView> viewList = nodeList.stream()
+                .map(node -> {
+                    NodeView view = new NodeView();
+
+                    view.setId(String.valueOf(node.getId()));
+                    view.setLabel(node.getNodeName());
+                    view.setParentId(node.getParentId());
+
+                    switch (node.getNodeType()) {
+                        case 1: view.setType("company"); break;
+                        case 2: view.setType("dept"); break;
+                        case 3: view.setType("team"); break;
+                        default: view.setType("unknown"); break;
+                    }
+
+                    return view;
+                })
+                .toList();
+
+        return buildTree(viewList);
+    }
+
+    private List<NodeView> buildTree(List<NodeView> flatList) {
+        if (flatList == null || flatList.isEmpty()) {
+            return List.of();
+        }
+
+        // 建立 ID -> 节点的映射表，用于快速查找
+        Map<String, NodeView> nodeMap = flatList.stream()
+                .collect(Collectors.toMap(NodeView::getId, node -> node));
+
+        // 2. 组装父子关系
+        List<NodeView> roots = new ArrayList<>();
+
+        for (NodeView node : flatList) {
+            if (node.getParentId() == null || node.getParentId() == 0L) {
+                // 根节点（parent_id = 0）
+                roots.add(node);
+            } else {
+                // 挂载到父节点下
+                NodeView parent = nodeMap.get(String.valueOf(node.getParentId()));
+                if (parent != null) parent.getChildren().add(node);
+                    // 父节点不存在（数据异常），作为根节点处理
+                else roots.add(node);
+            }
+        }
+
+        return roots;
     }
 
     /**

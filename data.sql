@@ -5,7 +5,7 @@ CREATE TABLE `org_node` (
     `node_type`     tinyint unsigned NOT NULL DEFAULT 0 COMMENT '节点类型:1-公司; 2-部门; 3-团队',
     `parent_id`     bigint unsigned NOT NULL DEFAULT 0 COMMENT '上级节点ID(根节点为0)',
     `is_enabled`    tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否启用:0-禁用; 1-启用',
-    `is_deleted`    tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否删除:0-未删除; 1-已删除',
+    `is_deleted`    tinyint unsigned NOT NULL DEFAULT 0 COMMENT '是否删除:0-未删除; 1-已删除',
     `created_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `creator_id`    bigint unsigned NOT NULL DEFAULT 0 COMMENT '创建者ID',
     `updated_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
