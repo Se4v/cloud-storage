@@ -190,6 +190,7 @@ const linkList = ref([
     id: '1',
     name: '腾讯云企业网盘使用手册.pdf',
     type: 'file',
+    key: 'abcd',
     expireTime: '2022-09-22 11:08:34',
     createTime: '2022-09-21 11:08:34',
     isProtected: false,
@@ -198,6 +199,7 @@ const linkList = ref([
     id: '2',
     name: '新建 Word 文档 (2).docx',
     type: 'file',
+    key: 'abcd',
     expireTime: '2022-09-15 10:46:56',
     createTime: '2022-09-14 10:46:56',
     isProtected: true
@@ -206,6 +208,7 @@ const linkList = ref([
     id: '3',
     name: '企业网盘移动端图标规范',
     type: 'folder',
+    key: 'abcd',
     expireTime: '2022-09-21 10:34:16',
     createTime: '2022-09-14 10:34:19',
     isProtected: false
@@ -256,8 +259,14 @@ const handleEdit = (row) => {
 }
 
 // 复制链接
-const handleCopyLink = (row) => {
-  ElMessage.success(`已复制链接：${row.name}`)
+const handleCopyLink = async (row) => {
+  const linkUrl = `http://localhost:8080/links/${row.key}`
+  try {
+    await navigator.clipboard.writeText(linkUrl)
+    ElMessage.success(`已复制分享链接：${linkUrl}`)
+  } catch (err) {
+    ElMessage.error('复制失败，请手动复制')
+  }
 }
 
 // 删除单个
