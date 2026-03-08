@@ -81,20 +81,9 @@
                 </div>
                 <div class="flex flex-col min-w-0">
                   <span class="text-sm font-medium text-slate-900 truncate">{{ row.fileName }}</span>
-                  <span v-if="row.subCount" class="text-xs text-slate-500 mt-0.5">{{ row.subCount }}</span>
+                  <span class="text-xs text-slate-400 truncate mt-0.5">{{ row.filePath }}</span>
                 </div>
               </div>
-            </template>
-          </el-table-column>
-
-          <el-table-column
-              prop="filePath"
-              label="文件路径"
-              min-width="200"
-              show-overflow-tooltip
-          >
-            <template #default="{ row }">
-              <span class="text-sm text-slate-600">{{ row.filePath }}</span>
             </template>
           </el-table-column>
 
@@ -107,6 +96,19 @@
             <template #default="{ row }">
               <div class="flex items-center gap-1.5 text-sm text-slate-600">
                 <span class="whitespace-nowrap">{{ row.deleteTime }}</span>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+              prop="expireTime"
+              label="过期时间"
+              width="180"
+              sortable
+          >
+            <template #default="{ row }">
+              <div class="flex items-center gap-1.5 text-sm text-slate-600">
+                <span class="whitespace-nowrap">{{ row.expireTime }}</span>
               </div>
             </template>
           </el-table-column>
@@ -198,8 +200,7 @@ import {
   Delete,
   DeleteFilled,
   RefreshLeft,
-  DocumentCopy,
-  Clock
+  DocumentCopy
 } from '@element-plus/icons-vue'
 
 const tableRef = ref()
@@ -213,55 +214,55 @@ const tableData = ref([
   {
     id: 1,
     fileName: '设计文档.zip',
-    fileType: 'zip',
-    subCount: null,
+    fileType: 'file',
     filePath: '企业空间/设计中心',
     deleteTime: '2022-04-27 14:45',
+    expireTime: '2022-05-27 14:45',
     fileSize: '31.2 MB'
   },
   {
     id: 2,
     fileName: '4月计划图.jpg',
-    fileType: 'image',
-    subCount: null,
+    fileType: 'file',
     filePath: '企业空间/产品团队',
     deleteTime: '2020-04-26 18:30',
+    expireTime: '2020-05-26 18:30',
     fileSize: '2.1 MB'
   },
   {
     id: 3,
     fileName: '云盘需求（第一版）',
-    fileType: 'doc',
-    subCount: null,
+    fileType: 'file',
     filePath: '企业空间/产品团队',
     deleteTime: '2020-04-26 18:30',
+    expireTime: '2020-05-26 18:30',
     fileSize: '6.2 MB'
   },
   {
     id: 4,
     fileName: '4月经费统计',
-    fileType: 'excel',
-    subCount: null,
+    fileType: 'file',
     filePath: '企业空间/产品团队',
     deleteTime: '2020-04-26 18:30',
+    expireTime: '2020-05-26 18:30',
     fileSize: '340 KB'
   },
   {
     id: 5,
     fileName: '项目资料汇总',
     fileType: 'folder',
-    subCount: '3 项',
     filePath: '个人空间/项目文件',
     deleteTime: '2020-04-20 14:37',
+    expireTime: '2020-05-20 14:37',
     fileSize: '22 MB'
   },
   {
     id: 6,
     fileName: '交付材料',
     fileType: 'folder',
-    subCount: '127 项',
     filePath: '个人空间/项目文件',
     deleteTime: '2020-04-20 14:37',
+    expireTime: '2020-05-20 14:37',
     fileSize: '1.3 GB'
   }
 ])

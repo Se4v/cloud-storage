@@ -24,7 +24,7 @@ public class PersonalService {
     public List<Entry> listEntries(Long userId, Long parentId) {
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
         driveQuery.eq(Drive::getUserId, userId)
-                .eq(Drive::getDriveType, 4);
+                .eq(Drive::getDriveType, 1);
         Drive drive = driveMapper.selectOne(driveQuery);
         if (drive == null) throw new BusinessException("<UNK>");
 
@@ -50,7 +50,7 @@ public class PersonalService {
 
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
         driveQuery.eq(Drive::getUserId, userId)
-                .eq(Drive::getDriveType, 4);
+                .eq(Drive::getDriveType, 1);
         Drive drive = driveMapper.selectOne(driveQuery);
 
         // 创建记录

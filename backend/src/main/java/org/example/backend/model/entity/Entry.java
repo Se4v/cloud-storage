@@ -57,6 +57,10 @@ public class Entry implements Serializable {
     private Integer status;
 
     /** 删除时间 */
+    @TableField("deleter_id")
+    private Long deleterId;
+
+    /** 删除时间 */
     @TableField("deleted_at")
     private LocalDateTime deletedAt;
 

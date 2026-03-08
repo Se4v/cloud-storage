@@ -5,10 +5,11 @@ import lombok.Data;
 
 @Data
 @Builder
-public class RecycleBinView {
+public class RecycleView {
     private String id;
     private String name;
-    private String drive;
+    private String type;
+    private String path;
     private String size;
     private String deleteTime;
     private String expireTime;

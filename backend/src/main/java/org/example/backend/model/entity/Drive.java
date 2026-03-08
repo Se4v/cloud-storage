@@ -24,7 +24,7 @@ public class Drive implements Serializable {
     @TableField("drive_name")
     private String driveName;
 
-    /** 空间类型:1-公司; 2-部门; 3-团队; 4-个人 */
+    /** 空间类型:1-个人; 2-企业 */
     @TableField("drive_type")
     private Integer driveType;
 

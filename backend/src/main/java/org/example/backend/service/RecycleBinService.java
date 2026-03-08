@@ -1,7 +1,10 @@
 package org.example.backend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
+import org.example.backend.model.entity.Entry;
 import org.example.backend.model.result.RecycleDetailResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +23,7 @@ public class RecycleBinService {
     private static final int STATUS_NORMAL = 1;
     private static final int STATUS_PERMANENTLY_DELETED = 3;
 
-    public List<RecycleDetailResult> getEntries(Long userId) {
+    public List<RecycleDetailResult> listEntries(Long userId) {
         // 查询未过期也未永久删除的文件
         List<RecycleDetailResult> results = entryMapper.selectValidRecycleBinEntryByUserId(userId);
         return results == null ? List.of() : results;
@@ -37,16 +40,14 @@ public class RecycleBinService {
     }
 
     @Transactional
-    public void clear(Long userId) {
-        List<RecycleDetailResult> results = entryMapper.selectValidRecycleBinEntryByUserId(userId);
-        if (results == null || results.isEmpty()) {
-            throw new BusinessException("clear recycle bin failed");
-        }
+    public void clearEntries(Long userId) {
+        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Entry::getDeleterId, userId)
+                .eq(Entry::getStatus, 2);
+        List<Entry> entries = entryMapper.selectList(queryWrapper);
+        if (entries == null || entries.isEmpty()) throw new BusinessException("clear recycle bin failed");
 
-        List<Long> allIds = results.stream()
-                .map(RecycleDetailResult::getEntryId)
-                .filter(Objects::nonNull)
-                .toList();
+        List<Long> allIds = entries.stream().map(Entry::getId).toList();
 
         permanentlyDeleteEntries(allIds);
     }

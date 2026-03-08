@@ -3,7 +3,7 @@ package org.example.backend.controller.user;
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.result.RecycleDetailResult;
-import org.example.backend.model.view.RecycleBinView;
+import org.example.backend.model.view.RecycleView;
 import org.example.backend.service.RecycleBinService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,20 +15,20 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user/recycle")
+@RequestMapping("/api/recycle")
 public class RecycleBinController {
     @Autowired
     private RecycleBinService recycleBinService;
 
-    public Result<List<RecycleBinView>> listEntries() {
+    public Result<List<RecycleView>> listEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        List<RecycleDetailResult> results = recycleBinService.getEntries(userDetails.getUserId());
+        List<RecycleDetailResult> results = recycleBinService.listEntries(userDetails.getUserId());
 
-        List<RecycleBinView> recycleBinViews = results.stream()
+        List<RecycleView> recycleViews = results.stream()
                 .map(result -> {
-                    return RecycleBinView.builder()
+                    return RecycleView.builder()
                             .id(String.valueOf(result.getEntryId()))
                             .name(result.getEntryName())
                             .drive(result.getDriveName())
@@ -39,7 +39,7 @@ public class RecycleBinController {
                 })
                 .toList();
 
-        return Result.success("", recycleBinViews);
+        return Result.success("", recycleViews);
     }
 
 
