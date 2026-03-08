@@ -65,7 +65,7 @@
           />
 
           <el-table-column
-              prop="fileName"
+              prop="name"
               label="文件名"
               min-width="280"
           >
@@ -73,15 +73,15 @@
               <div class="flex items-center gap-3 py-1">
                 <div
                     class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    :class="getFileIconBg(row.fileType)"
+                    :class="getFileIconBg(row.type)"
                 >
-                  <el-icon :size="20" :class="getFileIconColor(row.fileType)">
-                    <component :is="getFileIcon(row.fileType)" />
+                  <el-icon :size="20" :class="getFileIconColor(row.type)">
+                    <component :is="getFileIcon(row.type)" />
                   </el-icon>
                 </div>
                 <div class="flex flex-col min-w-0">
-                  <span class="text-sm font-medium text-slate-900 truncate">{{ row.fileName }}</span>
-                  <span class="text-xs text-slate-400 truncate mt-0.5">{{ row.filePath }}</span>
+                  <span class="text-sm font-medium text-slate-900 truncate">{{ row.name }}</span>
+                  <span class="text-xs text-slate-400 truncate mt-0.5">{{ row.path }}</span>
                 </div>
               </div>
             </template>
@@ -114,14 +114,14 @@
           </el-table-column>
 
           <el-table-column
-              prop="fileSize"
+              prop="size"
               label="大小"
               width="120"
               align="left"
               sortable
           >
             <template #default="{ row }">
-              <span class="text-sm text-slate-600 tabular-nums">{{ row.fileSize }}</span>
+              <span class="text-sm text-slate-600 tabular-nums">{{ row.size }}</span>
             </template>
           </el-table-column>
 
@@ -193,14 +193,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document,
   Folder,
-  Picture,
-  Film,
-  Headset,
-  Box,
   Delete,
   DeleteFilled,
-  RefreshLeft,
-  DocumentCopy
+  RefreshLeft
 } from '@element-plus/icons-vue'
 
 const tableRef = ref()
@@ -213,102 +208,73 @@ const total = ref(6)
 const tableData = ref([
   {
     id: 1,
-    fileName: '设计文档.zip',
-    fileType: 'file',
-    filePath: '企业空间/设计中心',
+    name: '设计文档.zip',
+    type: 'file',
+    path: '企业空间/设计中心',
     deleteTime: '2022-04-27 14:45',
     expireTime: '2022-05-27 14:45',
-    fileSize: '31.2 MB'
+    size: '31.2 MB'
   },
   {
     id: 2,
-    fileName: '4月计划图.jpg',
-    fileType: 'file',
-    filePath: '企业空间/产品团队',
+    name: '4月计划图.jpg',
+    type: 'file',
+    path: '企业空间/产品团队',
     deleteTime: '2020-04-26 18:30',
     expireTime: '2020-05-26 18:30',
-    fileSize: '2.1 MB'
+    size: '2.1 MB'
   },
   {
     id: 3,
-    fileName: '云盘需求（第一版）',
-    fileType: 'file',
-    filePath: '企业空间/产品团队',
+    name: '云盘需求（第一版）',
+    type: 'file',
+    path: '企业空间/产品团队',
     deleteTime: '2020-04-26 18:30',
     expireTime: '2020-05-26 18:30',
-    fileSize: '6.2 MB'
+    size: '6.2 MB'
   },
   {
     id: 4,
-    fileName: '4月经费统计',
-    fileType: 'file',
-    filePath: '企业空间/产品团队',
+    name: '4月经费统计',
+    type: 'file',
+    path: '企业空间/产品团队',
     deleteTime: '2020-04-26 18:30',
     expireTime: '2020-05-26 18:30',
-    fileSize: '340 KB'
+    size: '340 KB'
   },
   {
     id: 5,
-    fileName: '项目资料汇总',
-    fileType: 'folder',
-    filePath: '个人空间/项目文件',
+    name: '项目资料汇总',
+    type: 'folder',
+    path: '个人空间/项目文件',
     deleteTime: '2020-04-20 14:37',
     expireTime: '2020-05-20 14:37',
-    fileSize: '22 MB'
+    size: '22 MB'
   },
   {
     id: 6,
-    fileName: '交付材料',
-    fileType: 'folder',
-    filePath: '个人空间/项目文件',
+    name: '交付材料',
+    type: 'folder',
+    path: '个人空间/项目文件',
     deleteTime: '2020-04-20 14:37',
     expireTime: '2020-05-20 14:37',
-    fileSize: '1.3 GB'
+    size: '1.3 GB'
   }
 ])
 
 // 获取文件图标
 const getFileIcon = (type) => {
-  const iconMap = {
-    zip: Box,
-    image: Picture,
-    doc: Document,
-    excel: DocumentCopy,
-    folder: Folder,
-    video: Film,
-    audio: Headset
-  }
-  return iconMap[type] || Document
+  return type === 'folder' ? Folder : Document
 }
 
 // 获取文件图标背景色
 const getFileIconBg = (type) => {
-  const bgMap = {
-    folder: 'bg-blue-100',
-    doc: 'bg-blue-100',
-    excel: 'bg-green-100',
-    image: 'bg-purple-100',
-    pdf: 'bg-red-100',
-    zip: 'bg-yellow-100',
-    video: 'bg-red-100',
-    audio: 'bg-pink-100'
-  }
-  return bgMap[type] || 'bg-slate-100'
+  return type === 'folder' ? 'bg-blue-100' : 'bg-slate-100'
 }
 
 // 获取文件图标颜色
 const getFileIconColor = (type) => {
-  const colorMap = {
-    folder: 'text-blue-600',
-    doc: 'text-blue-600',
-    excel: 'text-green-600',
-    image: 'text-purple-600',
-    pdf: 'text-red-600',
-    zip: 'text-yellow-600',
-    video: 'text-red-600',
-    audio: 'text-pink-600'
-  }
-  return colorMap[type] || 'text-slate-600'
+  return type === 'folder' ? 'text-blue-600' : 'text-slate-600'
 }
 
 // 选择变化
@@ -320,7 +286,7 @@ const handleSelectionChange = (selection) => {
 const handleRestore = async (row) => {
   try {
     await ElMessageBox.confirm(
-        `确定要还原文件 "${row.fileName}" 吗？`,
+        `确定要还原文件 "${row.name}" 吗？`,
         '确认还原',
         {
           confirmButtonText: '确定',
@@ -346,7 +312,7 @@ const handleRestore = async (row) => {
 const handleDelete = async (row) => {
   try {
     await ElMessageBox.confirm(
-        `确定要彻底删除 "${row.fileName}" 吗？此操作不可恢复！`,
+        `确定要彻底删除 "${row.name}" 吗？此操作不可恢复！`,
         '确认彻底删除',
         {
           confirmButtonText: '彻底删除',
@@ -378,7 +344,7 @@ const handleBatchRestore = async () => {
     await ElMessageBox.confirm(
         isMulti
             ? `确定要还原选中的 ${selectedRows.value.length} 个文件吗？`
-            : `确定要还原 "${selectedRows.value[0].fileName}" 吗？`,
+            : `确定要还原 "${selectedRows.value[0].name}" 吗？`,
         '确认还原',
         {
           confirmButtonText: '确定',
@@ -410,7 +376,7 @@ const handleBatchDelete = async () => {
     await ElMessageBox.confirm(
         isMulti
             ? `确定要彻底删除选中的 ${selectedRows.value.length} 个文件吗？此操作不可恢复！`
-            : `确定要彻底删除 "${selectedRows.value[0].fileName}" 吗？此操作不可恢复！`,
+            : `确定要彻底删除 "${selectedRows.value[0].name}" 吗？此操作不可恢复！`,
         '确认彻底删除',
         {
           confirmButtonText: '彻底删除',

@@ -10,7 +10,7 @@ public class RecycleView {
     private String name;
     private String type;
     private String path;
-    private String size;
     private String deleteTime;
     private String expireTime;
+    private String size;
 }
