@@ -36,31 +36,25 @@ public class RecycleService {
      * 查询用户回收站中的条目
      */
     public List<RecycleDetailResult> listEntries(Long userId) {
-        // 1. 参数校验
-        if (userId == null) {
-            throw new BusinessException("userId cannot be null");
-        }
-
-        // 2. 查询用户回收站中的条目（状态为已删除且未过期）
+        // 查询用户回收站中的条目（状态为已删除且未过期）
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getDeleterId, userId)
                 .eq(Entry::getStatus, STATUS_DELETED)
                 .gt(Entry::getExpiredAt, java.time.LocalDateTime.now())
-                .orderByDesc(Entry::getDeletedAt);
         List<Entry> entries = entryMapper.selectList(entryQuery);
 
-        // 3. 如果结果为空，直接返回空列表
+        // 如果结果为空，直接返回空列表
         if (entries == null || entries.isEmpty()) {
             return List.of();
         }
 
-        // 4. 获取所有相关的空间ID
+        // 获取所有相关的空间ID
         Set<Long> driveIds = entries.stream()
                 .map(Entry::getDriveId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // 5. 批量查询空间信息
+        // 5批量查询空间信息
         Map<Long, Drive> driveMap = new HashMap<>();
         if (!driveIds.isEmpty()) {
             LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
@@ -76,9 +70,6 @@ public class RecycleService {
         // 6. 组装结果
         List<RecycleDetailResult> results = new ArrayList<>();
         for (Entry entry : entries) {
-            if (entry == null) {
-                continue;
-            }
             RecycleDetailResult result = new RecycleDetailResult();
             result.setEntryId(entry.getId());
             result.setEntryName(entry.getEntryName());
