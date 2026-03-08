@@ -134,7 +134,6 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-slate-900 truncate">系统管理员</p>
-              <p class="text-xs text-slate-500 truncate">已使用 45.58M</p>
             </div>
           </div>
         </div>

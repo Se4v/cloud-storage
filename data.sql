@@ -149,7 +149,7 @@ CREATE TABLE `sys_role` (
     `code`          varchar(64) NOT NULL DEFAULT '' COMMENT '角色代码',
     `type`          tinyint unsigned NOT NULL DEFAULT 1 COMMENT '角色类型:1-全局角色; 2-组织内角色',
     `is_enabled`    tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否启用:0-禁用; 1-启用',
-    `is_deleted`        tinyint unsigned NOT NULL DEFAULT 0 COMMENT '是否删除:0-未删除; 1-已删除',
+    `is_deleted`    tinyint unsigned NOT NULL DEFAULT 0 COMMENT '是否删除:0-未删除; 1-已删除',
     `created_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `creator_id`    bigint unsigned NOT NULL DEFAULT 0 COMMENT '创建者ID',
     `updated_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

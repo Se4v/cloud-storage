@@ -2,7 +2,6 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -16,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 @Service
-public class EntryService {
+public class PersonalService {
     @Autowired
     private EntryMapper entryMapper;
     @Autowired
@@ -24,103 +23,88 @@ public class EntryService {
 
     public List<Entry> listEntries(Long userId, Long parentId) {
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getUserId, userId);
-        Drive existDrive = driveMapper.selectOne(driveQuery);
-        if (existDrive == null) {
-            throw new BusinessException("<UNK>");
-        }
+        driveQuery.eq(Drive::getUserId, userId)
+                .eq(Drive::getDriveType, 4);
+        Drive drive = driveMapper.selectOne(driveQuery);
+        if (drive == null) throw new BusinessException("<UNK>");
 
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        if (parentId == null) parentId = 0L;
         entryQuery.eq(Entry::getParentId, parentId)
-                .eq(Entry::getDriveId, existDrive.getId());
+                .eq(Entry::getDriveId, drive.getId())
+                .eq(Entry::getStatus, 1);
         List<Entry> entries = entryMapper.selectList(entryQuery);
-        if (entries == null || entries.isEmpty()) {
-            throw new BusinessException("<UNK>");
-        }
+        if (entries == null || entries.isEmpty()) throw new BusinessException("<UNK>");
 
         return entries;
     }
 
     @Transactional
-    public void createEntry(CreateFolderArgs args, Long userId) {
+    public void createFolder(CreateFolderArgs args, Long userId) {
         // 目标父目录下是否存在同名条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Entry::getParentId, args.getParentId())
                 .eq(Entry::getEntryName, args.getFolderName());
         Entry sameEntry = entryMapper.selectOne(queryWrapper);
-        if (sameEntry != null) {
-            throw new BusinessException("Folder already exists");
-        }
+        if (sameEntry != null) throw new BusinessException("Folder already exists");
+
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getUserId, userId)
+                .eq(Drive::getDriveType, 4);
+        Drive drive = driveMapper.selectOne(driveQuery);
 
         // 创建记录
         int count = entryMapper.insert(Entry.builder()
-                .driveId(args.getDriveId())
+                .driveId(drive.getId())
                 .userId(userId)
                 .parentId(args.getParentId())
                 .storageId(0L)
                 .entryName(args.getFolderName())
                 .entryType(2)
+                .status(1)
                 .build());
-        if (count != 1) {
-            throw new BusinessException("Create folder failed");
-        }
+        if (count != 1) throw new BusinessException("Create folder failed");
     }
 
     @Transactional
-    public void moveEntries(List<Long> entryIds, Long targetParentId, Long userId) {
-        Entry existEntry = entryMapper.selectById(targetParentId);
-        if (existEntry == null) {
-            throw new BusinessException("Entry does not exist");
-        }
+    public void moveEntries(List<Long> entryIds, Long targetId, Long userId) {
+        Entry entry = entryMapper.selectById(targetId);
+        if (entry == null) throw new BusinessException("Entry does not exist");
 
         LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(Entry::getId, entryIds)
-                .set(Entry::getParentId, targetParentId)
+                .set(Entry::getParentId, targetId)
                 .set(Entry::getUpdaterId, userId);
 
         int count = entryMapper.update(updateWrapper);
-        if (count != entryIds.size()) {
-            throw new BusinessException("Move entry failed");
-        }
+        if (count != entryIds.size()) throw new BusinessException("Move entry failed");
     }
 
     @Transactional
     public void renameEntry(Long entryId, String newEntryName) {
-        Entry existEntry = entryMapper.selectById(entryId);
-        if (existEntry == null) {
-            throw new BusinessException("Entry does not exist");
-        }
+        Entry entry = entryMapper.selectById(entryId);
+        if (entry == null) throw new BusinessException("Entry does not exist");
 
         // 新文件名校验
-        String invalidChars = "[\\\\/:*?\"<>|]";
-        if (newEntryName.length() > 100 || newEntryName.matches(".*" + invalidChars + ".*")) {
-            throw new BusinessException("New entry name invalid");
-        }
+        if (!validateFileName(newEntryName)) throw new BusinessException("Invalid file name");
 
         // 重命名
-        UpdateWrapper<Entry> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("entry_id", entryId)
-                .set("entry_name", newEntryName);
+        LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.set(Entry::getEntryName, newEntryName)
+                .eq(Entry::getId, entryId);
         int count = entryMapper.update(updateWrapper);
-        if (count != 1) {
-            throw new BusinessException("Rename entry failed");
-        }
+        if (count != 1) throw new BusinessException("Rename entry failed");
     }
 
     public List<Entry> searchEntry(String targetName, Long userId) {
         // 文件名校验
-        String invalidChars = "[\\\\/:*?\"<>|]";
-        if (targetName.length() > 100 || targetName.matches(".*" + invalidChars + ".*")) {
-            throw new BusinessException("New entry name invalid");
-        }
+        if (!validateFileName(targetName)) throw new BusinessException("Invalid file name");
 
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(Entry::getEntryName, targetName);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
 
-        if (entries == null || entries.isEmpty()) {
-            throw new BusinessException("Search entry failed");
-        }
+        if (entries == null || entries.isEmpty()) throw new BusinessException("Search entry failed");
 
         return entries;
     }
@@ -163,7 +147,16 @@ public class EntryService {
         }
     }
 
-    private boolean validateFileName() {
-        return false;
+    private boolean validateFileName(String fileName) {
+        if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;
+
+        // 检查保留字（CON, PRN, AUX, NUL, COM1-9, LPT1-9）
+        String upper = fileName.toUpperCase();
+        if (upper.matches("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\\..*)?$")) return false;
+
+        // 检查非法字符 \ / : * ? " < > | 以及首尾空格/点
+        return !fileName.matches(".*[\\\\/:*?\"<>|].*") &&
+                !fileName.startsWith(" ") && !fileName.endsWith(" ") &&
+                !fileName.endsWith(".");
     }
 }

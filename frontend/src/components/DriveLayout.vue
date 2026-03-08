@@ -149,24 +149,6 @@
 
       <!-- 用户信息 & 存储空间（始终固定在底部） -->
       <div class="p-4 border-t border-slate-200 bg-slate-50/50 flex-shrink-0 mt-auto">
-        <!-- 存储空间 - 始终显示个人空间存储信息 -->
-        <div class="mb-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-semibold text-slate-700">
-              存储空间
-            </span>
-            <span class="text-xs font-medium text-slate-500 tabular-nums">
-              40M / 1G
-            </span>
-          </div>
-          <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-            <div
-                class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 shadow-sm"
-                style="width: 4%"
-            ></div>
-          </div>
-        </div>
-
         <!-- 用户头像 -->
         <div
             class="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all

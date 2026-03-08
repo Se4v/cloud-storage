@@ -2,7 +2,6 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import org.example.backend.common.Result;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.NoticeMapper;
 import org.example.backend.model.args.UpdateNoticeArgs;

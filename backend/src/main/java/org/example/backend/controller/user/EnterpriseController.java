@@ -11,7 +11,6 @@ import org.example.backend.model.view.InitUploadView;
 import org.example.backend.model.view.MergeChunksView;
 import org.example.backend.model.view.RecordChunksView;
 import org.example.backend.service.DownloadService;
-import org.example.backend.service.EntryService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,9 +24,7 @@ public class EnterpriseController {
     @Autowired
     private UploadService uploadService;
     @Autowired
-    private DownloadService downloadService;
-    @Autowired
-    private EntryService entryService;
+    private DownloadService downloadService;;
 
     @PostMapping("/org")
     public Result<?> getUserOwnedOrgTree() {

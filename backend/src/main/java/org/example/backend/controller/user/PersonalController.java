@@ -2,16 +2,13 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
-import org.example.backend.model.args.DirectUploadArgs;
-import org.example.backend.model.args.InitUploadArgs;
-import org.example.backend.model.args.MergeChunksArgs;
-import org.example.backend.model.args.RecordChunksArgs;
+import org.example.backend.model.args.*;
 import org.example.backend.model.view.DirectUploadView;
 import org.example.backend.model.view.InitUploadView;
 import org.example.backend.model.view.MergeChunksView;
 import org.example.backend.model.view.RecordChunksView;
 import org.example.backend.service.DownloadService;
-import org.example.backend.service.EntryService;
+import org.example.backend.service.DriveService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,7 +24,7 @@ public class PersonalController {
     @Autowired
     private DownloadService downloadService;
     @Autowired
-    private EntryService entryService;
+    private DriveService driveService;
 
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args,
@@ -59,12 +56,12 @@ public class PersonalController {
     }
 
     @GetMapping("/list")
-    public Result<?> listEntries(Long parentId, Long userId) {
+    public Result<?> listEntries(@RequestParam(required = false) Long parentId) {
         return Result.success();
     }
 
     @PostMapping("/create")
-    public Result<?> createEntry() {
+    public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
         return Result.success();
     }
 
