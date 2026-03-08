@@ -12,11 +12,9 @@ public interface EntryMapper extends BaseMapper<Entry> {
 
     List<EntryWithBlobResult> selectBatchWithBlobByEntryIds(List<Long> entryIds);
 
-    List<Long> selectRecursiveChildEntryIdsBatch(List<Long> folderIds);
+    List<Entry> selectRecursiveChildEntryIdsBatch(List<Long> folderIds);
 
     Integer updateStatusBatch(List<Long> entryIds, Integer status);
 
     List<RecycleDetailResult> selectValidRecycleBinEntryByUserId(Long userId);
-
-    List<RecycleDetailResult> selectRecycleBinEntryByEntryIds(List<Long> entryIds);
 }

@@ -4,7 +4,7 @@ import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.result.RecycleDetailResult;
 import org.example.backend.model.view.RecycleView;
-import org.example.backend.service.RecycleBinService;
+import org.example.backend.service.RecycleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,15 +16,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/recycle")
-public class RecycleBinController {
+public class RecycleController {
     @Autowired
-    private RecycleBinService recycleBinService;
+    private RecycleService recycleService;
 
     public Result<List<RecycleView>> listEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        List<RecycleDetailResult> results = recycleBinService.listEntries(userDetails.getUserId());
+        List<RecycleDetailResult> results = recycleService.listEntries(userDetails.getUserId());
 
         List<RecycleView> recycleViews = results.stream()
                 .map(result -> {
@@ -44,12 +44,12 @@ public class RecycleBinController {
 
 
     public Result<Void> restoreEntries(@RequestBody List<Long> ids) {
-        recycleBinService.restoreEntries(ids);
+        recycleService.restoreEntries(ids);
         return Result.success();
     }
 
     public Result<Void> deleteEntries(@RequestBody List<Long> ids) {
-        recycleBinService.permanentlyDeleteEntries(ids);
+        recycleService.permanentlyDeleteEntries(ids);
         return Result.success();
     }
 
@@ -57,7 +57,7 @@ public class RecycleBinController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        recycleBinService.clear(userDetails.getUserId());
+        recycleService.clear(userDetails.getUserId());
 
         return Result.success();
     }
