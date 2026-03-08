@@ -40,7 +40,7 @@ public class RecycleService {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getDeleterId, userId)
                 .eq(Entry::getStatus, STATUS_DELETED)
-                .gt(Entry::getExpiredAt, java.time.LocalDateTime.now())
+                .gt(Entry::getExpiredAt, java.time.LocalDateTime.now());
         List<Entry> entries = entryMapper.selectList(entryQuery);
 
         // 如果结果为空，直接返回空列表
@@ -54,7 +54,7 @@ public class RecycleService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // 5批量查询空间信息
+        // 批量查询空间信息
         Map<Long, Drive> driveMap = new HashMap<>();
         if (!driveIds.isEmpty()) {
             LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
@@ -67,7 +67,7 @@ public class RecycleService {
             }
         }
 
-        // 6. 组装结果
+        // 组装结果
         List<RecycleDetailResult> results = new ArrayList<>();
         for (Entry entry : entries) {
             RecycleDetailResult result = new RecycleDetailResult();

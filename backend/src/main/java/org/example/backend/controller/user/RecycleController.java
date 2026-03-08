@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -19,6 +20,8 @@ import java.util.List;
 public class RecycleController {
     @Autowired
     private RecycleService recycleService;
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Result<List<RecycleView>> listEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -28,14 +31,17 @@ public class RecycleController {
 
         List<RecycleView> recycleViews = results.stream()
                 .map(result -> {
-                    return RecycleView.builder()
-                            .id(String.valueOf(result.getEntryId()))
-                            .name(result.getEntryName())
-                            .drive(result.getDriveName())
-                            .size(String.valueOf(result.getFileSize()))
-                            .deleteTime(String.valueOf(result.getDeletedAt()))
-                            .expireTime(String.valueOf(result.getExpiredAt()))
-                            .build();
+                    RecycleView view = new RecycleView();
+
+                    view.setId(String.valueOf(result.getEntryId()));
+                    view.setName(result.getEntryName());
+                    view.setType(result.getEntryType() == 1 ? "file" : "folder");
+                    view.setPath(result.getDriveType() == 1 ? "个人空间/项目文件" : "企业空间/" + result.getDriveName());
+                    view.setDeleteTime(result.getDeletedAt().format(formatter));
+                    view.setExpireTime(result.getExpiredAt().format(formatter));
+                    view.setSize(String.valueOf(result.getFileSize()));
+
+                    return view;
                 })
                 .toList();
 
@@ -57,7 +63,7 @@ public class RecycleController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        recycleService.clear(userDetails.getUserId());
+        recycleService.clearEntries(userDetails.getUserId());
 
         return Result.success();
     }
