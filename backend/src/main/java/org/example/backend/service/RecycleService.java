@@ -3,8 +3,10 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
+import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.result.RecycleDetailResult;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RecycleService {
@@ -20,6 +23,8 @@ public class RecycleService {
     private EntryMapper entryMapper;
     @Autowired
     private StorageMapper storageMapper;
+    @Autowired
+    private DriveMapper driveMapper;
 
     private static final int ENTRY_TYPE_FILE = 1;
     private static final int ENTRY_TYPE_FOLDER = 2;
@@ -31,10 +36,17 @@ public class RecycleService {
      * 查询用户回收站中的条目
      */
     public List<RecycleDetailResult> listEntries(Long userId) {
-        List<RecycleDetailResult> results = entryMapper.selectValidRecycleBinEntryByUserId(userId);
-        if (results == null) {
-            return List.of();
-        }
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getDeleterId, userId)
+                .eq(Entry::getStatus, STATUS_DELETED);
+        List<Entry> entries = entryMapper.selectList(entryQuery);
+
+        Set<Long> driveIds = entries.stream().map(Entry::getDriveId).collect(Collectors.toSet());
+
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.in(Drive::getId, driveIds);
+        List<Drive> driveList = driveMapper.selectList(driveQuery);
+
         return results;
     }
 
@@ -42,10 +54,10 @@ public class RecycleService {
      * 批量恢复条目
      */
     @Transactional
-    public void restoreEntries(List<Long> ids) {
+    public void restoreEntries(List<Long> entryIds) {
         // 1. 查询要恢复的条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Entry::getId, ids)
+        queryWrapper.in(Entry::getId, entryIds)
                 .eq(Entry::getStatus, STATUS_DELETED);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
@@ -93,10 +105,10 @@ public class RecycleService {
      * 批量永久删除条目
      */
     @Transactional
-    public void permanentlyDeleteEntries(List<Long> ids) {
+    public void permanentlyDeleteEntries(List<Long> entryIds) {
         // 1. 查询要删除的条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Entry::getId, ids)
+        queryWrapper.in(Entry::getId, entryIds)
                 .eq(Entry::getStatus, STATUS_DELETED);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");

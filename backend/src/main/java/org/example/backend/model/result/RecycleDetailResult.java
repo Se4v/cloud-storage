@@ -8,13 +8,11 @@ import java.time.LocalDateTime;
 public class RecycleDetailResult {
     private Long entryId;
     private Long driveId;
+    private String driveName;
+    private Integer driveType;
     private String entryName;
     private Integer entryType;
     private Long fileSize;
-    private Integer status;
     private LocalDateTime deletedAt;
     private LocalDateTime expiredAt;
-
-    private String driveName;
-    private Integer driveType;
 }
