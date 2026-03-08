@@ -121,7 +121,7 @@
               sortable
           >
             <template #default="{ row }">
-              <span class="text-sm text-slate-600 tabular-nums">{{ row.size }}</span>
+              <span class="text-sm text-slate-600 tabular-nums">{{ row.size || '-' }}</span>
             </template>
           </el-table-column>
 
