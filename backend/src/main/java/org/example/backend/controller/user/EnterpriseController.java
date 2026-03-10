@@ -75,6 +75,11 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PostMapping("/copy")
+    public Result<?> copyEntries() {
+        return Result.success();
+    }
+
     @PostMapping("/rename")
     public Result<?> renameEntry() {
         return Result.success();

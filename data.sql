@@ -85,6 +85,7 @@ CREATE TABLE `file_entry` (
     `file_ext`      varchar(32) NOT NULL DEFAULT '' COMMENT '文件后缀',
     `status`        tinyint unsigned NOT NULL DEFAULT 0 COMMENT '状态:1-未删除; 2-已删除; 3-永久删除;',
     `deleted_at`    datetime DEFAULT NULL COMMENT '删除时间',
+    `deleter_id`    bigint unsigned NOT NULL DEFAULT 0 COMMENT '删除者ID',
     `expired_at`    datetime DEFAULT NULL COMMENT '删除后的过期时间',
     `created_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

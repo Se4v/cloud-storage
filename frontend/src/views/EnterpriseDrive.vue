@@ -341,30 +341,100 @@
     <el-dialog
         v-model="moveVisible"
         title="移动到"
-        width="400px"
+        width="480px"
+        :close-on-click-modal="false"
+        class="rounded-lg move-dialog"
+    >
+      <div class="py-4">
+        <!-- 空间根目录提示 -->
+        <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg mb-3">
+          <el-icon class="text-blue-500"><Folder /></el-icon>
+          <span class="text-sm font-medium text-slate-700">企业空间</span>
+        </div>
+
+        <!-- 文件夹树形结构 -->
+        <div class="folder-tree-container border border-slate-200 rounded-lg overflow-auto max-h-[360px]">
+          <el-tree
+              ref="moveTreeRef"
+              :data="folderTreeData"
+              :props="{ label: 'name', children: 'children' }"
+              node-key="id"
+              :highlight-current="true"
+              :expand-on-click-node="false"
+              @node-click="handleTreeNodeClick"
+              class="folder-tree"
+          >
+            <template #default="{ node, data }">
+              <div class="flex items-center gap-2 py-1">
+                <el-icon class="text-blue-400" :size="18"><Folder /></el-icon>
+                <span class="text-sm text-slate-700">{{ data.name }}</span>
+                <el-icon v-if="selectedTargetFolder && selectedTargetFolder.id === data.id" class="text-blue-600 ml-auto" :size="16"><Check /></el-icon>
+              </div>
+            </template>
+          </el-tree>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-between items-center">
+          <button
+              @click="handleCreateFolderInMove"
+              class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1"
+          >
+            <el-icon><Plus /></el-icon>
+            新建文件夹
+          </button>
+          <div class="flex gap-3">
+            <button
+                @click="moveVisible = false"
+                class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              取消
+            </button>
+            <button
+                @click="confirmMove"
+                :disabled="!selectedTargetFolder"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            >
+              确认
+            </button>
+          </div>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 移动对话框内新建文件夹 -->
+    <el-dialog
+        v-model="createFolderInMoveVisible"
+        title="新建文件夹"
+        width="360px"
+        :close-on-click-modal="false"
+        append-to-body
         class="rounded-lg"
     >
       <div class="py-4">
-        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 mb-4">
-          <p class="text-xs text-slate-500">选择目标位置：</p>
-        </div>
-        <el-radio-group v-model="moveTarget" class="flex flex-col gap-2">
-          <el-radio label="personal">个人空间</el-radio>
-          <el-radio label="enterprise">企业空间根目录</el-radio>
-          <el-radio label="folder1">项目资料</el-radio>
-          <el-radio label="folder2">合同文档</el-radio>
-        </el-radio-group>
+        <el-input
+            v-model="newFolderInMoveName"
+            placeholder="请输入文件夹名称"
+            maxlength="50"
+            show-word-limit
+            autofocus
+            @keyup.enter="confirmCreateFolderInMove"
+        >
+          <template #prefix>
+            <el-icon class="text-slate-400"><Folder /></el-icon>
+          </template>
+        </el-input>
       </div>
       <template #footer>
         <div class="flex justify-end gap-3">
           <button
-              @click="moveVisible = false"
+              @click="createFolderInMoveVisible = false"
               class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
           >
             取消
           </button>
           <button
-              @click="confirmMove"
+              @click="confirmCreateFolderInMove"
               class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
           >
             确定
@@ -376,7 +446,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Folder,
@@ -396,7 +466,8 @@ import {
   ArrowDown,
   Search,
   MoreFilled,
-  HomeFilled
+  HomeFilled,
+  Check
 } from '@element-plus/icons-vue'
 
 // 面包屑路径 - 改为空数组，表示当前在根目录
@@ -471,12 +542,64 @@ const fileList = ref([
   }
 ])
 
+// 模拟文件夹树形数据
+const folderTreeData = ref([
+  {
+    id: 1,
+    name: '项目文件',
+    children: [
+      {
+        id: 11,
+        name: '云盘项目',
+        children: [
+          { id: 111, name: '设计资料', children: [] },
+          { id: 112, name: '需求文档', children: [] }
+        ]
+      },
+      {
+        id: 12,
+        name: '企业官网',
+        children: [
+          { id: 121, name: '前端代码', children: [] },
+          { id: 122, name: '后端接口', children: [] }
+        ]
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: '市场资料',
+    children: [
+      { id: 21, name: '竞品分析', children: [] },
+      { id: 22, name: '用户调研', children: [] }
+    ]
+  },
+  {
+    id: 3,
+    name: '财务文档',
+    children: [
+      {
+        id: 31,
+        name: '2024年',
+        children: [
+          { id: 311, name: 'Q1报表', children: [] },
+          { id: 312, name: 'Q2报表', children: [] }
+        ]
+      },
+      { id: 32, name: '2023年', children: [] }
+    ]
+  },
+  { id: 4, name: '人力资源', children: [] },
+  { id: 5, name: '行政文件', children: [] }
+])
+
 // 搜索和分页
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const selectedFiles = ref([])
 const tableRef = ref(null)
+const moveTreeRef = ref(null)
 
 // 过滤后的文件列表
 const filteredFiles = computed(() => {
@@ -491,10 +614,12 @@ const filteredFiles = computed(() => {
 const createFolderVisible = ref(false)
 const shareVisible = ref(false)
 const moveVisible = ref(false)
+const createFolderInMoveVisible = ref(false)
 const newFolderName = ref('')
+const newFolderInMoveName = ref('')
 const shareExpire = ref('7')
 const shareLink = ref('')
-const moveTarget = ref('')
+const selectedTargetFolder = ref(null)
 
 // 获取文件图标
 const getFileIcon = (file) => {
@@ -722,8 +847,12 @@ const handleDeleteSingle = (row) => {
 // 移动文件
 const handleMove = () => {
   if (selectedFiles.value.length === 0) return
-  moveTarget.value = ''
+  selectedTargetFolder.value = null
   moveVisible.value = true
+  // 默认展开第一级
+  nextTick(() => {
+    moveTreeRef.value?.expandLevel?.(1)
+  })
 }
 
 const handleMoveSingle = (row) => {
@@ -731,19 +860,55 @@ const handleMoveSingle = (row) => {
   handleMove()
 }
 
+// 处理树节点点击
+const handleTreeNodeClick = (data) => {
+  selectedTargetFolder.value = data
+}
+
 const confirmMove = () => {
-  if (!moveTarget.value) {
-    ElMessage.warning('请选择目标位置')
+  if (!selectedTargetFolder.value) {
+    ElMessage.warning('请选择目标文件夹')
     return
   }
 
-  ElMessage.success(`已移动 ${selectedFiles.value.length} 个文件`)
+  ElMessage.success(`已将 ${selectedFiles.value.length} 个文件移动到 "${selectedTargetFolder.value.name}"`)
   moveVisible.value = false
+  selectedTargetFolder.value = null
 
-  // 从列表移除
+  // 从列表移除已移动的文件
   const ids = selectedFiles.value.map(f => f.id)
   fileList.value = fileList.value.filter(f => !ids.includes(f.id))
   selectedFiles.value = []
+}
+
+// 在移动对话框中新建文件夹
+const handleCreateFolderInMove = () => {
+  newFolderInMoveName.value = '新建文件夹'
+  createFolderInMoveVisible.value = true
+}
+
+// 确认在移动对话框中创建文件夹
+const confirmCreateFolderInMove = () => {
+  if (!newFolderInMoveName.value.trim()) {
+    ElMessage.warning('请输入文件夹名称')
+    return
+  }
+
+  // 添加到树形数据中（简化处理，实际应该添加到当前选中的节点下）
+  const newFolder = {
+    id: Date.now(),
+    name: newFolderInMoveName.value,
+    children: []
+  }
+  folderTreeData.value.push(newFolder)
+
+  createFolderInMoveVisible.value = false
+  ElMessage.success('文件夹创建成功')
+
+  // 选中新创建的文件夹
+  nextTick(() => {
+    selectedTargetFolder.value = newFolder
+  })
 }
 
 // 复制
@@ -844,25 +1009,45 @@ const handleBatchDelete = () => {
   border-top: 1px solid #e2e8f0;
 }
 
-/* 移动到对话框中的单选框 */
-:deep(.el-radio-group) {
-  width: 100%;
+/* 移动到对话框样式 */
+:deep(.move-dialog .el-dialog__body) {
+  padding: 16px 24px;
 }
 
-:deep(.el-radio) {
-  margin-right: 0;
-  padding: 8px 12px;
+.folder-tree-container {
+  background: #fff;
+}
+
+:deep(.folder-tree) {
+  padding: 8px 0;
+}
+
+:deep(.folder-tree .el-tree-node__content) {
+  height: 40px;
+  padding-right: 12px;
   border-radius: 6px;
-  width: 100%;
-  transition: all 0.2s;
+  margin: 0 8px;
 }
 
-:deep(.el-radio:hover) {
-  background-color: #f8fafc;
+:deep(.folder-tree .el-tree-node__content:hover) {
+  background-color: #f1f5f9;
 }
 
-:deep(.el-radio.is-checked) {
+:deep(.folder-tree .el-tree-node:focus > .el-tree-node__content) {
   background-color: #eff6ff;
+}
+
+:deep(.folder-tree .el-tree-node.is-current > .el-tree-node__content) {
+  background-color: #eff6ff;
+}
+
+:deep(.folder-tree .el-tree-node__expand-icon) {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+:deep(.folder-tree .el-tree-node__expand-icon.is-leaf) {
+  color: transparent;
 }
 
 /* 自定义滚动条 */

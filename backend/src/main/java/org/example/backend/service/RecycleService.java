@@ -29,8 +29,8 @@ public class RecycleService {
     private static final int FILE = 1;
     private static final int FOLDER = 2;
     private static final int UNDELETED = 1;
-    private static final int STATUS_DELETED = 2;
-    private static final int STATUS_PERMANENTLY_DELETED = 3;
+    private static final int DELETED = 2;
+    private static final int PERMANENTLY_DELETED = 3;
 
     /**
      * 查询用户回收站中的条目
@@ -39,7 +39,7 @@ public class RecycleService {
         // 查询用户回收站中的条目（状态为已删除且未过期）
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getDeleterId, userId)
-                .eq(Entry::getStatus, STATUS_DELETED)
+                .eq(Entry::getStatus, DELETED)
                 .gt(Entry::getExpiredAt, java.time.LocalDateTime.now());
         List<Entry> entries = entryMapper.selectList(entryQuery);
 
@@ -100,7 +100,7 @@ public class RecycleService {
         // 1. 查询要恢复的条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(Entry::getId, entryIds)
-                .eq(Entry::getStatus, STATUS_DELETED);
+                .eq(Entry::getStatus, DELETED);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
@@ -151,7 +151,7 @@ public class RecycleService {
         // 1. 查询要删除的条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(Entry::getId, entryIds)
-                .eq(Entry::getStatus, STATUS_DELETED);
+                .eq(Entry::getStatus, DELETED);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
@@ -190,7 +190,7 @@ public class RecycleService {
         allFileIds.addAll(allChildFileIds);
         if (!allFileIds.isEmpty()) {
             LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, STATUS_PERMANENTLY_DELETED)
+            updateWrapper.set(Entry::getStatus, PERMANENTLY_DELETED)
                     .in(Entry::getId, allFileIds);
             int count = entryMapper.update(updateWrapper);
             if (count != allFileIds.size()) throw new BusinessException("Permanently Delete files failed");
@@ -201,7 +201,7 @@ public class RecycleService {
         allFolderIds.addAll(allChildFolderIds);
         if (!allFolderIds.isEmpty()) {
             LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, STATUS_PERMANENTLY_DELETED)
+            updateWrapper.set(Entry::getStatus, PERMANENTLY_DELETED)
                     .in(Entry::getId, allFolderIds);
             int count = entryMapper.update(updateWrapper);
             if (count != allFolderIds.size()) throw new BusinessException("Permanently Delete folders failed");
@@ -226,7 +226,7 @@ public class RecycleService {
         // 1. 查询用户回收站中所有条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Entry::getDeleterId, userId)
-                .eq(Entry::getStatus, STATUS_DELETED);
+                .eq(Entry::getStatus, DELETED);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
         if (entries == null || entries.isEmpty()) throw new BusinessException("clear recycle bin failed");
 
@@ -265,7 +265,7 @@ public class RecycleService {
         allFileIds.addAll(allChildFileIds);
         if (!allFileIds.isEmpty()) {
             LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, STATUS_PERMANENTLY_DELETED)
+            updateWrapper.set(Entry::getStatus, PERMANENTLY_DELETED)
                     .in(Entry::getId, allFileIds);
             int count = entryMapper.update(updateWrapper);
             if (count != allFileIds.size()) throw new BusinessException("clear recycle bin failed");
@@ -276,7 +276,7 @@ public class RecycleService {
         allFolderIds.addAll(allChildFolderIds);
         if (!allFolderIds.isEmpty()) {
             LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, STATUS_PERMANENTLY_DELETED)
+            updateWrapper.set(Entry::getStatus, PERMANENTLY_DELETED)
                     .in(Entry::getId, allFolderIds);
             int count = entryMapper.update(updateWrapper);
             if (count != allFolderIds.size()) throw new BusinessException("clear recycle bin failed");

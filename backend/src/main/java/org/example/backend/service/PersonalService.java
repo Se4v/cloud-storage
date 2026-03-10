@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -21,18 +22,26 @@ public class PersonalService {
     @Autowired
     private DriveMapper driveMapper;
 
+    private static final int PERSONAL_DRIVE = 1;
+    private static final int UNDELETED = 1;
+    private static final int DELETED = 2;
+    private static final int FOLDER = 2;
+    private static final int EXPIRE_DAYS = 15;
+
     public List<Entry> listEntries(Long userId, Long parentId) {
+        // 查询用户空间
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
         driveQuery.eq(Drive::getUserId, userId)
-                .eq(Drive::getDriveType, 1);
+                .eq(Drive::getDriveType, PERSONAL_DRIVE);
         Drive drive = driveMapper.selectOne(driveQuery);
         if (drive == null) throw new BusinessException("<UNK>");
 
+        // 查询文件列表
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         if (parentId == null) parentId = 0L;
         entryQuery.eq(Entry::getParentId, parentId)
                 .eq(Entry::getDriveId, drive.getId())
-                .eq(Entry::getStatus, 1);
+                .eq(Entry::getStatus, UNDELETED);
         List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("<UNK>");
 
@@ -60,8 +69,8 @@ public class PersonalService {
                 .parentId(args.getParentId())
                 .storageId(0L)
                 .entryName(args.getFolderName())
-                .entryType(2)
-                .status(1)
+                .entryType(FOLDER)
+                .status(UNDELETED)
                 .build());
         if (count != 1) throw new BusinessException("Create folder failed");
     }
@@ -78,6 +87,30 @@ public class PersonalService {
 
         int count = entryMapper.update(updateWrapper);
         if (count != entryIds.size()) throw new BusinessException("Move entry failed");
+    }
+
+    @Transactional
+    public void copyEntries(Long entryId, Long targetId, Long userId) {
+        Entry dir = entryMapper.selectById(targetId);
+        if (dir == null) throw new BusinessException("Entry does not exist");
+
+        Entry entry = entryMapper.selectById(entryId);
+        if (entry == null) throw new BusinessException("Entry does not exist");
+
+        Entry copyEntry = Entry.builder()
+                .driveId(entry.getDriveId())
+                .userId(userId)
+                .parentId(targetId)
+                .storageId(entry.getStorageId())
+                .entryName(entry.getEntryName())
+                .entryType(entry.getEntryType())
+                .fileSize(entry.getFileSize())
+                .fileExt(entry.getFileExt())
+                .status(entry.getStatus())
+                .build();
+
+        int count = entryMapper.insert(copyEntry);
+        if (count != 1) throw new BusinessException("Move entry failed");
     }
 
     @Transactional
@@ -110,53 +143,46 @@ public class PersonalService {
     }
 
     @Transactional
-    public void deleteEntries(List<Long> entryIds) {
-        // 获取数据
+    public void deleteEntries(List<Long> entryIds, Long userId) {
+        // 查询要删除的条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Entry::getId, entryIds);
+        queryWrapper.in(Entry::getId, entryIds)
+                .eq(Entry::getStatus, UNDELETED);
         List<Entry> entries = entryMapper.selectList(queryWrapper);
-        if (entries == null || entries.isEmpty()) {
-            throw new BusinessException("entry does not exist");
-        }
+        if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
-        // 文件分类
-        List<Long> files = entries.stream()
-                .filter(entry -> entry.getEntryType() != null && entry.getEntryType() == 1)
+        // 分离文件夹和文件
+        List<Long> folderIds = entries.stream()
+                .filter(e -> e.getEntryType() != null && e.getEntryType() == FOLDER)
                 .map(Entry::getId)
-                .filter(Objects::nonNull)
-                .toList();
-        List<Long> folders = entries.stream()
-                .filter(entry -> entry.getEntryType() != null && entry.getEntryType() == 2)
-                .map(Entry::getId)
-                .filter(Objects::nonNull)
                 .toList();
 
-        // 删除文件
-        int fileCount = entryMapper.updateStatusBatch(files, 2);
-        if (fileCount != files.size()) {
-            throw new BusinessException("Delete files failed");
+        // 收集所有需要删除的条目ID（包括文件夹的子项）
+        Set<Long> allIds = new HashSet<>();
+        entries.forEach(e -> allIds.add(e.getId()));
+
+        if (!folderIds.isEmpty()) {
+            List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            children.forEach(c -> allIds.add(c.getId()));
         }
 
-        // 删除文件夹
-        List<Long> children = entryMapper.selectRecursiveChildEntryIdsBatch(folders);
-        Set<Long> allIds = new HashSet<>(folders);
-        allIds.addAll(children);
-        int folderCount = entryMapper.updateStatusBatch(new ArrayList<>(allIds), 2);
-        if (folderCount != allIds.size()) {
-            throw new BusinessException("Delete folders failed");
-        }
+        // 设置删除信息并更新状态
+        LocalDateTime now = LocalDateTime.now();
+        LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.in(Entry::getId, allIds)
+                .set(Entry::getStatus, DELETED)
+                .set(Entry::getDeleterId, userId)
+                .set(Entry::getDeletedAt, now)
+                .set(Entry::getExpiredAt, now.plusDays(EXPIRE_DAYS));
+
+        int count = entryMapper.update(updateWrapper);
+        if (count != allIds.size()) throw new BusinessException("delete entries failed");
     }
 
     private boolean validateFileName(String fileName) {
         if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;
 
-        // 检查保留字（CON, PRN, AUX, NUL, COM1-9, LPT1-9）
-        String upper = fileName.toUpperCase();
-        if (upper.matches("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\\..*)?$")) return false;
-
-        // 检查非法字符 \ / : * ? " < > | 以及首尾空格/点
-        return !fileName.matches(".*[\\\\/:*?\"<>|].*") &&
-                !fileName.startsWith(" ") && !fileName.endsWith(" ") &&
-                !fileName.endsWith(".");
+        // 检查非法字符 \ / : * ? " < > |
+        return !fileName.matches(".*[\\\\/:*?\"<>|].*");
     }
 }

@@ -60,6 +60,11 @@ public class PersonalController {
         return Result.success();
     }
 
+    @GetMapping("/folder")
+    public Result<?> listFolders() {
+        return Result.success();
+    }
+
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
         return Result.success();
@@ -67,6 +72,11 @@ public class PersonalController {
 
     @PostMapping("/move")
     public Result<?> moveEntries() {
+        return Result.success();
+    }
+
+    @PostMapping("/copy")
+    public Result<?> copyEntries() {
         return Result.success();
     }
 
