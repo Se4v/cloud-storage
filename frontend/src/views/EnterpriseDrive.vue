@@ -50,7 +50,7 @@
                 <el-icon class="mr-2"><Folder /></el-icon>移动到
               </el-dropdown-item>
               <el-dropdown-item @click="handleCopy" :disabled="selectedFiles.length === 0">
-                <el-icon class="mr-2"><DocumentCopy /></el-icon>复制
+                <el-icon class="mr-2"><DocumentCopy /></el-icon>复制到
               </el-dropdown-item>
               <el-dropdown-item @click="handleRename" :disabled="selectedFiles.length !== 1">
                 <el-icon class="mr-2"><EditPen /></el-icon>重命名
@@ -392,6 +392,62 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 复制到对话框 -->
+    <el-dialog
+        v-model="copyVisible"
+        title="复制到"
+        width="480px"
+        :close-on-click-modal="false"
+        class="rounded-lg move-dialog"
+    >
+      <div class="py-4">
+        <!-- 空间根目录提示 -->
+        <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg mb-3">
+          <el-icon class="text-blue-500"><Folder /></el-icon>
+          <span class="text-sm font-medium text-slate-700">企业空间</span>
+        </div>
+
+        <!-- 文件夹树形结构 -->
+        <div class="folder-tree-container border border-slate-200 rounded-lg overflow-auto max-h-[360px]">
+          <el-tree
+              ref="copyTreeRef"
+              :data="folderTreeData"
+              :props="{ label: 'name', children: 'children' }"
+              node-key="id"
+              :highlight-current="true"
+              :expand-on-click-node="false"
+              @node-click="handleCopyTreeNodeClick"
+              class="folder-tree"
+          >
+            <template #default="{ node, data }">
+              <div class="flex items-center gap-2 py-1">
+                <el-icon class="text-blue-400" :size="18"><Folder /></el-icon>
+                <span class="text-sm text-slate-700">{{ data.name }}</span>
+                <el-icon v-if="selectedTargetFolder && selectedTargetFolder.id === data.id" class="text-blue-600 ml-auto" :size="16"><Check /></el-icon>
+              </div>
+            </template>
+          </el-tree>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button
+              @click="copyVisible = false"
+              class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            取消
+          </button>
+          <button
+              @click="confirmCopy"
+              :disabled="!selectedTargetFolder"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+          >
+            确认
+          </button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -550,6 +606,7 @@ const pageSize = ref(20)
 const selectedFiles = ref([])
 const tableRef = ref(null)
 const moveTreeRef = ref(null)
+const copyTreeRef = ref(null)
 
 // 过滤后的文件列表
 const filteredFiles = computed(() => {
@@ -564,6 +621,7 @@ const filteredFiles = computed(() => {
 const createFolderVisible = ref(false)
 const shareVisible = ref(false)
 const moveVisible = ref(false)
+const copyVisible = ref(false)
 const newFolderName = ref('')
 const shareExpire = ref('7')
 const shareLink = ref('')
@@ -831,8 +889,41 @@ const confirmMove = () => {
 
 // 复制
 const handleCopy = () => {
-  if (selectedFiles.length === 0) return
-  ElMessage.success(`已复制 ${selectedFiles.value.length} 个项目`)
+  if (selectedFiles.value.length === 0) return
+
+  // 校验：只能复制单个文件，不能复制文件夹
+  if (selectedFiles.value.length !== 1) {
+    ElMessage.warning('只能复制单个文件')
+    return
+  }
+
+  const selectedFile = selectedFiles.value[0]
+  if (selectedFile.type === 'folder') {
+    ElMessage.warning('不能复制文件夹，请选择文件')
+    return
+  }
+
+  selectedTargetFolder.value = null
+  copyVisible.value = true
+}
+
+// 处理复制对话框中的树节点点击
+const handleCopyTreeNodeClick = (data) => {
+  selectedTargetFolder.value = data
+}
+
+// 确认复制
+const confirmCopy = () => {
+  if (!selectedTargetFolder.value) {
+    ElMessage.warning('请选择目标文件夹')
+    return
+  }
+
+  const selectedFile = selectedFiles.value[0]
+  ElMessage.success(`已将 "${selectedFile.name}" 复制到 "${selectedTargetFolder.value.name}"`)
+  copyVisible.value = false
+  selectedTargetFolder.value = null
+  selectedFiles.value = []
 }
 
 // 重命名（批量时禁用）
