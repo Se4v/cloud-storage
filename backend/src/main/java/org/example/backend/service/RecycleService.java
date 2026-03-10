@@ -26,9 +26,9 @@ public class RecycleService {
     @Autowired
     private DriveMapper driveMapper;
 
-    private static final int ENTRY_TYPE_FILE = 1;
-    private static final int ENTRY_TYPE_FOLDER = 2;
-    private static final int STATUS_UNDELETED = 1;
+    private static final int FILE = 1;
+    private static final int FOLDER = 2;
+    private static final int UNDELETED = 1;
     private static final int STATUS_DELETED = 2;
     private static final int STATUS_PERMANENTLY_DELETED = 3;
 
@@ -109,9 +109,9 @@ public class RecycleService {
         List<Long> folderIds = new ArrayList<>();
 
         for (Entry entry : entries) {
-            if (entry.getEntryType() == ENTRY_TYPE_FILE) {
+            if (entry.getEntryType() == FILE) {
                 fileIds.add(entry.getId());
-            } else if (entry.getEntryType() == ENTRY_TYPE_FOLDER) {
+            } else if (entry.getEntryType() == FOLDER) {
                 folderIds.add(entry.getId());
             }
         }
@@ -119,7 +119,7 @@ public class RecycleService {
         // 3. 恢复文件
         if (!fileIds.isEmpty()) {
             LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, STATUS_UNDELETED)
+            updateWrapper.set(Entry::getStatus, UNDELETED)
                     .in(Entry::getId, fileIds);
             int count = entryMapper.update(updateWrapper);
             if (count != fileIds.size()) throw new BusinessException("Restore files failed");
@@ -136,7 +136,7 @@ public class RecycleService {
             }
 
             LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, STATUS_UNDELETED)
+            updateWrapper.set(Entry::getStatus, UNDELETED)
                     .in(Entry::getId, allFolderIds);
             int count = entryMapper.update(updateWrapper);
             if (count != allFolderIds.size()) throw new BusinessException("Restore folders failed");
@@ -161,10 +161,10 @@ public class RecycleService {
         Set<Long> fileStorageIds = new HashSet<>();
 
         for (Entry entry : entries) {
-            if (entry.getEntryType() == ENTRY_TYPE_FILE) {
+            if (entry.getEntryType() == FILE) {
                 fileIds.add(entry.getId());
                 fileStorageIds.add(entry.getStorageId());
-            } else if (entry.getEntryType() == ENTRY_TYPE_FOLDER) {
+            } else if (entry.getEntryType() == FOLDER) {
                 folderIds.add(entry.getId());
             }
         }
@@ -176,10 +176,10 @@ public class RecycleService {
         if (!folderIds.isEmpty()) {
             List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
             for (Entry child : children) {
-                if (child.getEntryType() == ENTRY_TYPE_FILE) {
+                if (child.getEntryType() == FILE) {
                     allChildFileIds.add(child.getId());
                     fileStorageIds.add(child.getStorageId());
-                } else if (child.getEntryType() == ENTRY_TYPE_FOLDER) {
+                } else if (child.getEntryType() == FOLDER) {
                     allChildFolderIds.add(child.getId());
                 }
             }
@@ -236,10 +236,10 @@ public class RecycleService {
         Set<Long> fileStorageIds = new HashSet<>();
 
         for (Entry entry : entries) {
-            if (entry.getEntryType() == ENTRY_TYPE_FILE) {
+            if (entry.getEntryType() == FILE) {
                 fileIds.add(entry.getId());
                 fileStorageIds.add(entry.getStorageId());
-            } else if (entry.getEntryType() == ENTRY_TYPE_FOLDER) {
+            } else if (entry.getEntryType() == FOLDER) {
                 folderIds.add(entry.getId());
             }
         }
@@ -251,10 +251,10 @@ public class RecycleService {
         if (!folderIds.isEmpty()) {
             List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
             for (Entry child : children) {
-                if (child.getEntryType() == ENTRY_TYPE_FILE) {
+                if (child.getEntryType() == FILE) {
                     allChildFileIds.add(child.getId());
                     fileStorageIds.add(child.getStorageId());
-                } else if (child.getEntryType() == ENTRY_TYPE_FOLDER) {
+                } else if (child.getEntryType() == FOLDER) {
                     allChildFolderIds.add(child.getId());
                 }
             }

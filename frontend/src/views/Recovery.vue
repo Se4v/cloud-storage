@@ -6,7 +6,7 @@
         <div class="flex items-center gap-3">
           <button
               @click="handleBatchRestore"
-              :disabled="selectedRows.length === 0"
+              :disabled="selectedRows.length === 0 || loading"
               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             <el-icon :size="16"><RefreshLeft /></el-icon>
@@ -15,7 +15,7 @@
 
           <button
               @click="handleBatchDelete"
-              :disabled="selectedRows.length === 0"
+              :disabled="selectedRows.length === 0 || loading"
               class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 hover:text-red-600 hover:border-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <el-icon :size="16"><Delete /></el-icon>
@@ -24,7 +24,7 @@
 
           <button
               @click="handleClearAll"
-              :disabled="tableData.length === 0"
+              :disabled="tableData.length === 0 || loading"
               class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 hover:text-red-600 hover:border-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <el-icon :size="16"><DeleteFilled /></el-icon>
@@ -40,6 +40,7 @@
         <!-- 表格 -->
         <el-table
             ref="tableRef"
+            v-loading="loading"
             :data="tableData"
             row-key="id"
             @selection-change="handleSelectionChange"
@@ -121,7 +122,7 @@
               sortable
           >
             <template #default="{ row }">
-              <span class="text-sm text-slate-600 tabular-nums">{{ row.size || '-' }}</span>
+              <span class="text-sm text-slate-600 tabular-nums">{{ formatFileSize(row.size) }}</span>
             </template>
           </el-table-column>
 
@@ -153,12 +154,12 @@
         </el-table>
 
         <!-- 空状态 -->
-        <div v-if="tableData.length === 0" class="py-20 flex flex-col items-center justify-center">
+        <div v-if="tableData.length === 0 && !loading" class="py-20 flex flex-col items-center justify-center">
           <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
             <el-icon class="text-slate-400" :size="32"><Delete /></el-icon>
           </div>
-          <h3 class="text-sm font-medium text-slate-900 mb-1">回收站是空的</h3>
-          <p class="text-sm text-slate-500">暂无已删除的文件</p>
+          <h3 class="text-sm font-medium text-slate-900 mb-1">暂无文件</h3>
+          <p class="text-sm text-slate-500">您还没有删除任何文件</p>
         </div>
       </div>
     </div>
@@ -188,8 +189,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 import {
   Document,
   Folder,
@@ -202,65 +204,45 @@ const tableRef = ref()
 const selectedRows = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(6)
+const total = ref(0)
+const tableData = ref([])
+const loading = ref(false)
 
-// 模拟数据
-const tableData = ref([
-  {
-    id: 1,
-    name: '设计文档.zip',
-    type: 'file',
-    path: '企业空间/设计中心',
-    deleteTime: '2022-04-27 14:45',
-    expireTime: '2022-05-27 14:45',
-    size: '31.2 MB'
-  },
-  {
-    id: 2,
-    name: '4月计划图.jpg',
-    type: 'file',
-    path: '企业空间/产品团队',
-    deleteTime: '2020-04-26 18:30',
-    expireTime: '2020-05-26 18:30',
-    size: '2.1 MB'
-  },
-  {
-    id: 3,
-    name: '云盘需求（第一版）',
-    type: 'file',
-    path: '企业空间/产品团队',
-    deleteTime: '2020-04-26 18:30',
-    expireTime: '2020-05-26 18:30',
-    size: '6.2 MB'
-  },
-  {
-    id: 4,
-    name: '4月经费统计',
-    type: 'file',
-    path: '企业空间/产品团队',
-    deleteTime: '2020-04-26 18:30',
-    expireTime: '2020-05-26 18:30',
-    size: '340 KB'
-  },
-  {
-    id: 5,
-    name: '项目资料汇总',
-    type: 'folder',
-    path: '个人空间/项目文件',
-    deleteTime: '2020-04-20 14:37',
-    expireTime: '2020-05-20 14:37',
-    size: '22 MB'
-  },
-  {
-    id: 6,
-    name: '交付材料',
-    type: 'folder',
-    path: '个人空间/项目文件',
-    deleteTime: '2020-04-20 14:37',
-    expireTime: '2020-05-20 14:37',
-    size: '1.3 GB'
+// 获取回收站列表
+const fetchRecycleList = async () => {
+  loading.value = true
+  try {
+    const response = await axios.get('/api/recycle/list')
+    if (response.data.code === 200) {
+      tableData.value = response.data.data || []
+      total.value = tableData.value.length
+    } else {
+      ElMessage.error(response.data.message || '获取回收站列表失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取回收站列表失败')
+    console.error(error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  fetchRecycleList()
+})
+
+// 格式化文件大小
+const formatFileSize = (size) => {
+  if (!size || size === '0' || size === 'null') return '-'
+  const numSize = parseInt(size)
+  if (isNaN(numSize)) return '-'
+  if (numSize === 0) return '-'
+  if (numSize < 1024) return numSize + ' B'
+  if (numSize < 1024 * 1024) return (numSize / 1024).toFixed(1) + ' KB'
+  if (numSize < 1024 * 1024 * 1024) return (numSize / 1024 / 1024).toFixed(1) + ' MB'
+  return (numSize / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+}
 
 // 获取文件图标
 const getFileIcon = (type) => {
@@ -296,15 +278,22 @@ const handleRestore = async (row) => {
         }
     )
 
-    const index = tableData.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      tableData.value.splice(index, 1)
-      total.value--
+    loading.value = true
+    const response = await axios.post('/api/recycle/restore', [parseInt(row.id)])
+    if (response.data.code === 200) {
+      ElMessage.success('还原成功')
+      await fetchRecycleList()
+      selectedRows.value = []
+    } else {
+      ElMessage.error(response.data.message || '还原失败')
     }
-
-    ElMessage.success('还原成功')
   } catch (error) {
-    // 取消操作
+    if (error !== 'cancel') {
+      ElMessage.error('还原失败')
+      console.error(error)
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -322,15 +311,22 @@ const handleDelete = async (row) => {
         }
     )
 
-    const index = tableData.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      tableData.value.splice(index, 1)
-      total.value--
+    loading.value = true
+    const response = await axios.post('/api/recycle/delete', [parseInt(row.id)])
+    if (response.data.code === 200) {
+      ElMessage.success('已彻底删除')
+      await fetchRecycleList()
+      selectedRows.value = []
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
     }
-
-    ElMessage.success('已彻底删除')
   } catch (error) {
-    // 取消操作
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+      console.error(error)
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -354,15 +350,24 @@ const handleBatchRestore = async () => {
         }
     )
 
-    const ids = selectedRows.value.map(row => row.id)
-    tableData.value = tableData.value.filter(item => !ids.includes(item.id))
-    total.value -= ids.length
-    selectedRows.value = []
-    tableRef.value?.clearSelection()
-
-    ElMessage.success('还原成功')
+    loading.value = true
+    const ids = selectedRows.value.map(row => parseInt(row.id))
+    const response = await axios.post('/api/recycle/restore', ids)
+    if (response.data.code === 200) {
+      ElMessage.success('还原成功')
+      await fetchRecycleList()
+      selectedRows.value = []
+      tableRef.value?.clearSelection()
+    } else {
+      ElMessage.error(response.data.message || '还原失败')
+    }
   } catch (error) {
-    // 取消操作
+    if (error !== 'cancel') {
+      ElMessage.error('还原失败')
+      console.error(error)
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -386,15 +391,24 @@ const handleBatchDelete = async () => {
         }
     )
 
-    const ids = selectedRows.value.map(row => row.id)
-    tableData.value = tableData.value.filter(item => !ids.includes(item.id))
-    total.value -= ids.length
-    selectedRows.value = []
-    tableRef.value?.clearSelection()
-
-    ElMessage.success('已彻底删除')
+    loading.value = true
+    const ids = selectedRows.value.map(row => parseInt(row.id))
+    const response = await axios.post('/api/recycle/delete', ids)
+    if (response.data.code === 200) {
+      ElMessage.success('已彻底删除')
+      await fetchRecycleList()
+      selectedRows.value = []
+      tableRef.value?.clearSelection()
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
+    }
   } catch (error) {
-    // 取消操作
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+      console.error(error)
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -417,14 +431,23 @@ const handleClearAll = async () => {
         }
     )
 
-    tableData.value = []
-    total.value = 0
-    selectedRows.value = []
-    tableRef.value?.clearSelection()
-
-    ElMessage.success('回收站已清空')
+    loading.value = true
+    const response = await axios.post('/api/recycle/clear')
+    if (response.data.code === 200) {
+      ElMessage.success('回收站已清空')
+      await fetchRecycleList()
+      selectedRows.value = []
+      tableRef.value?.clearSelection()
+    } else {
+      ElMessage.error(response.data.message || '清空失败')
+    }
   } catch (error) {
-    // 取消操作
+    if (error !== 'cancel') {
+      ElMessage.error('清空失败')
+      console.error(error)
+    }
+  } finally {
+    loading.value = false
   }
 }
 

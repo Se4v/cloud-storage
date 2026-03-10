@@ -8,9 +8,7 @@ import org.example.backend.service.RecycleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -23,6 +21,7 @@ public class RecycleController {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    @GetMapping("/list")
     public Result<List<RecycleView>> listEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
@@ -49,16 +48,19 @@ public class RecycleController {
     }
 
 
+    @PostMapping("/restore")
     public Result<Void> restoreEntries(@RequestBody List<Long> ids) {
         recycleService.restoreEntries(ids);
         return Result.success();
     }
 
+    @PostMapping("/delete")
     public Result<Void> deleteEntries(@RequestBody List<Long> ids) {
         recycleService.permanentlyDeleteEntries(ids);
         return Result.success();
     }
 
+    @PostMapping("/clear")
     public Result<Void> clearEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
