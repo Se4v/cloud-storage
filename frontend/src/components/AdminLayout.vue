@@ -39,10 +39,10 @@
           </div>
         </div>
 
-        <!-- 用户与团队管理 -->
+        <!-- 用户与组织管理 -->
         <div class="mb-6">
           <h3 class="px-4 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            用户与团队管理
+            用户与组织管理
           </h3>
           <div class="space-y-1 px-2">
             <button
@@ -161,11 +161,16 @@ import {
   DataLine,
   User,
   OfficeBuilding,
-  Link,
-  SetUp,
   Histogram,
-  List,
-  SwitchButton
+  Notebook,
+  SwitchButton,
+  UserFilled,
+  DataAnalysis,
+  Lock,
+  Box,
+  Bell,
+  Tools,
+  SetUp
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -174,25 +179,28 @@ const currentMenu = ref('space-stats')
 // 数据报表菜单
 const reportMenu = [
   { key: 'space-stats', label: '空间统计', icon: DataLine, route: '/admin/space-stats' },
-  { key: 'user-stats', label: '用户统计', icon: Histogram, route: '/admin/user-stats' },
-  { key: 'traffic-stats', label: '流量统计', icon: DataLine, route: '/admin/traffic-stats' }
+  { key: 'user-stats', label: '用户统计', icon: DataAnalysis, route: '/admin/user-stats' },
+  { key: 'traffic-stats', label: '流量统计', icon: Histogram, route: '/admin/traffic-stats' }
 ]
 
-// 用户与团队管理菜单
+// 用户与组织管理菜单
 const managementMenu = [
-  { key: 'user-mgmt', label: '用户管理', icon: User, route: '/admin/users' },
-  { key: 'team-mgmt', label: '团队管理', icon: OfficeBuilding, route: '/admin/teams' }
+  { key: 'user-mgmt', label: '用户管理', icon: User, route: '/admin/user' },
+  { key: 'org-mgmt', label: '组织管理', icon: OfficeBuilding, route: '/admin/org' },
+  { key: 'role-mgmt', label: '角色管理', icon: UserFilled, route: '/admin/role' },
+  { key: 'perm-mgmt', label: '权限管理', icon: Lock, route: '/admin/permission' }
 ]
 
 // 网盘配置菜单
 const configMenu = [
-  { key: 'init-config', label: '初始化设置', icon: SetUp, route: '/admin/init' },
-  { key: 'link-config', label: '外链设置', icon: Link, route: '/admin/links' }
+  { key: 'storage-mgmt', label: '存储管理', icon: Box, route: '/admin/storage' },
+  { key: 'notice-mgmt', label: '系统公告', icon: Bell, route: '/admin/notice' },
+  { key: 'system-settings', label: '系统设置', icon: SetUp, route: '/admin/settings' }
 ]
 
 // 安全与审计菜单
 const securityMenu = [
-  { key: 'logs', label: '日志查询', icon: List, route: '/admin/logs' }
+  { key: 'logs', label: '日志查询', icon: Notebook, route: '/admin/log' }
 ]
 
 // 处理菜单点击
