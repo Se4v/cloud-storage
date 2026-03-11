@@ -1,0 +1,526 @@
+<template>
+  <div class="p-6 max-w-[1600px] mx-auto space-y-6">
+    <!-- 查询区域 -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+      <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+        <!-- 用户名搜索 -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">用户名</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <el-icon class="text-slate-400" :size="16">
+                <User />
+              </el-icon>
+            </div>
+            <input
+              v-model="queryForm.username"
+              type="text"
+              placeholder="请输入用户名"
+              class="w-full h-9 pl-9 pr-4 rounded-md border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- 操作类型筛选 -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">操作类型</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <el-icon class="text-slate-400" :size="16">
+                <Operation />
+              </el-icon>
+            </div>
+            <select
+              v-model="queryForm.operationType"
+              class="w-full h-9 pl-9 pr-8 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer appearance-none"
+            >
+              <option value="">全部类型</option>
+              <option value="LOGIN">登录</option>
+              <option value="LOGOUT">登出</option>
+              <option value="CREATE">创建</option>
+              <option value="UPDATE">更新</option>
+              <option value="DELETE">删除</option>
+              <option value="UPLOAD">上传</option>
+              <option value="DOWNLOAD">下载</option>
+              <option value="SHARE">分享</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <el-icon class="text-slate-400" :size="14"><ArrowDown /></el-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作状态筛选 -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">操作状态</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <el-icon class="text-slate-400" :size="16">
+                <CircleCheck />
+              </el-icon>
+            </div>
+            <select
+              v-model="queryForm.success"
+              class="w-full h-9 pl-9 pr-8 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer appearance-none"
+            >
+              <option value="">全部状态</option>
+              <option :value="true">成功</option>
+              <option :value="false">失败</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <el-icon class="text-slate-400" :size="14"><ArrowDown /></el-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- 时间范围筛选 -->
+        <div class="flex-1 min-w-[280px]">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">操作时间</label>
+          <el-date-picker
+            v-model="queryForm.timeRange"
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            class="w-full"
+          />
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="flex gap-2 flex-shrink-0">
+          <button
+            @click="handleSearch"
+            class="h-9 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2"
+          >
+            <el-icon :size="16"><Search /></el-icon>
+            查询
+          </button>
+          <button
+            @click="handleReset"
+            class="h-9 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-md text-sm font-medium transition-colors"
+          >
+            重置
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">用户名</th>
+              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">操作类型</th>
+              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">操作详情</th>
+              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">操作时间</th>
+              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">状态</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr
+              v-for="log in tableData"
+              :key="log.id"
+              class="hover:bg-slate-50/50 transition-colors"
+            >
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-sm font-medium flex-shrink-0">
+                    {{ log.username.charAt(0).toUpperCase() }}
+                  </div>
+                  <span class="font-medium text-slate-900">{{ log.username }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  :class="[
+                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                    getOperationTypeClass(log.operationType)
+                  ]"
+                >
+                  {{ getOperationTypeLabel(log.operationType) }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="max-w-md">
+                  <p class="text-slate-700 truncate" :title="log.detail">{{ log.detail }}</p>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex flex-col">
+                  <span class="text-slate-900">{{ formatDate(log.operationTime) }}</span>
+                  <span class="text-xs text-slate-500 mt-0.5">{{ formatTime(log.operationTime) }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  :class="[
+                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                    log.success
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-red-50 text-red-700 border-red-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'w-1.5 h-1.5 rounded-full mr-1.5',
+                      log.success ? 'bg-emerald-500' : 'bg-red-500'
+                    ]"
+                  ></span>
+                  {{ log.success ? '成功' : '失败' }}
+                </span>
+              </td>
+            </tr>
+
+            <!-- 空状态 -->
+            <tr v-if="tableData.length === 0">
+              <td colspan="5" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center justify-center text-slate-400">
+                  <el-icon :size="48" class="mb-2 opacity-50"><Document /></el-icon>
+                  <p class="text-sm">暂无日志数据</p>
+                  <button
+                    @click="handleReset"
+                    class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    重置筛选条件
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 分页 -->
+      <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
+        <div class="text-sm text-slate-500">
+          <span>共 {{ total }} 条记录</span>
+        </div>
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="prev, pager, next, sizes"
+          background
+          class="custom-pagination"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+import {
+  Search,
+  User,
+  Operation,
+  CircleCheck,
+  ArrowDown,
+  Document
+} from '@element-plus/icons-vue'
+
+// 查询表单
+const queryForm = reactive({
+  username: '',
+  operationType: '',
+  success: '',
+  timeRange: null
+})
+
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+
+// 操作类型映射
+const operationTypeMap = {
+  'LOGIN': { label: '登录', class: 'bg-blue-50 text-blue-700 border-blue-200' },
+  'LOGOUT': { label: '登出', class: 'bg-slate-50 text-slate-700 border-slate-200' },
+  'CREATE': { label: '创建', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  'UPDATE': { label: '更新', class: 'bg-amber-50 text-amber-700 border-amber-200' },
+  'DELETE': { label: '删除', class: 'bg-red-50 text-red-700 border-red-200' },
+  'UPLOAD': { label: '上传', class: 'bg-purple-50 text-purple-700 border-purple-200' },
+  'DOWNLOAD': { label: '下载', class: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+  'SHARE': { label: '分享', class: 'bg-pink-50 text-pink-700 border-pink-200' }
+}
+
+// 获取操作类型标签
+const getOperationTypeLabel = (type) => {
+  return operationTypeMap[type]?.label || type
+}
+
+// 获取操作类型样式类
+const getOperationTypeClass = (type) => {
+  return operationTypeMap[type]?.class || 'bg-slate-50 text-slate-700 border-slate-200'
+}
+
+// 格式化日期
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
+// 格式化时间
+const formatTime = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+// 模拟数据
+const mockData = [
+  {
+    id: 1,
+    username: 'zhangsan',
+    operationType: 'LOGIN',
+    detail: '用户登录系统成功，IP: 192.168.1.100',
+    operationTime: '2026-03-11 14:32:18',
+    success: true
+  },
+  {
+    id: 2,
+    username: 'lisi',
+    operationType: 'UPLOAD',
+    detail: '上传文件 "项目文档.pdf" 到 /工作文件/',
+    operationTime: '2026-03-11 14:28:45',
+    success: true
+  },
+  {
+    id: 3,
+    username: 'wangwu',
+    operationType: 'DELETE',
+    detail: '删除文件夹 "/旧资料/2024" 及其包含的 15 个文件',
+    operationTime: '2026-03-11 14:15:22',
+    success: true
+  },
+  {
+    id: 4,
+    username: 'zhangsan',
+    operationType: 'SHARE',
+    detail: '创建分享链接，文件: "会议记录.docx"',
+    operationTime: '2026-03-11 13:58:07',
+    success: true
+  },
+  {
+    id: 5,
+    username: 'lisi',
+    operationType: 'DOWNLOAD',
+    detail: '下载文件 "设计稿_v2.psd"',
+    operationTime: '2026-03-11 13:45:33',
+    success: false
+  },
+  {
+    id: 6,
+    username: 'admin',
+    operationType: 'CREATE',
+    detail: '创建新用户 "zhaoliu"，分配角色：普通用户',
+    operationTime: '2026-03-11 12:30:15',
+    success: true
+  },
+  {
+    id: 7,
+    username: 'wangwu',
+    operationType: 'UPDATE',
+    detail: '修改个人资料：更新手机号',
+    operationTime: '2026-03-11 11:22:48',
+    success: true
+  },
+  {
+    id: 8,
+    username: 'zhangsan',
+    operationType: 'LOGOUT',
+    detail: '用户登出系统',
+    operationTime: '2026-03-11 10:15:36',
+    success: true
+  },
+  {
+    id: 9,
+    username: 'lisi',
+    operationType: 'LOGIN',
+    detail: '用户登录系统失败，原因：密码错误',
+    operationTime: '2026-03-11 09:45:12',
+    success: false
+  },
+  {
+    id: 10,
+    username: 'admin',
+    operationType: 'UPDATE',
+    detail: '修改系统设置：更新存储配额为 100GB',
+    operationTime: '2026-03-11 09:30:00',
+    success: true
+  }
+]
+
+// 表格数据
+const tableData = ref([])
+
+// 加载数据
+const loadData = () => {
+  // 模拟筛选
+  let result = [...mockData]
+  
+  if (queryForm.username) {
+    result = result.filter(item => item.username.includes(queryForm.username))
+  }
+  
+  if (queryForm.operationType) {
+    result = result.filter(item => item.operationType === queryForm.operationType)
+  }
+  
+  if (queryForm.success !== '') {
+    result = result.filter(item => item.success === queryForm.success)
+  }
+  
+  if (queryForm.timeRange && queryForm.timeRange.length === 2) {
+    const startTime = new Date(queryForm.timeRange[0]).getTime()
+    const endTime = new Date(queryForm.timeRange[1]).getTime()
+    result = result.filter(item => {
+      const itemTime = new Date(item.operationTime).getTime()
+      return itemTime >= startTime && itemTime <= endTime
+    })
+  }
+  
+  total.value = result.length
+  
+  // 分页
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  tableData.value = result.slice(start, end)
+}
+
+// 搜索
+const handleSearch = () => {
+  currentPage.value = 1
+  loadData()
+  ElMessage.success('查询成功')
+}
+
+// 重置
+const handleReset = () => {
+  queryForm.username = ''
+  queryForm.operationType = ''
+  queryForm.success = ''
+  queryForm.timeRange = null
+  currentPage.value = 1
+  loadData()
+}
+
+// 分页大小变化
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  loadData()
+}
+
+// 页码变化
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+  loadData()
+}
+
+// 初始化加载
+loadData()
+</script>
+
+<style scoped>
+/* 覆盖Element Plus样式以匹配shadcn风格 */
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
+  background-color: rgb(37 99 235);
+  color: white;
+  border-radius: 6px;
+}
+
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active:hover) {
+  background-color: rgb(29 78 216);
+}
+
+:deep(.el-pagination.is-background .el-pager li) {
+  background-color: transparent;
+  border-radius: 6px;
+  font-weight: 500;
+  color: rgb(71 85 105);
+}
+
+:deep(.el-pagination.is-background .el-pager li:hover) {
+  background-color: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+
+:deep(.el-pagination.is-background .btn-prev),
+:deep(.el-pagination.is-background .btn-next) {
+  background-color: transparent;
+  border-radius: 6px;
+  border: 1px solid rgb(226 232 240);
+}
+
+:deep(.el-pagination.is-background .btn-prev:hover),
+:deep(.el-pagination.is-background .btn-next:hover) {
+  background-color: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+
+:deep(.el-pagination .el-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgb(226 232 240) inset;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+:deep(.el-pagination .el-select .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px rgb(148 163 184) inset;
+}
+
+/* 日期选择器样式覆盖 */
+:deep(.el-date-editor.el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgb(226 232 240) inset;
+  border-radius: 6px;
+  height: 36px;
+}
+
+:deep(.el-date-editor.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px rgb(148 163 184) inset;
+}
+
+:deep(.el-date-editor.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 2px rgb(59 130 246) inset;
+}
+
+/* 平滑滚动 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(148 163 184);
+}
+
+/* select 箭头样式 */
+select {
+  background-image: none;
+}
+</style>
