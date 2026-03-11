@@ -32,13 +32,9 @@ public class Log implements Serializable {
     @TableField("request_uri")
     private String requestUri;
 
-    /** 请求参数(JSON) */
-    @TableField("request_params")
-    private String requestParams;
-
     /** 操作: UPLOAD/DOWNLOAD/LOGIN/DELETE */
-    @TableField("action_type")
-    private String actionType;
+    @TableField("action")
+    private String action;
 
     /** 对象类型: FILE/USER/SHARE/SYSTEM */
     @TableField("target_type")
@@ -53,12 +49,12 @@ public class Log implements Serializable {
     private String targetName;
 
     /** 操作详情 */
-    @TableField("content")
-    private String content;
+    @TableField("detail")
+    private String detail;
 
     /** 是否成功:0-失败; 1-成功 */
-    @TableField("is_success")
-    private Integer success;
+    @TableField("status")
+    private Integer status;
 
     /** 错误信息 */
     @TableField("error_msg")
@@ -69,8 +65,8 @@ public class Log implements Serializable {
     private String clientIp;
 
     /** 设备信息 */
-    @TableField("device_info")
-    private String deviceInfo;
+    @TableField("user_agent")
+    private String userAgent;
 
     /** 创建时间 */
     @TableField("created_at")

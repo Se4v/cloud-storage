@@ -13,6 +13,7 @@ import PermissionMange from "@/views/admin/PermissionMange.vue";
 import RoleMange from "@/views/admin/RoleMange.vue";
 import OrgMange from "@/views/admin/OrgMange.vue";
 import StorageMange from "@/views/admin/StorageMange.vue";
+import LogManage from "@/views/admin/LogManage.vue";
 
 const routes = [
     {
@@ -86,6 +87,11 @@ const routes = [
                 path: 'storage',
                 name: 'StorageMange',
                 component: StorageMange
+            },
+            {
+                path: 'log',
+                name: 'LogManage',
+                component: LogManage
             }
         ]
     }
