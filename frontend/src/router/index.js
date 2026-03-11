@@ -14,6 +14,7 @@ import RoleManage from "@/views/admin/RoleManage.vue";
 import OrgManage from "@/views/admin/OrgManage.vue";
 import StorageManage from "@/views/admin/StorageManage.vue";
 import LogManage from "@/views/admin/LogManage.vue";
+import SystemManage from "@/views/admin/SystemManage.vue";
 
 const routes = [
     {
@@ -92,6 +93,11 @@ const routes = [
                 path: 'log',
                 name: 'LogManage',
                 component: LogManage
+            },
+            {
+                path: 'settings',
+                name: 'SystemManage',
+                component: SystemManage
             }
         ]
     }
