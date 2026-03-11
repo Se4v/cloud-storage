@@ -7,12 +7,12 @@ import SafeExternalLinks from "@/views/SafeExternalLinks.vue";
 import Profile from '@/views/Profile.vue';
 import Recovery from "@/views/Recovery.vue";
 import AdminLayout from "@/components/AdminLayout.vue";
-import NoticeMange from "@/views/admin/NoticeMange.vue";
-import UserMange from "@/views/admin/UserMange.vue";
-import PermissionMange from "@/views/admin/PermissionMange.vue";
-import RoleMange from "@/views/admin/RoleMange.vue";
-import OrgMange from "@/views/admin/OrgMange.vue";
-import StorageMange from "@/views/admin/StorageMange.vue";
+import NoticeManage from "@/views/admin/NoticeManage.vue";
+import UserManage from "@/views/admin/UserManage.vue";
+import PermissionManage from "@/views/admin/PermissionManage.vue";
+import RoleManage from "@/views/admin/RoleManage.vue";
+import OrgManage from "@/views/admin/OrgManage.vue";
+import StorageManage from "@/views/admin/StorageManage.vue";
 import LogManage from "@/views/admin/LogManage.vue";
 
 const routes = [
@@ -60,33 +60,33 @@ const routes = [
         children: [
             {
                 path: 'notice',
-                name: 'NoticeMange',
-                component: NoticeMange
+                name: 'NoticeManage',
+                component: NoticeManage
             },
             {
                 path: 'user',
-                name: 'UserMange',
-                component: UserMange
+                name: 'UserManage',
+                component: UserManage
             },
             {
                 path: 'permission',
-                name: 'PermissionMange',
-                component: PermissionMange
+                name: 'PermissionManage',
+                component: PermissionManage
             },
             {
                 path: 'role',
-                name: 'RoleMange',
-                component: RoleMange
+                name: 'RoleManage',
+                component: RoleManage
             },
             {
                 path: 'org',
-                name: 'OrgMange',
-                component: OrgMange
+                name: 'OrgManage',
+                component: OrgManage
             },
             {
                 path: 'storage',
-                name: 'StorageMange',
-                component: StorageMange
+                name: 'StorageManage',
+                component: StorageManage
             },
             {
                 path: 'log',

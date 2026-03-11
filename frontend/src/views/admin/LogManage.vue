@@ -1,7 +1,8 @@
 <template>
   <div class="p-6 max-w-[1600px] mx-auto space-y-6">
     <!-- 查询区域 -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
+      <!-- 第一行：用户名、操作类型、操作状态 -->
       <div class="flex flex-col lg:flex-row lg:items-end gap-4">
         <!-- 用户名搜索 -->
         <div class="flex-1 min-w-[200px]">
@@ -72,9 +73,12 @@
             </div>
           </div>
         </div>
+      </div>
 
+      <!-- 第二行：操作时间、按钮 -->
+      <div class="flex flex-col lg:flex-row lg:items-end gap-4">
         <!-- 时间范围筛选 -->
-        <div class="flex-1 min-w-[280px]">
+        <div class="flex-1 min-w-[280px] lg:max-w-[calc(33.333%-11px)]">
           <label class="block text-sm font-medium text-slate-700 mb-1.5">操作时间</label>
           <el-date-picker
             v-model="queryForm.timeRange"
@@ -89,7 +93,7 @@
         </div>
 
         <!-- 操作按钮 -->
-        <div class="flex gap-2 flex-shrink-0">
+        <div class="flex gap-2 flex-shrink-0 lg:ml-auto">
           <button
             @click="handleSearch"
             class="h-9 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2"
