@@ -260,8 +260,7 @@ onMounted(() => {
 
 // 获取文件图标背景色
 const getFileIconBg = (row) => {
-  if (row.type === 'folder') return 'bg-blue-100'
-  return 'bg-slate-100'
+  return 'bg-slate-400'
 }
 
 // 获取文件图标颜色

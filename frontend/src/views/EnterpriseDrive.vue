@@ -648,7 +648,7 @@ const getFileIcon = (file) => {
 
 // 获取文件图标背景色
 const getFileIconClass = (file) => {
-  return 'bg-blue-500'
+  return 'bg-slate-400'
 }
 
 // 格式化日期

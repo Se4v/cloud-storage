@@ -261,7 +261,7 @@ const getFileIcon = (type) => {
 
 // 获取文件图标背景色
 const getFileIconBg = (type) => {
-  return type === 'folder' ? 'bg-blue-100' : 'bg-slate-100'
+  return 'bg-slate-400'
 }
 
 // 获取文件图标颜色
