@@ -118,15 +118,15 @@
         </div>
       </div>
 
-      <!-- 数据表格 - 扁平化 -->
-      <div class="overflow-x-auto bg-white">
+      <!-- 数据表格 - 外边框 + 横线 -->
+      <div class="overflow-x-auto bg-white border border-slate-200">
         <table class="w-full text-sm text-left">
           <thead>
-            <tr class="border-b border-slate-200">
+            <tr class="bg-slate-50 border-b border-slate-200">
               <th 
                 v-for="col in columns" 
                 :key="col.key"
-                class="px-6 py-3 text-xs font-medium text-slate-500 cursor-pointer hover:text-slate-700 transition-colors"
+                class="px-4 py-3 text-xs font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors"
                 @click="handleSort(col.key)"
               >
                 <div class="flex items-center gap-1">
@@ -142,24 +142,24 @@
             <tr
               v-for="row in tableData"
               :key="row.id"
-              class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+              class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors last:border-b-0"
             >
-              <td class="px-6 py-4">
+              <td class="px-4 py-3">
                 <div class="flex flex-col">
                   <span class="font-medium text-slate-900">{{ row.name }}</span>
                   <span class="text-xs text-slate-500">{{ row.id }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-slate-700">
+              <td class="px-4 py-3 text-slate-700">
                 {{ row.allocated }}
               </td>
-              <td class="px-6 py-4 text-slate-700">
+              <td class="px-4 py-3 text-slate-700">
                 {{ row.used }}
               </td>
-              <td class="px-6 py-4 text-slate-700">
+              <td class="px-4 py-3 text-slate-700">
                 {{ row.remaining }}
               </td>
-              <td class="px-6 py-4 text-slate-700">
+              <td class="px-4 py-3 text-slate-700">
                 {{ row.members }}
               </td>
             </tr>
