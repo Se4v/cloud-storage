@@ -7,7 +7,7 @@
         <div class="flex items-center gap-3">
           <button
               @click="handleCreate"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
           >
             <el-icon :size="16"><Plus /></el-icon>
             新建角色
@@ -139,7 +139,7 @@
             <p class="text-sm text-slate-500 mb-4">开始创建你的第一个角色</p>
             <button
                 @click="handleCreate"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
             >
               <el-icon :size="16"><Plus /></el-icon>
               新建角色
@@ -149,13 +149,10 @@
       </el-table>
 
       <!-- 分页 -->
-      <div class="border-t border-slate-200 px-4 py-4 flex items-center justify-between">
-        <div class="text-sm text-slate-500 flex items-center gap-4">
-          <span>共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录</span>
-          <span v-if="selectedRoles.length > 0" class="text-blue-600 font-medium">
-            已选择 {{ selectedRoles.length }} 项数据
-          </span>
-        </div>
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+        <span class="text-sm text-slate-500">
+          共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
+        </span>
         <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -163,7 +160,7 @@
             :total="total"
             layout="prev, pager, next, sizes"
             background
-            class="custom-pagination"
+            class="!gap-2"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
         />
@@ -249,7 +246,7 @@
           <button
               @click="handleSubmit"
               :loading="submitLoading"
-              class="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ submitLoading ? '保存中...' : '确认保存' }}
           </button>

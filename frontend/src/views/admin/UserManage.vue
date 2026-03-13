@@ -56,8 +56,9 @@
 
           <button
               @click="handleSearch"
-              class="h-9 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-sm font-medium transition-colors"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
           >
+            <el-icon :size="16"><Search /></el-icon>
             查询
           </button>
           <button
@@ -197,13 +198,10 @@
       </div>
 
       <!-- 分页 -->
-      <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
-        <div class="text-sm text-slate-500">
-          <span>共 {{ total }} 条记录</span>
-          <span v-if="selectedUsers.length > 0" class="ml-3 text-blue-600 font-medium">
-            共选中 {{ selectedUsers.length }} 项数据
-          </span>
-        </div>
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+        <span class="text-sm text-slate-500">
+          共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
+        </span>
         <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -211,7 +209,7 @@
             :total="total"
             layout="prev, pager, next, sizes"
             background
-            class="custom-pagination"
+            class="!gap-2"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
         />

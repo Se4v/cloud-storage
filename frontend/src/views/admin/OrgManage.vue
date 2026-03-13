@@ -3,25 +3,24 @@
     <!-- 顶部操作栏 -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <el-button
-            type="primary"
-            class="!bg-slate-900 !border-slate-900 !text-white hover:!bg-slate-800 shadow-sm"
+        <button
             @click="handleCreate"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
         >
-          <el-icon class="mr-1"><Plus /></el-icon>
+          <el-icon :size="16"><Plus /></el-icon>
           新建节点
-        </el-button>
-        <el-button
-            :disabled="!selectedRows.length"
-            class="!border-slate-200 !text-slate-700 hover:!bg-slate-50 disabled:!opacity-50"
+        </button>
+        <button
             @click="handleBatchDelete"
+            :disabled="!selectedRows.length"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <el-icon class="mr-1"><Delete /></el-icon>
+          <el-icon :size="16"><Delete /></el-icon>
           批量删除
           <span v-if="selectedRows.length" class="ml-1 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
             {{ selectedRows.length }}
           </span>
-        </el-button>
+        </button>
       </div>
 
       <div class="flex items-center gap-3">
@@ -127,14 +126,18 @@
         </el-table>
 
         <!-- 分页 -->
-        <div class="px-4 py-3 border-t border-slate-200 flex justify-end">
+        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+          <span class="text-sm text-slate-500">
+            共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
+          </span>
           <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
               :page-sizes="[10, 20, 50]"
               :total="total"
-              layout="total, sizes, prev, pager, next"
-              class="!font-sans"
+              layout="prev, pager, next, sizes"
+              background
+              class="!gap-2"
           />
         </div>
       </div>
@@ -235,14 +238,18 @@
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <el-button @click="dialogVisible = false" class="!rounded-lg">取消</el-button>
-          <el-button
-              type="primary"
+          <button
+              @click="dialogVisible = false"
+              class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200"
+          >
+            取消
+          </button>
+          <button
               @click="handleSubmit"
-              class="!bg-slate-900 !border-slate-900 !text-white hover:!bg-slate-800 !rounded-lg"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             确认
-          </el-button>
+          </button>
         </div>
       </template>
     </el-dialog>
