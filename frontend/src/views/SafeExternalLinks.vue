@@ -130,12 +130,12 @@
       </div>
     </div>
 
-    <!-- 底部栏 -->
-    <div class="bg-white border-t border-slate-200 px-8 py-4 flex items-center justify-between">
-      <div class="text-sm text-slate-500">
-        共 <span class="font-medium text-slate-900">{{ total }}</span> 项数据
-        <span v-if="selectedLinks.length > 0" class="ml-2 text-blue-600">
-          已选中 <span class="font-medium">{{ selectedLinks.length }}</span> 项
+    <!-- 底部状态栏 -->
+    <div class="bg-white border-t border-slate-200 px-6 py-3 flex items-center justify-between text-sm text-slate-500">
+      <div class="flex items-center gap-4">
+        <span>共 {{ total }} 项数据</span>
+        <span v-if="selectedLinks.length > 0" class="text-blue-600 font-medium">
+          已选中 {{ selectedLinks.length }} 项
         </span>
       </div>
 
@@ -144,11 +144,9 @@
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
+          layout="total, sizes, prev, pager, next"
           background
-          class="!font-sans"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+          class="custom-pagination"
       />
     </div>
 
@@ -445,11 +443,21 @@ const handleCurrentChange = (val) => {
 }
 
 /* 分页样式优化 */
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: #0f172a;
+:deep(.custom-pagination) {
+  --el-pagination-hover-color: #2563eb;
 }
 
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
-  color: #0f172a;
+:deep(.custom-pagination .el-pagination__sizes .el-input .el-input__inner) {
+  border-radius: 6px;
+}
+
+:deep(.custom-pagination .el-pager li) {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+:deep(.custom-pagination .el-pager li.is-active) {
+  background-color: #2563eb;
+  color: white;
 }
 </style>
