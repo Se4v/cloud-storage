@@ -1,12 +1,10 @@
 <template>
-  <div class="p-6 max-w-[1400px] mx-auto space-y-6">
-    <!-- 顶部区域：存储概览 + 环形图 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="p-6 max-w-[1400px] mx-auto">
+    <!-- 顶部区域：存储概览 + 环形图 - 扁平化设计 -->
+    <div class="flex flex-col lg:flex-row border-b border-slate-200">
       <!-- 左侧：存储空间概览 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-semibold text-slate-900">存储空间</h2>
-        </div>
+      <div class="flex-1 p-6 lg:border-r border-slate-200">
+        <h2 class="text-base font-semibold text-slate-900 mb-4">存储空间</h2>
 
         <!-- 剩余容量 -->
         <div class="mb-4">
@@ -47,7 +45,7 @@
       </div>
 
       <!-- 右侧：容量使用占比环形图 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-t lg:border-t-0 border-slate-200">
         <h2 class="text-base font-semibold text-slate-900 mb-4">容量使用占比</h2>
         <div class="flex items-center">
           <!-- 环形图 -->
@@ -76,20 +74,38 @@
     </div>
 
     <!-- 底部：容量使用详情 -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+    <div>
       <!-- 标题和工具栏 -->
-      <div class="p-4 border-b border-slate-200">
+      <div class="py-4 border-b border-slate-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 class="text-base font-semibold text-slate-900">容量使用详情</h2>
+          <div class="flex items-center gap-6">
+            <h2 class="text-base font-semibold text-slate-900">容量使用详情</h2>
+            <!-- Tab 切换 - 扁平化 -->
+            <div class="flex items-center gap-1">
+              <button
+                v-for="tab in tabs"
+                :key="tab.key"
+                @click="currentTab = tab.key"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition-colors border-b-2',
+                  currentTab === tab.key
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-600 hover:text-slate-900'
+                ]"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+          </div>
           
           <div class="flex items-center gap-3">
-            <!-- 搜索框 -->
+            <!-- 搜索框 - 扁平化 -->
             <div class="relative">
               <input
                 v-model="searchQuery"
                 type="text"
                 placeholder="请输入团队名称搜索团队"
-                class="w-64 h-9 pl-3 pr-10 rounded-md border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                class="w-64 h-9 pl-3 pr-10 rounded border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
               <button 
                 @click="handleSearch"
@@ -100,34 +116,17 @@
             </div>
           </div>
         </div>
-
-        <!-- Tab 切换 -->
-        <div class="flex items-center gap-1 mt-4">
-          <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            @click="currentTab = tab.key"
-            :class="[
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              currentTab === tab.key
-                ? 'bg-slate-100 text-slate-900'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            ]"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
       </div>
 
-      <!-- 数据表格 -->
-      <div class="overflow-x-auto">
+      <!-- 数据表格 - 扁平化 -->
+      <div class="overflow-x-auto bg-white">
         <table class="w-full text-sm text-left">
-          <thead class="bg-slate-50 border-b border-slate-200">
-            <tr>
+          <thead>
+            <tr class="border-b border-slate-200">
               <th 
                 v-for="col in columns" 
                 :key="col.key"
-                class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                class="px-6 py-3 text-xs font-medium text-slate-500 cursor-pointer hover:text-slate-700 transition-colors"
                 @click="handleSort(col.key)"
               >
                 <div class="flex items-center gap-1">
@@ -139,11 +138,11 @@
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100">
+          <tbody>
             <tr
               v-for="row in tableData"
               :key="row.id"
-              class="hover:bg-slate-50/50 transition-colors"
+              class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
             >
               <td class="px-6 py-4">
                 <div class="flex flex-col">
@@ -178,8 +177,8 @@
         </table>
       </div>
 
-      <!-- 分页 -->
-      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+      <!-- 分页 - 扁平化 -->
+      <div class="py-4 border-t border-slate-200 bg-white flex items-center justify-between">
         <span class="text-sm text-slate-500">
           共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
         </span>
@@ -212,7 +211,6 @@ import VChart from 'vue-echarts'
 import { ElMessage } from 'element-plus'
 import {
   Search,
-  Download,
   Box,
   Sort
 } from '@element-plus/icons-vue'

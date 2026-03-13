@@ -141,7 +141,7 @@
     </aside>
 
     <!-- 主内容区 - 无标题，直接显示内容 -->
-    <main class="flex-1 flex flex-col overflow-hidden min-w-0 bg-slate-50/50">
+    <main class="flex-1 flex flex-col overflow-hidden min-w-0 bg-white">
       <div class="flex-1 overflow-auto custom-scrollbar">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
