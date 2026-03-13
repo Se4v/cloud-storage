@@ -72,10 +72,10 @@
     </div>
 
     <!-- 下方两列布局 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <!-- 存储空间排行榜 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
               <el-icon class="text-purple-600" :size="20"><Trophy /></el-icon>
@@ -88,7 +88,7 @@
         </div>
 
         <!-- 横向条形图 -->
-        <div class="space-y-4">
+        <div class="flex-1 space-y-3">
           <div 
             v-for="(user, index) in topStorageUsers" 
             :key="user.id"
@@ -112,7 +112,7 @@
 
               <!-- 进度条 -->
               <div class="flex-1 min-w-0">
-                <div class="h-6 bg-slate-100 rounded-md overflow-hidden relative">
+                <div class="h-5 bg-slate-100 rounded-md overflow-hidden relative">
                   <div 
                     class="h-full rounded-md transition-all duration-500 ease-out flex items-center justify-end pr-2"
                     :class="getBarColor(index)"
@@ -139,18 +139,18 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 空状态 -->
-        <div v-if="topStorageUsers.length === 0" class="py-12 text-center">
-          <div class="flex flex-col items-center justify-center text-slate-400">
-            <el-icon :size="48" class="mb-2 opacity-50"><Box /></el-icon>
-            <p class="text-sm">暂无数据</p>
+          <!-- 空状态 -->
+          <div v-if="topStorageUsers.length === 0" class="py-12 text-center">
+            <div class="flex flex-col items-center justify-center text-slate-400">
+              <el-icon :size="48" class="mb-2 opacity-50"><Box /></el-icon>
+              <p class="text-sm">暂无数据</p>
+            </div>
           </div>
         </div>
 
         <!-- 底部统计 -->
-        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-sm">
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-sm">
           <span class="text-slate-500">
             共占用 <span class="font-medium text-slate-900">{{ formatStorage(totalTop5Storage) }}</span>
           </span>
