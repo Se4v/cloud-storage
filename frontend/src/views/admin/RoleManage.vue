@@ -622,8 +622,14 @@ const formatDate = (dateString) => {
   height: 40px;
 }
 
-:deep(.custom-pagination .el-pagination__sizes) {
-  margin-right: 0;
+/* 分页器样式 */
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
+  background-color: #2563eb;
+  border-radius: 6px;
+}
+
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
+  color: #2563eb;
 }
 
 :deep(.el-dialog__header) {

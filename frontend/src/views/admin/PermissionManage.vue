@@ -259,12 +259,12 @@ const handleSearch = () => {
 <style scoped>
 /* 分页器样式覆盖 */
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: #0f172a;
+  background-color: #2563eb;
   border-radius: 6px;
 }
 
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
-  color: #0f172a;
+  color: #2563eb;
 }
 
 /* 下拉框样式调整 */
