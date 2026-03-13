@@ -2,15 +2,20 @@
   <div class="h-full flex flex-col bg-slate-50">
     <!-- 工具栏 -->
     <div class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
+      <div class="flex flex-col gap-2">
+        <!-- 存储空间信息 -->
+        <div class="text-xs text-slate-500">
+          已使用 {{ formatSize(usedStorage) }} | 总容量 {{ formatSize(totalStorage) }}
+        </div>
         <!-- 主要操作按钮 -->
-        <button
-            @click="handleUpload"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow"
-        >
-          <el-icon><Upload /></el-icon>
-          上传
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+              @click="handleUpload"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow"
+          >
+            <el-icon><Upload /></el-icon>
+            上传
+          </button>
 
         <button
             @click="handleCreateFolder"
@@ -62,6 +67,7 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
+        </div>
       </div>
 
       <!-- 搜索框 -->
@@ -474,6 +480,10 @@ const currentPath = ref([])
 const tableRef = ref(null)
 const moveTreeRef = ref(null)
 const copyTreeRef = ref(null)
+
+// 存储空间（单位：字节）
+const usedStorage = ref(49 * 1024 * 1024) // 49MB
+const totalStorage = ref(1024 * 1024 * 1024) // 1GB
 
 // 对话框状态
 const createFolderVisible = ref(false)
