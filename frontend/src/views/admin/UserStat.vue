@@ -1,15 +1,15 @@
 <template>
-  <div class="p-6 max-w-[1200px] mx-auto space-y-6">
+  <div class="p-6 max-w-[1200px] mx-auto">
     <!-- 页面标题 -->
-    <div>
+    <div class="mb-6">
       <h1 class="text-2xl font-semibold text-slate-900">用户统计</h1>
       <p class="text-sm text-slate-500 mt-1">查看用户增长趋势和存储使用情况</p>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- 统计卡片 - 扁平化 -->
+    <div class="flex border-b border-slate-200">
       <!-- 用户总数 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-r border-slate-200">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">用户总数</p>
@@ -29,7 +29,7 @@
       </div>
 
       <!-- 今日新增 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-r border-slate-200">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">今日新增</p>
@@ -49,7 +49,7 @@
       </div>
 
       <!-- 活跃用户数 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">活跃用户数</p>
@@ -71,10 +71,10 @@
       </div>
     </div>
 
-    <!-- 下方两列布局 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+    <!-- 下方两列布局 - 扁平化 -->
+    <div class="flex flex-col lg:flex-row border-b border-slate-200">
       <!-- 存储空间排行榜 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col">
+      <div class="flex-1 p-6 lg:border-r border-slate-200">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
@@ -88,7 +88,7 @@
         </div>
 
         <!-- 横向条形图 -->
-        <div class="flex-1 space-y-3">
+        <div class="space-y-3">
           <div 
             v-for="(user, index) in topStorageUsers" 
             :key="user.id"
@@ -161,7 +161,7 @@
       </div>
 
       <!-- 用户增长趋势折线图 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-t lg:border-t-0 border-slate-200">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">

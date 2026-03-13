@@ -1,15 +1,15 @@
 <template>
-  <div class="p-6 max-w-[1400px] mx-auto space-y-6">
+  <div class="p-6 max-w-[1400px] mx-auto">
     <!-- 页面标题 -->
-    <div>
+    <div class="mb-6">
       <h1 class="text-2xl font-semibold text-slate-900">流量统计</h1>
       <p class="text-sm text-slate-500 mt-1">查看存储使用情况和流量趋势</p>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- 统计卡片 - 扁平化 -->
+    <div class="flex border-b border-slate-200">
       <!-- 总存储 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-r border-slate-200">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">总存储</p>
@@ -28,7 +28,7 @@
       </div>
 
       <!-- 今日上传量 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-r border-slate-200">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">今日上传量</p>
@@ -48,7 +48,7 @@
       </div>
 
       <!-- 今日下载量 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">今日下载量</p>
@@ -68,10 +68,10 @@
       </div>
     </div>
 
-    <!-- 下方两列布局 -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- 左侧：近7天流量趋势（占2列） -->
-      <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+    <!-- 下方两列布局 - 扁平化 -->
+    <div class="flex flex-col lg:flex-row border-b border-slate-200">
+      <!-- 左侧：近7天流量趋势 -->
+      <div class="flex-[2] p-6 lg:border-r border-slate-200">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
@@ -126,7 +126,7 @@
       </div>
 
       <!-- 右侧：文件类型占比 -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex-1 p-6 border-t lg:border-t-0 border-slate-200">
         <div class="flex items-center gap-3 mb-6">
           <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
             <el-icon class="text-amber-600" :size="20"><Document /></el-icon>
