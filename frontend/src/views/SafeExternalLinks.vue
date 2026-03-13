@@ -3,25 +3,15 @@
     <!-- 顶部工具栏 - 白色背景 -->
     <div class="bg-white px-8 py-4 border-b border-slate-200">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <el-button
-              v-if="selectedLinks.length > 0"
-              type="primary"
-              class="!bg-slate-900 !border-slate-900 hover:!bg-slate-800 shadow-sm"
+        <div class="flex items-center gap-2">
+          <button
               @click="handleBatchDelete"
+              :disabled="selectedLinks.length === 0"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <el-icon class="mr-1"><Delete /></el-icon>
+            <el-icon><Delete /></el-icon>
             删除外链
-          </el-button>
-
-          <el-button
-              v-else
-              disabled
-              class="!opacity-50"
-          >
-            <el-icon class="mr-1"><Delete /></el-icon>
-            删除外链
-          </el-button>
+          </button>
         </div>
       </div>
     </div>
@@ -222,7 +212,17 @@ const pageSize = ref(20)
 const total = ref(0)
 const selectedLinks = ref([])
 const tableRef = ref(null)
-const linkList = ref([])
+const linkList = ref([
+  {
+    id: "123",
+    name: "12314",
+    type: "file",
+    key: "123123",
+    expireTime: "2024-12-01 12:12:31",
+    createTime: "2024-12-01 12:12:31",
+    isProtected: true
+  }
+])
 
 // 编辑对话框
 const editDialogVisible = ref(false)
@@ -435,10 +435,8 @@ const handleCurrentChange = (val) => {
 }
 
 :deep(.link-table .el-checkbox__inner) {
-  border-color: #cbd5e1;
   border-radius: 4px;
-  width: 18px;
-  height: 18px;
+  border-color: #cbd5e1;
 }
 
 :deep(.link-table .el-checkbox__input.is-checked .el-checkbox__inner) {

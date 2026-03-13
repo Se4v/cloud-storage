@@ -503,34 +503,9 @@ const handleCurrentChange = (val) => {
   background-color: #f8fafc;
 }
 
-/* 修复 checkbox 对齐问题 */
-:deep(.recovery-table .el-table-column--selection .cell) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 0;
-}
-
-:deep(.recovery-table .el-checkbox) {
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 :deep(.recovery-table .el-checkbox__inner) {
-  border-color: #cbd5e1;
   border-radius: 4px;
-  width: 18px;
-  height: 18px;
-  margin: 0;
-}
-
-:deep(.recovery-table .el-checkbox__input) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-color: #cbd5e1;
 }
 
 :deep(.recovery-table .el-checkbox__input.is-checked .el-checkbox__inner) {
