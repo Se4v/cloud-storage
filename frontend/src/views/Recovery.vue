@@ -205,7 +205,17 @@ const selectedRows = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
-const tableData = ref([])
+const tableData = ref([
+  {
+    id: "1234",
+    name: "abc",
+    type: "file",
+    path: "abc",
+    deleteTime: "2024-05-23 12:23:13",
+    expireTime: "2024-05-23 12:23:13",
+    size: "123"
+  }
+])
 const loading = ref(false)
 
 // 获取回收站列表

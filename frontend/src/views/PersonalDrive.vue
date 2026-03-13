@@ -648,19 +648,7 @@ const getFileIcon = (file) => {
 
 // 获取文件图标背景色
 const getFileIconClass = (file) => {
-  const classMap = {
-    folder: 'bg-blue-500',
-    image: 'bg-purple-500',
-    video: 'bg-red-500',
-    audio: 'bg-amber-500',
-    pdf: 'bg-red-600',
-    word: 'bg-blue-600',
-    excel: 'bg-green-600',
-    zip: 'bg-yellow-600',
-    code: 'bg-slate-600',
-    default: 'bg-slate-400'
-  }
-  return classMap[file.type] || classMap.default
+  return 'bg-blue-500'
 }
 
 // 格式化日期

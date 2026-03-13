@@ -17,6 +17,7 @@ import LogManage from "@/views/admin/LogManage.vue";
 import SystemManage from "@/views/admin/SystemManage.vue";
 import UserStat from "@/views/admin/UserStat.vue";
 import StorageStat from "@/views/admin/StorageStat.vue";
+import TrafficStat from "@/views/admin/TrafficStat.vue";
 
 const routes = [
     {
@@ -110,6 +111,11 @@ const routes = [
                 path: 'space-stats',
                 name: 'StorageStat',
                 component: StorageStat
+            },
+            {
+                path: 'traffic-stats',
+                name: 'TrafficStat',
+                component: TrafficStat
             }
         ]
     }
