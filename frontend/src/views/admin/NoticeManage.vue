@@ -2,25 +2,22 @@
   <div class="p-6">
     <!-- 顶部工具栏 - 按钮置于左侧 -->
     <div class="flex items-center gap-3 mb-6">
-      <el-button
-          type="primary"
-          class="!bg-slate-900 !border-slate-900 !rounded-lg !px-4 !h-10 hover:!bg-slate-800"
+      <button
           @click="handleCreate"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
       >
-        <el-icon class="mr-1"><Plus /></el-icon>
+        <el-icon :size="16"><Plus /></el-icon>
         新建公告
-      </el-button>
+      </button>
 
-      <el-button
-          type="danger"
-          plain
-          class="!rounded-lg !px-4 !h-10"
+      <button
           @click="handleBatchDelete"
           :disabled="selectedAnnouncements.length === 0"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <el-icon class="mr-1"><Delete /></el-icon>
+        <el-icon :size="16"><Delete /></el-icon>
         删除
-      </el-button>
+      </button>
     </div>
 
     <!-- 公告列表 -->
@@ -108,9 +105,9 @@
       </el-table>
 
       <!-- 分页 -->
-      <div class="px-4 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
         <span class="text-sm text-slate-500">
-          共 {{ total }} 条记录
+          共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
         </span>
         <el-pagination
             v-model:current-page="currentPage"
@@ -175,19 +172,18 @@
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <el-button
+          <button
               @click="dialogVisible = false"
-              class="!rounded-lg !h-10 !px-5"
+              class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200"
           >
             取消
-          </el-button>
-          <el-button
-              type="primary"
+          </button>
+          <button
               @click="handleSubmit"
-              class="!bg-slate-900 !border-slate-900 !rounded-lg !h-10 !px-5 hover:!bg-slate-800"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ isEdit ? '保存修改' : '立即创建' }}
-          </el-button>
+          </button>
         </div>
       </template>
     </el-dialog>
@@ -424,13 +420,13 @@ onMounted(() => {
   padding-bottom: 4px;
 }
 
-/* 分页按钮圆角 */
-:deep(.el-pagination .el-pager li) {
+/* 分页器样式 */
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
+  background-color: #2563eb;
   border-radius: 6px;
-  font-weight: 500;
 }
 
-:deep(.el-pagination button) {
-  border-radius: 6px;
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
+  color: #2563eb;
 }
 </style>

@@ -96,7 +96,7 @@
         <div class="flex gap-2 flex-shrink-0 lg:ml-auto">
           <button
             @click="handleSearch"
-            class="h-9 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
           >
             <el-icon :size="16"><Search /></el-icon>
             查询
@@ -199,10 +199,10 @@
       </div>
 
       <!-- 分页 -->
-      <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
-        <div class="text-sm text-slate-500">
-          <span>共 {{ total }} 条记录</span>
-        </div>
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+        <span class="text-sm text-slate-500">
+          共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
+        </span>
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -210,7 +210,7 @@
           :total="total"
           layout="prev, pager, next, sizes"
           background
-          class="custom-pagination"
+          class="!gap-2"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -443,50 +443,14 @@ loadData()
 </script>
 
 <style scoped>
-/* 覆盖Element Plus样式以匹配shadcn风格 */
+/* 分页器样式 */
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: rgb(37 99 235);
-  color: white;
+  background-color: #2563eb;
   border-radius: 6px;
 }
 
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active:hover) {
-  background-color: rgb(29 78 216);
-}
-
-:deep(.el-pagination.is-background .el-pager li) {
-  background-color: transparent;
-  border-radius: 6px;
-  font-weight: 500;
-  color: rgb(71 85 105);
-}
-
-:deep(.el-pagination.is-background .el-pager li:hover) {
-  background-color: rgb(241 245 249);
-  color: rgb(15 23 42);
-}
-
-:deep(.el-pagination.is-background .btn-prev),
-:deep(.el-pagination.is-background .btn-next) {
-  background-color: transparent;
-  border-radius: 6px;
-  border: 1px solid rgb(226 232 240);
-}
-
-:deep(.el-pagination.is-background .btn-prev:hover),
-:deep(.el-pagination.is-background .btn-next:hover) {
-  background-color: rgb(241 245 249);
-  color: rgb(15 23 42);
-}
-
-:deep(.el-pagination .el-select .el-input__wrapper) {
-  box-shadow: 0 0 0 1px rgb(226 232 240) inset;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-:deep(.el-pagination .el-select .el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px rgb(148 163 184) inset;
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
+  color: #2563eb;
 }
 
 /* 日期选择器样式覆盖 */

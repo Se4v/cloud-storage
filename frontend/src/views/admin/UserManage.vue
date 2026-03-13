@@ -698,50 +698,14 @@ const handleDelete = (row) => {
 </script>
 
 <style scoped>
-/* 覆盖Element Plus样式以匹配shadcn风格 */
+/* 分页器样式 */
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: rgb(37 99 235);
-  color: white;
+  background-color: #2563eb;
   border-radius: 6px;
 }
 
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active:hover) {
-  background-color: rgb(29 78 216);
-}
-
-:deep(.el-pagination.is-background .el-pager li) {
-  background-color: transparent;
-  border-radius: 6px;
-  font-weight: 500;
-  color: rgb(71 85 105);
-}
-
-:deep(.el-pagination.is-background .el-pager li:hover) {
-  background-color: rgb(241 245 249);
-  color: rgb(15 23 42);
-}
-
-:deep(.el-pagination.is-background .btn-prev),
-:deep(.el-pagination.is-background .btn-next) {
-  background-color: transparent;
-  border-radius: 6px;
-  border: 1px solid rgb(226 232 240);
-}
-
-:deep(.el-pagination.is-background .btn-prev:hover),
-:deep(.el-pagination.is-background .btn-next:hover) {
-  background-color: rgb(241 245 249);
-  color: rgb(15 23 42);
-}
-
-:deep(.el-pagination .el-select .el-input__wrapper) {
-  box-shadow: 0 0 0 1px rgb(226 232 240) inset;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-:deep(.el-pagination .el-select .el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px rgb(148 163 184) inset;
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
+  color: #2563eb;
 }
 
 :deep(.el-dropdown-menu__item) {

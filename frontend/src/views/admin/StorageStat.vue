@@ -6,12 +6,6 @@
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-base font-semibold text-slate-900">存储空间</h2>
-          <button 
-            @click="handleExpand"
-            class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors"
-          >
-            扩容
-          </button>
         </div>
 
         <!-- 剩余容量 -->
@@ -104,13 +98,6 @@
                 <el-icon :size="16"><Search /></el-icon>
               </button>
             </div>
-            <!-- 下载按钮 -->
-            <button 
-              @click="handleDownload"
-              class="h-9 w-9 flex items-center justify-center border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-            >
-              <el-icon :size="16"><Download /></el-icon>
-            </button>
           </div>
         </div>
 
@@ -164,20 +151,14 @@
                   <span class="text-xs text-slate-500">{{ row.id }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <span class="text-slate-700">{{ row.allocated }}</span>
-                  <span v-if="row.isShared" class="px-1.5 py-0.5 text-xs bg-blue-50 text-blue-600 rounded">共享</span>
-                </div>
+              <td class="px-6 py-4 text-slate-700">
+                {{ row.allocated }}
               </td>
               <td class="px-6 py-4 text-slate-700">
                 {{ row.used }}
               </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <span class="text-slate-700">{{ row.remaining }}</span>
-                  <span v-if="row.isShared" class="px-1.5 py-0.5 text-xs bg-blue-50 text-blue-600 rounded">共享</span>
-                </div>
+              <td class="px-6 py-4 text-slate-700">
+                {{ row.remaining }}
               </td>
               <td class="px-6 py-4 text-slate-700">
                 {{ row.members }}
@@ -198,17 +179,18 @@
       </div>
 
       <!-- 分页 -->
-      <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-        <div class="text-sm text-slate-500">
-          共 {{ total }} 项数据
-        </div>
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+        <span class="text-sm text-slate-500">
+          共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
+        </span>
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="total"
-          layout="sizes, prev, pager, next"
-          class="custom-pagination"
+          layout="prev, pager, next, sizes"
+          background
+          class="!gap-2"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -403,49 +385,13 @@ const handleCurrentChange = (val) => {
 </script>
 
 <style scoped>
-/* Element Plus 分页样式覆盖 */
+/* 分页器样式 */
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: rgb(37 99 235);
-  color: white;
+  background-color: #2563eb;
   border-radius: 6px;
 }
 
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active:hover) {
-  background-color: rgb(29 78 216);
-}
-
-:deep(.el-pagination.is-background .el-pager li) {
-  background-color: transparent;
-  border-radius: 6px;
-  font-weight: 500;
-  color: rgb(71 85 105);
-}
-
-:deep(.el-pagination.is-background .el-pager li:hover) {
-  background-color: rgb(241 245 249);
-  color: rgb(15 23 42);
-}
-
-:deep(.el-pagination.is-background .btn-prev),
-:deep(.el-pagination.is-background .btn-next) {
-  background-color: transparent;
-  border-radius: 6px;
-  border: 1px solid rgb(226 232 240);
-}
-
-:deep(.el-pagination.is-background .btn-prev:hover),
-:deep(.el-pagination.is-background .btn-next:hover) {
-  background-color: rgb(241 245 249);
-  color: rgb(15 23 42);
-}
-
-:deep(.el-pagination .el-select .el-input__wrapper) {
-  box-shadow: 0 0 0 1px rgb(226 232 240) inset;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-:deep(.el-pagination .el-select .el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px rgb(148 163 184) inset;
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
+  color: #2563eb;
 }
 </style>
