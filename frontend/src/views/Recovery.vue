@@ -73,10 +73,10 @@
             <template #default="{ row }">
               <div class="flex items-center gap-3 py-1">
                 <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
                     :class="getFileIconBg(row.type)"
                 >
-                  <el-icon :size="20" :class="getFileIconColor(row.type)">
+                  <el-icon :size="20">
                     <component :is="getFileIcon(row.type)" />
                   </el-icon>
                 </div>
@@ -209,7 +209,7 @@ const tableData = ref([
   {
     id: "1234",
     name: "abc",
-    type: "file",
+    type: "folder",
     path: "abc",
     deleteTime: "2024-05-23 12:23:13",
     expireTime: "2024-05-23 12:23:13",
@@ -266,7 +266,7 @@ const getFileIconBg = (type) => {
 
 // 获取文件图标颜色
 const getFileIconColor = (type) => {
-  return type === 'folder' ? 'text-blue-600' : 'text-slate-600'
+  return 'text-white'
 }
 
 // 选择变化

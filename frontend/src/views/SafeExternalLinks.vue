@@ -45,10 +45,10 @@
             <template #default="{ row }">
               <div class="flex items-center gap-3 py-2">
                 <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
                     :class="getFileIconBg(row)"
                 >
-                  <el-icon :size="20" :class="getFileIconColor(row)">
+                  <el-icon :size="20">
                     <Document v-if="row.type === 'file'" />
                     <FolderOpened v-else />
                   </el-icon>
@@ -265,8 +265,7 @@ const getFileIconBg = (row) => {
 
 // 获取文件图标颜色
 const getFileIconColor = (row) => {
-  if (row.type === 'folder') return 'text-blue-600'
-  return 'text-slate-600'
+  return 'text-white'
 }
 
 // 获取过期状态
