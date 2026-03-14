@@ -1,11 +1,5 @@
 <template>
   <div class="p-6 max-w-[1400px] mx-auto">
-    <!-- 页面标题 -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-slate-900">流量统计</h1>
-      <p class="text-sm text-slate-500 mt-1">查看存储使用情况和流量趋势</p>
-    </div>
-
     <!-- 统计卡片 - 扁平化 -->
     <div class="flex border-b border-slate-200">
       <!-- 总存储 -->

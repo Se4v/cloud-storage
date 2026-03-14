@@ -1,11 +1,5 @@
 <template>
   <div class="p-6 max-w-[1200px] mx-auto">
-    <!-- 页面标题 -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-slate-900">系统设置</h1>
-      <p class="text-sm text-slate-500 mt-1">配置系统全局参数和安全策略</p>
-    </div>
-
     <!-- 设置表单 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
       <form @submit.prevent="handleSave" class="p-6 space-y-8">

@@ -86,9 +86,9 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="创建时间" width="180">
+          <el-table-column label="空间配额" width="120">
             <template #default="{ row }">
-              <span class="text-slate-500 text-sm">{{ row.createTime }}</span>
+              <span class="text-slate-600 text-sm font-medium">{{ formatStorageQuota(row.storageQuota) }}</span>
             </template>
           </el-table-column>
 
@@ -183,7 +183,7 @@
     <el-dialog
         v-model="dialogVisible"
         :title="isEdit ? '编辑组织节点' : '新建组织节点'"
-        width="500px"
+        width="600px"
         class="!rounded-xl"
         :close-on-click-modal="false"
     >
@@ -191,7 +191,7 @@
           ref="formRef"
           :model="formData"
           :rules="formRules"
-          label-width="80px"
+          label-width="100px"
           class="mt-4"
       >
         <el-form-item label="组织名称" prop="name">
@@ -227,12 +227,39 @@
           />
         </el-form-item>
 
-        <el-form-item label="排序" prop="sort">
+        <el-form-item label="空间配额" prop="storageQuota">
           <el-input-number
-              v-model="formData.sort"
-              :min="0"
+              v-model="formData.storageQuota"
+              :min="1"
+              :max="1000"
               class="!rounded-lg"
           />
+          <span class="text-xs text-slate-500 ml-2">GB</span>
+        </el-form-item>
+
+        <el-form-item label="组织管理员" prop="adminId">
+          <el-select
+              v-model="formData.adminId"
+              placeholder="请选择组织管理员"
+              class="w-full !rounded-lg"
+              clearable
+          >
+            <el-option
+                v-for="user in userList"
+                :key="user.id"
+                :label="user.name"
+                :value="user.id"
+            >
+              <div class="flex items-center gap-2">
+                <el-avatar :size="24" :src="user.avatar" class="!text-xs">
+                  {{ user.name.charAt(0) }}
+                </el-avatar>
+                <span>{{ user.name }}</span>
+                <span class="text-xs text-slate-400 ml-auto">{{ user.username }}</span>
+              </div>
+            </el-option>
+          </el-select>
+          <p class="text-xs text-slate-500 mt-1">不选则该组织暂无管理员</p>
         </el-form-item>
       </el-form>
 
@@ -292,7 +319,9 @@ const formData = reactive({
   name: '',
   type: 'dept',
   parentId: null,
-  sort: 0
+  sort: 0,
+  storageQuota: 10,
+  adminId: null
 })
 
 const formRules = {
@@ -308,14 +337,14 @@ const defaultProps = {
 
 // 模拟数据
 const orgList = ref([
-  { id: 1, name: '总经办', type: 'company', parentId: null, parentName: null, createTime: '2024-01-15 10:00:00', sort: 1 },
-  { id: 2, name: '技术研发中心', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', sort: 2 },
-  { id: 3, name: '前端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', sort: 1 },
-  { id: 4, name: '后端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', sort: 2 },
-  { id: 5, name: '产品设计部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', sort: 3 },
-  { id: 6, name: 'UI设计组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', sort: 1 },
-  { id: 7, name: '用户体验组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', sort: 2 },
-  { id: 8, name: '市场运营部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', sort: 4 },
+  { id: 1, name: '总经办', type: 'company', parentId: null, parentName: null, createTime: '2024-01-15 10:00:00', sort: 1, storageQuota: 100, adminId: 1, adminName: '张三' },
+  { id: 2, name: '技术研发中心', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', sort: 2, storageQuota: 50, adminId: 2, adminName: '李四' },
+  { id: 3, name: '前端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', sort: 1, storageQuota: 20, adminId: null, adminName: null },
+  { id: 4, name: '后端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', sort: 2, storageQuota: 20, adminId: null, adminName: null },
+  { id: 5, name: '产品设计部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', sort: 3, storageQuota: 30, adminId: 3, adminName: '王五' },
+  { id: 6, name: 'UI设计组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', sort: 1, storageQuota: 10, adminId: null, adminName: null },
+  { id: 7, name: '用户体验组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', sort: 2, storageQuota: 10, adminId: null, adminName: null },
+  { id: 8, name: '市场运营部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', sort: 4, storageQuota: 40, adminId: 4, adminName: '赵六' },
 ])
 
 const treeData = ref([
@@ -356,6 +385,22 @@ const filteredList = computed(() => {
       item.parentName?.toLowerCase().includes(query)
   )
 })
+
+// 用户列表（用于选择组织管理员）
+const userList = ref([
+  { id: 1, name: '张三', username: 'zhangsan', avatar: '' },
+  { id: 2, name: '李四', username: 'lisi', avatar: '' },
+  { id: 3, name: '王五', username: 'wangwu', avatar: '' },
+  { id: 4, name: '赵六', username: 'zhaoliu', avatar: '' },
+  { id: 5, name: '钱七', username: 'qianqi', avatar: '' },
+  { id: 6, name: '孙八', username: 'sunba', avatar: '' }
+])
+
+// 格式化存储配额显示
+const formatStorageQuota = (quota) => {
+  if (!quota || quota <= 0) return '0 GB'
+  return `${quota} GB`
+}
 
 // 类型标签映射
 const getTypeLabel = (type) => {
@@ -423,7 +468,9 @@ const handleCreate = () => {
     name: '',
     type: 'dept',
     parentId: null,
-    sort: 0
+    sort: 0,
+    storageQuota: 10,
+    adminId: null
   })
   dialogVisible.value = true
 }
@@ -467,6 +514,7 @@ const handleSubmit = async () => {
   if (!formRef.value) return
   await formRef.value.validate((valid) => {
     if (valid) {
+      const admin = userList.value.find(item => item.id === formData.adminId)
       if (isEdit.value) {
         const index = orgList.value.findIndex(item => item.id === formData.id)
         if (index > -1) {
@@ -474,7 +522,8 @@ const handleSubmit = async () => {
           orgList.value[index] = {
             ...orgList.value[index],
             ...formData,
-            parentName: parent?.name || null
+            parentName: parent?.name || null,
+            adminName: admin?.name || null
           }
           ElMessage.success('更新成功')
         }
@@ -485,6 +534,7 @@ const handleSubmit = async () => {
           ...formData,
           id: newId,
           parentName: parent?.name || null,
+          adminName: admin?.name || null,
           createTime: new Date().toLocaleString()
         })
         ElMessage.success('创建成功')

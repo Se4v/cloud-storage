@@ -1,11 +1,5 @@
 <template>
   <div class="p-6 max-w-[1200px] mx-auto">
-    <!-- 页面标题 -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-slate-900">用户统计</h1>
-      <p class="text-sm text-slate-500 mt-1">查看用户增长趋势和存储使用情况</p>
-    </div>
-
     <!-- 统计卡片 - 扁平化 -->
     <div class="flex border-b border-slate-200">
       <!-- 用户总数 -->
