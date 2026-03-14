@@ -83,7 +83,7 @@
         <table class="w-full text-sm text-left">
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
+              <th class="px-6 py-3.5 font-semibold text-slate-700 w-10">
                 <input
                   type="checkbox"
                   :checked="isAllSelected"
@@ -91,11 +91,11 @@
                   class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
               </th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">名称</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">上传时间</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">大小</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">状态</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">引用计数</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">名称</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">上传时间</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">大小</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">状态</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">引用计数</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">

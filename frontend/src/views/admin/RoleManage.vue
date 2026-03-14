@@ -54,7 +54,7 @@
           :data="roleList"
           @selection-change="handleSelectionChange"
           class="w-full"
-          header-cell-class-name="bg-slate-50 text-slate-700 font-semibold text-xs uppercase tracking-wider"
+          header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
           row-class-name="hover:bg-slate-50/50 transition-colors duration-150"
       >
         <el-table-column type="selection" width="48" align="center" />

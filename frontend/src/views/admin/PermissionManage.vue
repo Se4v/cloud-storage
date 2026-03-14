@@ -55,13 +55,13 @@
         <table class="w-full text-left">
           <thead>
           <tr class="border-b border-slate-200 bg-slate-50/50">
-            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th class="px-6 py-4 font-semibold text-slate-700">
               权限信息
             </th>
-            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th class="px-6 py-4 font-semibold text-slate-700">
               权限代码
             </th>
-            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th class="px-6 py-4 font-semibold text-slate-700">
               类型
             </th>
           </tr>

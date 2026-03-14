@@ -28,14 +28,7 @@
           row-key="id"
           @selection-change="handleSelectionChange"
           class="announcement-table"
-          :header-cell-style="{
-          background: '#f8fafc',
-          color: '#475569',
-          fontWeight: 600,
-          fontSize: '13px',
-          height: '48px',
-          borderBottom: '1px solid #e2e8f0'
-        }"
+          header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
           :cell-style="{
           fontSize: '14px',
           color: '#334155',

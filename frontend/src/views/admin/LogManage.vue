@@ -117,11 +117,11 @@
         <table class="w-full text-sm text-left">
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">用户名</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">操作类型</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">操作详情</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">操作时间</th>
-              <th class="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">状态</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">用户名</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">操作类型</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">操作详情</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">操作时间</th>
+              <th class="px-6 py-3.5 font-semibold text-slate-700">状态</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
