@@ -53,14 +53,9 @@
 
         <el-table-column label="用户名" min-width="200">
           <template #default="{ row }">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-medium">
-                {{ row.username.charAt(0).toUpperCase() }}
-              </div>
-              <div class="flex flex-col">
-                <span class="font-medium text-slate-900">{{ row.username }}</span>
-                <span class="text-xs text-slate-500">{{ row.realName }}</span>
-              </div>
+            <div class="flex flex-col">
+              <span class="font-medium text-slate-900">{{ row.username }}</span>
+              <span class="text-xs text-slate-500">{{ row.realName }}</span>
             </div>
           </template>
         </el-table-column>

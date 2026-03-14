@@ -131,12 +131,7 @@
               class="hover:bg-slate-50/50 transition-colors"
             >
               <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-sm font-medium flex-shrink-0">
-                    {{ log.username.charAt(0).toUpperCase() }}
-                  </div>
-                  <span class="font-medium text-slate-900">{{ log.username }}</span>
-                </div>
+                <span class="font-medium text-slate-900">{{ log.username }}</span>
               </td>
               <td class="px-6 py-4">
                 <span

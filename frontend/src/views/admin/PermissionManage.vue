@@ -74,14 +74,7 @@
           >
             <!-- 名称 -->
             <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-                  <el-icon :size="18"><Key /></el-icon>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-slate-900">{{ permission.name }}</div>
-                </div>
-              </div>
+              <div class="text-sm font-medium text-slate-900">{{ permission.name }}</div>
             </td>
 
             <!-- 代码 -->

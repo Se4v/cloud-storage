@@ -40,9 +40,6 @@
         <el-table-column label="标题" min-width="240" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <el-icon class="text-blue-600"><Bell /></el-icon>
-              </div>
               <span class="font-medium text-slate-900">{{ row.title }}</span>
               <el-tag
                   v-if="isExpired(row.expireTime)"

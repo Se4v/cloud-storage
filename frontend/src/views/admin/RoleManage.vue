@@ -61,14 +61,9 @@
 
         <el-table-column label="角色名称" min-width="180">
           <template #default="{ row }">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-sm">
-                <el-icon :size="18"><UserFilled /></el-icon>
-              </div>
-              <div>
-                <div class="font-medium text-slate-900">{{ row.name }}</div>
-                <div class="text-xs text-slate-500 mt-0.5">{{ row.description || '暂无描述' }}</div>
-              </div>
+            <div>
+              <div class="font-medium text-slate-900">{{ row.name }}</div>
+              <div class="text-xs text-slate-500 mt-0.5">{{ row.description || '暂无描述' }}</div>
             </div>
           </template>
         </el-table-column>

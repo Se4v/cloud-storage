@@ -113,12 +113,7 @@
                 />
               </td>
               <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-sm">
-                    <el-icon :size="18"><Document /></el-icon>
-                  </div>
-                  <span class="font-medium text-slate-900">{{ item.name }}</span>
-                </div>
+                <span class="font-medium text-slate-900">{{ item.name }}</span>
               </td>
               <td class="px-6 py-4">
                 <span class="text-slate-700">{{ formatDate(item.uploadTime) }}</span>

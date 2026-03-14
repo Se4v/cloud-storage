@@ -55,12 +55,7 @@
 
           <el-table-column label="组织名称" min-width="200">
             <template #default="{ row }">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-                  <el-icon :size="16"><OfficeBuilding v-if="row.type === 'company'" /><House v-if="row.type === 'dept'" /><UserFilled v-if="row.type === 'group'" /></el-icon>
-                </div>
-                <span class="font-medium text-slate-900">{{ row.name }}</span>
-              </div>
+              <span class="font-medium text-slate-900">{{ row.name }}</span>
             </template>
           </el-table-column>
 
