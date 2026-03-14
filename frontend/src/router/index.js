@@ -18,6 +18,7 @@ import SystemManage from "@/views/admin/SystemManage.vue";
 import UserStat from "@/views/admin/UserStat.vue";
 import StorageStat from "@/views/admin/StorageStat.vue";
 import TrafficStat from "@/views/admin/TrafficStat.vue";
+import MemberManage from "@/views/admin/MemberManage.vue";
 
 const routes = [
     {
@@ -86,6 +87,11 @@ const routes = [
                 path: 'org',
                 name: 'OrgManage',
                 component: OrgManage
+            },
+            {
+                path: 'member',
+                name: 'MemberManage',
+                component: MemberManage
             },
             {
                 path: 'storage',

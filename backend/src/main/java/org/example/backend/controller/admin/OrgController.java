@@ -48,8 +48,4 @@ public class OrgController {
         return null;
     }
 
-    public Result<Void> assignOrgRole() {
-        return null;
-    }
-
 }

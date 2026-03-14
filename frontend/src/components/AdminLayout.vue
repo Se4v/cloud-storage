@@ -170,7 +170,8 @@ import {
   Box,
   Bell,
   Tools,
-  SetUp
+  SetUp,
+  Avatar
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -186,9 +187,10 @@ const reportMenu = [
 // 用户与组织管理菜单
 const managementMenu = [
   { key: 'user-mgmt', label: '用户管理', icon: User, route: '/admin/user' },
+  { key: 'member-mgmt', label: '成员管理', icon: Avatar, route: '/admin/member' },
   { key: 'org-mgmt', label: '组织管理', icon: OfficeBuilding, route: '/admin/org' },
-  { key: 'role-mgmt', label: '角色管理', icon: UserFilled, route: '/admin/role' },
-  { key: 'perm-mgmt', label: '权限管理', icon: Lock, route: '/admin/permission' }
+  { key: 'role-mgmt', label: '角色管理', icon: Lock, route: '/admin/role' },
+  { key: 'perm-mgmt', label: '权限管理', icon: Tools, route: '/admin/permission' }
 ]
 
 // 网盘配置菜单
