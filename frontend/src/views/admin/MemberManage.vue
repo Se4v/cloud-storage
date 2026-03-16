@@ -1,7 +1,8 @@
 <template>
   <div class="h-full flex flex-col p-6 bg-slate-50/50">
-    <!-- 顶部操作栏 -->
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <!-- 控制栏：左侧操作按钮，右侧搜索 -->
+    <div class="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+      <!-- 左侧：操作按钮 -->
       <div class="flex items-center gap-3">
         <button
           @click="handleCreate"
@@ -23,6 +24,7 @@
         </button>
       </div>
 
+      <!-- 右侧：搜索 -->
       <div class="flex items-center gap-3">
         <el-input
           v-model="searchQuery"
@@ -30,11 +32,19 @@
           clearable
           class="w-64 !rounded-lg"
           @input="handleSearch"
+          @keyup.enter="handleSearch"
         >
           <template #prefix>
             <el-icon class="text-slate-400"><Search /></el-icon>
           </template>
         </el-input>
+        <button
+          @click="handleSearch"
+          class="inline-flex items-center justify-center gap-2 h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+        >
+          <el-icon :size="16"><Search /></el-icon>
+          <span>搜索</span>
+        </button>
       </div>
     </div>
 

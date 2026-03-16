@@ -149,57 +149,49 @@ const permissions = ref([
     id: 1,
     name: '用户查看',
     code: 'user:view',
-    type: 'menu',
-    status: 'enabled'
+    type: 'menu'
   },
   {
     id: 2,
     name: '用户创建',
     code: 'user:create',
-    type: 'button',
-    status: 'enabled'
+    type: 'button'
   },
   {
     id: 3,
     name: '文件上传',
     code: 'file:upload',
-    type: 'api',
-    status: 'enabled'
+    type: 'api'
   },
   {
     id: 4,
     name: '团队管理',
     code: 'team:manage',
-    type: 'menu',
-    status: 'disabled'
+    type: 'menu'
   },
   {
     id: 5,
     name: '数据导出',
     code: 'data:export',
-    type: 'data',
-    status: 'enabled'
+    type: 'data'
   },
   {
     id: 6,
     name: '角色分配',
     code: 'role:assign',
-    type: 'button',
-    status: 'enabled'
+    type: 'button'
   },
   {
     id: 7,
     name: '日志查看',
     code: 'log:view',
-    type: 'menu',
-    status: 'enabled'
+    type: 'menu'
   },
   {
     id: 8,
     name: '系统配置',
     code: 'system:config',
-    type: 'api',
-    status: 'disabled'
+    type: 'api'
   }
 ])
 
