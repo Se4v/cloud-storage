@@ -41,7 +41,7 @@
         <!-- 查询按钮 -->
         <button
             @click="handleSearch"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+            class="inline-flex items-center justify-center gap-2 h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
         >
           <el-icon :size="16"><Search /></el-icon>
           <span>查询</span>

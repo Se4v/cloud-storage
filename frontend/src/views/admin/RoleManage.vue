@@ -30,19 +30,24 @@
 
         <!-- 右侧搜索 -->
         <div class="flex items-center gap-3">
-          <div class="relative">
-            <el-input
-                v-model="searchQuery"
-                placeholder="搜索角色名称或代码..."
-                clearable
-                class="w-64"
-                @keyup.enter="handleSearch"
-            >
-              <template #prefix>
-                <el-icon class="text-slate-400"><Search /></el-icon>
-              </template>
-            </el-input>
-          </div>
+          <el-input
+              v-model="searchQuery"
+              placeholder="搜索角色名称或代码..."
+              clearable
+              class="w-64"
+              @keyup.enter="handleSearch"
+          >
+            <template #prefix>
+              <el-icon class="text-slate-400"><Search /></el-icon>
+            </template>
+          </el-input>
+          <button
+            @click="handleSearch"
+            class="inline-flex items-center justify-center gap-2 h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+          >
+            <el-icon :size="16"><Search /></el-icon>
+            <span>搜索</span>
+          </button>
         </div>
       </div>
     </div>

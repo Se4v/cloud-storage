@@ -1,30 +1,56 @@
 <template>
   <div class="p-6">
-    <!-- 顶部工具栏 - 按钮置于左侧 -->
-    <div class="flex items-center gap-3 mb-6">
-      <button
-          @click="handleCreate"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-      >
-        <el-icon :size="16"><Plus /></el-icon>
-        新建公告
-      </button>
+    <!-- 控制栏：左侧操作按钮，右侧搜索 -->
+    <div class="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+      <!-- 左侧：操作按钮 -->
+      <div class="flex items-center gap-3">
+        <button
+            @click="handleCreate"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+        >
+          <el-icon :size="16"><Plus /></el-icon>
+          新建公告
+        </button>
 
-      <button
-          @click="handleBatchDelete"
-          :disabled="selectedAnnouncements.length === 0"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <el-icon :size="16"><Delete /></el-icon>
-        删除
-      </button>
+        <button
+            @click="handleBatchDelete"
+            :disabled="selectedAnnouncements.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <el-icon :size="16"><Delete /></el-icon>
+          删除
+        </button>
+      </div>
+
+      <!-- 右侧：搜索 -->
+      <div class="flex items-center gap-3">
+        <el-input
+            v-model="searchQuery"
+            placeholder="搜索公告标题或内容..."
+            clearable
+            class="w-64 !rounded-lg"
+            @input="handleSearch"
+            @keyup.enter="handleSearch"
+        >
+          <template #prefix>
+            <el-icon class="text-slate-400"><Search /></el-icon>
+          </template>
+        </el-input>
+        <button
+          @click="handleSearch"
+          class="inline-flex items-center justify-center gap-2 h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+        >
+          <el-icon :size="16"><Search /></el-icon>
+          <span>搜索</span>
+        </button>
+      </div>
     </div>
 
     <!-- 公告列表 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <el-table
           v-loading="loading"
-          :data="announcementList"
+          :data="filteredAnnouncementList"
           row-key="id"
           @selection-change="handleSelectionChange"
           class="announcement-table"
@@ -181,9 +207,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Delete, Edit, Bell } from '@element-plus/icons-vue'
+import { Plus, Delete, Edit, Bell, Search } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const announcementList = ref([])
@@ -194,6 +220,21 @@ const total = ref(0)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
+const searchQuery = ref('')
+
+// 过滤后的公告列表
+const filteredAnnouncementList = computed(() => {
+  if (!searchQuery.value) return announcementList.value
+  const query = searchQuery.value.toLowerCase()
+  return announcementList.value.filter(item =>
+      item.title.toLowerCase().includes(query) ||
+      item.content.toLowerCase().includes(query)
+  )
+})
+
+const handleSearch = () => {
+  currentPage.value = 1
+}
 
 const form = reactive({
   id: null,
