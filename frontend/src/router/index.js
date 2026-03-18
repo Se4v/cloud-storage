@@ -37,7 +37,7 @@ const routes = [
                 component: PersonalDrive
             },
             {
-                path: 'enterprise',
+                path: 'enterprise/:driveId?',
                 name: 'EnterpriseDrive',
                 component: EnterpriseDrive
             },

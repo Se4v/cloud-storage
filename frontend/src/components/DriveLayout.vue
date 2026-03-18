@@ -357,8 +357,10 @@ const handleNodeClick = (data, node) => {
 
   // 如果是叶子节点或部门，跳转路由
   router.push({
-    path: '/drive/enterprise',
-    query: { dept: data.id }
+    name: 'EnterpriseDrive',
+    params: {
+      driveId: data.id
+    }
   })
 }
 
