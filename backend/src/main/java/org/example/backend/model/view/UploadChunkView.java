@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class RecordChunksView {
+public class UploadChunkView {
     private List<View> viewList;
 
     @Data

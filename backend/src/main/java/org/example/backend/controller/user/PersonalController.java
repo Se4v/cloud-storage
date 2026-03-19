@@ -1,17 +1,15 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.*;
-import org.example.backend.model.view.DirectUploadView;
+import org.example.backend.model.view.SimpleUploadView;
 import org.example.backend.model.view.InitUploadView;
 import org.example.backend.model.view.MergeChunksView;
-import org.example.backend.model.view.RecordChunksView;
+import org.example.backend.model.view.UploadChunkView;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.DriveService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,26 +25,22 @@ public class PersonalController {
     private DriveService driveService;
 
     @PostMapping("/init-upload")
-    public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args,
-                                             @AuthenticationPrincipal GlobalUserDetails userDetails) {
+    public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {
         return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
     }
 
-    @PostMapping("/direct-upload")
-    public Result<DirectUploadView> directUpload(DirectUploadArgs args,
-                                                 @AuthenticationPrincipal GlobalUserDetails userDetails) {
-        return Result.success(uploadService.directUpload(args, userDetails.getUserId()));
+    @PostMapping("/simple-upload")
+    public Result<SimpleUploadView> simpleUpload(SimpleUploadArgs args) {
+        return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
     }
 
-    @PostMapping("/chunk-upload")
-    public Result<RecordChunksView> chunkUpload(@RequestBody RecordChunksArgs args,
-                                                @AuthenticationPrincipal GlobalUserDetails userDetails) {
-        return Result.success(uploadService.recordChunks(args, userDetails.getUserId()));
+    @PostMapping("/upload-chunk")
+    public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
+        return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
     }
 
-    @PostMapping("/merge-chunk")
-    public Result<MergeChunksView> mergeChunk(@RequestBody MergeChunksArgs args,
-                                              @AuthenticationPrincipal GlobalUserDetails userDetails) {
+    @PostMapping("/merge-chunks")
+    public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
         return Result.success(uploadService.mergeChunks(args.getUploadId(), userDetails.getUserId()));
     }
 

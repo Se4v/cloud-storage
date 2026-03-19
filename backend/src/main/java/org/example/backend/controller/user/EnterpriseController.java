@@ -2,14 +2,14 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
-import org.example.backend.model.args.DirectUploadArgs;
+import org.example.backend.model.args.SimpleUploadArgs;
 import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.args.MergeChunksArgs;
-import org.example.backend.model.args.RecordChunksArgs;
-import org.example.backend.model.view.DirectUploadView;
+import org.example.backend.model.args.UploadChunkArgs;
+import org.example.backend.model.view.SimpleUploadView;
 import org.example.backend.model.view.InitUploadView;
 import org.example.backend.model.view.MergeChunksView;
-import org.example.backend.model.view.RecordChunksView;
+import org.example.backend.model.view.UploadChunkView;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +38,14 @@ public class EnterpriseController {
     }
 
     @PostMapping("/direct-upload")
-    public Result<DirectUploadView> directUpload(DirectUploadArgs args,
+    public Result<SimpleUploadView> directUpload(SimpleUploadArgs args,
                                                  @AuthenticationPrincipal GlobalUserDetails userDetails) {
         return Result.success(uploadService.directUpload(args, userDetails.getUserId()));
     }
 
     @PostMapping("/chunk-upload")
-    public Result<RecordChunksView> chunkUpload(@RequestBody RecordChunksArgs args,
-                                                @AuthenticationPrincipal GlobalUserDetails userDetails) {
+    public Result<UploadChunkView> chunkUpload(@RequestBody UploadChunkArgs args,
+                                               @AuthenticationPrincipal GlobalUserDetails userDetails) {
         return Result.success(uploadService.recordChunks(args, userDetails.getUserId()));
     }
 

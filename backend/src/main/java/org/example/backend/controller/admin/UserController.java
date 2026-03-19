@@ -41,16 +41,14 @@ public class UserController {
         return Result.success(users);
     }
 
-    @PostMapping("")
+    @PostMapping("/")
     public Result<Void> assignGlobalRole() {
         return null;
     }
 
+    @PostMapping("/reset")
     public Result<Void> resetPassword() {
         return null;
     }
 
-    public Result<Void> forceLogout() {
-        return null;
-    }
 }

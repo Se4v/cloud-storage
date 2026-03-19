@@ -256,7 +256,7 @@ CREATE TABLE `sys_config` (
 CREATE TABLE `sys_traffic` (
     `id`            bigint unsigned NOT NULL COMMENT '主键ID',
     `user_id`       bigint unsigned DEFAULT NULL COMMENT '用户ID',
-    `file_id`       bigint unsigned DEFAULT NULL COMMENT '文件唯一标识/路径哈希',
+    `storage_id`    bigint unsigned DEFAULT NULL COMMENT '文件唯一标识/路径哈希',
     `type`          tinyint unsigned NOT NULL COMMENT '操作类型: 1-上传, 2-下载',
     `file_size`     bigint unsigned NOT NULL DEFAULT 0 COMMENT '传输文件大小',
     `status`        tinyint unsigned DEFAULT 1 COMMENT '操作状态: 1-成功, 0-失败/中断',

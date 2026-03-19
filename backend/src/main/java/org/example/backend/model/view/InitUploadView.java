@@ -23,7 +23,7 @@ public class InitUploadView {
         // 以下字段在skipUpload=false和success=true时有效
         private Boolean directUpload;
         private String sha256;
-        private String uploadId;
+        private String uploadUrl;
         private List<Integer> uploadedChunks;
         private List<String> chunkUrls;
     }
