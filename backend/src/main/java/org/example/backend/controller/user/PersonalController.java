@@ -30,7 +30,7 @@ public class PersonalController {
     }
 
     @PostMapping("/simple-upload")
-    public Result<SimpleUploadView> simpleUpload(SimpleUploadArgs args) {
+    public Result<SimpleUploadView> simpleUpload(@RequestBody SimpleUploadArgs args) {
         return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
     }
 

@@ -19,9 +19,8 @@ public class InitUploadView {
         private Boolean success;
         private String message;
 
-        private Boolean skipUpload;
-        // 以下字段在skipUpload=false和success=true时有效
-        private Boolean directUpload;
+        private Boolean isSkip;
+        private Boolean isMultipart;
         private String sha256;
         private String uploadUrl;
         private List<Integer> uploadedChunks;

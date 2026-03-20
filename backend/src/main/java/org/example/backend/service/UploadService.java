@@ -84,11 +84,8 @@ public class UploadService {
             }
         }
 
-        return InitUploadView.builder()
-                .viewList(viewList)
-                .totalCount(args.getArgList().size())
-                .successCount(successCount)
-                .build();
+        return InitUploadView.builder().viewList(viewList).totalCount(args.getArgList().size())
+                .successCount(successCount).build();
     }
 
     private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg, InitUploadArgs args) throws Exception {
@@ -109,7 +106,7 @@ public class UploadService {
                     .build();
             fileRepository.saveEntryWithIncreaseRefCount(entry, arg.getSha256());
             return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                    .message("秒传成功").skipUpload(true).build();
+                    .message("秒传成功").isSkip(true).build();
         }
 
         String taskKey = getTaskKey(args.getUserId(), arg.getSha256());
@@ -124,15 +121,15 @@ public class UploadService {
                 // 小文件续传：重新给一个 PUT 链接
                 String uploadUrl = generateSinglePresignedUrl(objectName);
                 return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                        .message("小文件断点续传").skipUpload(false).directUpload(true)
-                        .sha256(arg.getSha256()).chunkUrls(List.of(uploadUrl)).build();
+                        .message("小文件断点续传").isSkip(false).isMultipart(false)
+                        .uploadUrl(uploadUrl).sha256(arg.getSha256()).build();
             } else {
                 // 大文件续传：查出缺失的分片，生成链接
                 String uploadId = existingTask.get("uploadId").toString();
                 List<Integer> uploadedChunks = getUploadedChunksFromRedis(args.getUserId(), arg.getSha256());
                 List<String> chunkUrls = regenerateChunkUrls(uploadId, objectName, arg.getTotalChunks(), uploadedChunks);
                 return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                        .message("大文件分片断点续传").skipUpload(false).directUpload(false)
+                        .message("大文件分片断点续传").isSkip(false).isMultipart(true)
                         .sha256(arg.getSha256()).uploadedChunks(uploadedChunks).chunkUrls(chunkUrls).build();
             }
         }
@@ -146,8 +143,8 @@ public class UploadService {
             saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args);
 
             return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                    .message("获取小文件直传链接成功").skipUpload(false).directUpload(true)
-                    .sha256(arg.getSha256()).chunkUrls(List.of(uploadUrl)).build();
+                    .message("获取小文件直传链接成功").isSkip(false).isMultipart(false)
+                    .uploadUrl(uploadUrl).sha256(arg.getSha256()).build();
         }
 
         // 【路线三：大文件分片初始化】
@@ -164,7 +161,7 @@ public class UploadService {
         redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
         return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                .message("大文件分片上传初始化成功").skipUpload(false).directUpload(false)
+                .message("大文件分片上传初始化成功").isSkip(false).isMultipart(true)
                 .sha256(arg.getSha256()).uploadedChunks(List.of()).chunkUrls(chunkUrls).build();
     }
 
