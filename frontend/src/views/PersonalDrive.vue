@@ -97,15 +97,15 @@
         >
           个人空间
         </span>
-        <template v-if="currentPath.length > 0">
-          <span v-for="(item, index) in currentPath" :key="index" class="flex items-center gap-2">
+        <template v-if="pathHistory.length > 0">
+          <span v-for="(item, index) in pathHistory" :key="item.id" class="flex items-center gap-2">
             <span class="text-slate-300">/</span>
             <span
                 class="font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                :class="{ 'text-slate-900': index === currentPath.length - 1, 'text-slate-600': index !== currentPath.length - 1 }"
+                :class="{ 'text-slate-900': index === pathHistory.length - 1, 'text-slate-600': index !== pathHistory.length - 1 }"
                 @click="goToPath(index)"
             >
-              {{ item }}
+              {{ item.name }}
             </span>
           </span>
         </template>
@@ -445,7 +445,8 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Folder,
@@ -468,17 +469,32 @@ import {
   HomeFilled,
   Check
 } from '@element-plus/icons-vue'
+import axios from 'axios'
+
+const route = useRoute()
 
 // 状态管理
+const loading = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
-const total = ref(14)
+const total = ref(0)
 const selectedFiles = ref([])
-const currentPath = ref([])
 const tableRef = ref(null)
 const moveTreeRef = ref(null)
 const copyTreeRef = ref(null)
+
+// driveId 从路由参数获取
+const driveId = computed(() => route.params.driveId)
+
+// 面包屑路径历史（前端维护）
+const pathHistory = ref([])
+
+// 当前所在目录的 parentId（根目录为 null）
+const currentParentId = ref(null)
+
+// 文件列表
+const fileList = ref([])
 
 // 存储空间（单位：字节）
 const usedStorage = ref(49 * 1024 * 1024) // 49MB
@@ -494,136 +510,8 @@ const shareExpire = ref('7')
 const shareLink = ref('')
 const selectedTargetFolder = ref(null)
 
-// 模拟文件夹树形数据
-const folderTreeData = ref([
-  {
-    id: 1,
-    name: '文档资料',
-    children: [
-      {
-        id: 11,
-        name: '工作文档',
-        children: [
-          { id: 111, name: '2024年', children: [] },
-          { id: 112, name: '2023年', children: [] }
-        ]
-      },
-      { id: 12, name: '个人文档', children: [] }
-    ]
-  },
-  {
-    id: 2,
-    name: '图片资源',
-    children: [
-      { id: 21, name: '照片', children: [] },
-      { id: 22, name: '截图', children: [] }
-    ]
-  },
-  {
-    id: 3,
-    name: '项目文件',
-    children: [
-      {
-        id: 31,
-        name: '云盘项目',
-        children: [
-          { id: 311, name: '设计稿', children: [] },
-          { id: 312, name: '需求文档', children: [] }
-        ]
-      }
-    ]
-  },
-  { id: 4, name: '下载', children: [] },
-  { id: 5, name: '备份', children: [] }
-])
-
-// 模拟文件数据
-const fileList = ref([
-  {
-    id: 1,
-    name: '企业网盘移动端图标PNG格式',
-    type: 'folder',
-    createTime: '2022-08-16 19:54:00',
-    size: 0
-  },
-  {
-    id: 2,
-    name: '多种格式预览库',
-    type: 'folder',
-    createTime: '2022-08-16 19:53:48',
-    size: 0
-  },
-  {
-    id: 3,
-    name: '新建文件夹',
-    type: 'folder',
-    createTime: '2022-08-16 19:53:29',
-    size: 0
-  },
-  {
-    id: 4,
-    name: '新建文件夹 (1)',
-    type: 'folder',
-    createTime: '2022-08-30 16:04:56',
-    size: 0
-  },
-  {
-    id: 5,
-    name: '产品设计规范文档.pdf',
-    type: 'pdf',
-    createTime: '2022-08-31 15:59:55',
-    size: 3460300
-  },
-  {
-    id: 6,
-    name: '项目需求分析.xlsx',
-    type: 'excel',
-    createTime: '2022-08-31 15:59:49',
-    size: 24064
-  },
-  {
-    id: 7,
-    name: '会议纪要-20220830.docx',
-    type: 'word',
-    createTime: '2022-08-31 15:59:49',
-    size: 11400
-  },
-  {
-    id: 8,
-    name: 'logo-design-v2.png',
-    type: 'image',
-    createTime: '2022-08-30 16:05:22',
-    size: 13000
-  },
-  {
-    id: 9,
-    name: '演示视频.mp4',
-    type: 'video',
-    createTime: '2022-08-30 16:05:22',
-    size: 52428800
-  },
-  {
-    id: 10,
-    name: '录音文件.mp3',
-    type: 'audio',
-    createTime: '2022-08-30 16:05:22',
-    size: 2097152
-  },
-  {
-    id: 11,
-    name: 'source-code.zip',
-    type: 'zip',
-    createTime: '2022-08-30 16:05:22',
-    size: 10485760
-  },
-  {
-    id: 12,
-    name: 'index.html',
-    type: 'code',
-    createTime: '2022-08-30 16:05:22',
-    size: 4096
-  }
-])
+// 文件夹树形数据（移动/复制对话框用）
+const folderTreeData = ref([])
 
 // 过滤后的文件列表
 const filteredFiles = computed(() => {
@@ -700,12 +588,43 @@ const handleRowClick = (row) => {
   tableRef.value?.toggleRowSelection(row)
 }
 
+// 加载文件列表
+const loadFileList = async (parentId = null) => {
+  if (!driveId.value) {
+    ElMessage.error('未获取到 driveId')
+    return
+  }
+
+  loading.value = true
+  try {
+    let url = `/api/personal/list?driveId=${driveId.value}`
+    if (parentId !== null) {
+      url += `&parentId=${parentId}`
+    }
+    const response = await axios.get(url)
+    if (response.data.code === 200) {
+      fileList.value = response.data.data || []
+      total.value = fileList.value.length
+      selectedFiles.value = []
+    } else {
+      ElMessage.error(response.data.message || '加载失败')
+    }
+  } catch (error) {
+    console.error('加载文件列表失败:', error)
+    fileList.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
 // 打开文件/文件夹
 const handleOpenFile = (file) => {
   if (file.type === 'folder') {
-    currentPath.value.push(file.name)
-    ElMessage.success(`进入文件夹: ${file.name}`)
-    // 这里应该加载文件夹内容
+    // 进入文件夹：更新路径历史，重新加载文件列表
+    pathHistory.value.push({ id: file.id, name: file.name })
+    currentParentId.value = file.id
+    loadFileList(file.id)
   } else {
     ElMessage.info(`预览文件: ${file.name}`)
   }
@@ -713,16 +632,24 @@ const handleOpenFile = (file) => {
 
 // 面包屑导航 - 返回根目录
 const goToRoot = () => {
-  currentPath.value = []
-  ElMessage.success('返回根目录')
+  pathHistory.value = []
+  currentParentId.value = null
+  loadFileList(null)
 }
 
 // 面包屑导航 - 点击某个路径层级
 const goToPath = (index) => {
   // 保留从0到index的路径，删除后面的
-  currentPath.value = currentPath.value.slice(0, index + 1)
-  ElMessage.success(`导航到: ${currentPath.value[index] || '根目录'}`)
+  pathHistory.value = pathHistory.value.slice(0, index + 1)
+  const targetId = pathHistory.value.length > 0 ? pathHistory.value[pathHistory.value.length - 1].id : null
+  currentParentId.value = targetId
+  loadFileList(targetId)
 }
+
+// 初始化加载
+onMounted(() => {
+  loadFileList()
+})
 
 // 上传
 const handleUpload = () => {
@@ -736,24 +663,35 @@ const handleCreateFolder = () => {
 }
 
 // 确认创建文件夹
-const confirmCreateFolder = () => {
+const confirmCreateFolder = async () => {
   if (!newFolderName.value.trim()) {
     ElMessage.warning('请输入文件夹名称')
     return
   }
 
-  const newFolder = {
-    id: Date.now(),
-    name: newFolderName.value,
-    type: 'folder',
-    createTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
-    size: 0,
-    itemCount: 0
+  if (!driveId.value) {
+    ElMessage.error('未获取到 driveId')
+    return
   }
 
-  fileList.value.unshift(newFolder)
-  createFolderVisible.value = false
-  ElMessage.success('创建成功')
+  try {
+    const response = await axios.post('/api/personal/create', {
+      parentId: currentParentId.value,
+      folderName: newFolderName.value.trim()
+    })
+
+    if (response.data.code === 200) {
+      createFolderVisible.value = false
+      ElMessage.success('创建成功')
+      // 重新加载文件列表
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.message || '创建失败')
+    }
+  } catch (error) {
+    console.error('创建文件夹失败:', error)
+    ElMessage.error('创建失败')
+  }
 }
 
 // 批量下载
@@ -814,11 +752,22 @@ const handleRenameSingle = async (row) => {
       inputErrorMessage: '名称不能为空'
     })
 
-    row.name = value
-    row.createTime = new Date().toISOString().replace('T', ' ').substring(0, 19)
-    ElMessage.success('重命名成功')
-  } catch {
-    // 用户取消
+    const response = await axios.post('/api/personal/rename', {
+      entryId: row.id,
+      newName: value
+    })
+
+    if (response.data.code === 200) {
+      ElMessage.success('重命名成功')
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.message || '重命名失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('重命名失败:', error)
+      ElMessage.error('重命名失败')
+    }
   }
 }
 
@@ -829,13 +778,39 @@ const handleDeleteSingle = (row) => {
     cancelButtonText: '取消',
     type: 'warning',
     confirmButtonClass: 'el-button--danger'
-  }).then(() => {
-    const index = fileList.value.findIndex(f => f.id === row.id)
-    if (index > -1) {
-      fileList.value.splice(index, 1)
-      ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      const response = await axios.post('/api/personal/delete', [row.id])
+      if (response.data.code === 200) {
+        ElMessage.success('删除成功')
+        loadFileList(currentParentId.value)
+      } else {
+        ElMessage.error(response.data.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
     }
   }).catch(() => {})
+}
+
+// 加载文件夹树形数据（用于移动/复制对话框）
+const loadFolderTree = async () => {
+  if (!driveId.value) return
+
+  try {
+    // TODO: 后端接口 /api/personal/folder 实现后取消注释
+    // const response = await axios.get(`/api/personal/folder?driveId=${driveId.value}`)
+    // if (response.data.code === 200) {
+    //   folderTreeData.value = response.data.data || []
+    // }
+
+    // 暂时使用空数据
+    folderTreeData.value = []
+  } catch (error) {
+    console.error('加载文件夹树失败:', error)
+    folderTreeData.value = []
+  }
 }
 
 // 移动
@@ -843,10 +818,7 @@ const handleMove = () => {
   if (selectedFiles.value.length === 0) return
   selectedTargetFolder.value = null
   moveVisible.value = true
-  // 默认展开第一级
-  nextTick(() => {
-    moveTreeRef.value?.expandLevel?.(1)
-  })
+  loadFolderTree()
 }
 
 // 移动单个文件
@@ -861,20 +833,32 @@ const handleTreeNodeClick = (data) => {
 }
 
 // 确认移动
-const confirmMove = () => {
+const confirmMove = async () => {
   if (!selectedTargetFolder.value) {
     ElMessage.warning('请选择目标文件夹')
     return
   }
 
-  ElMessage.success(`已将 ${selectedFiles.value.length} 个文件移动到 "${selectedTargetFolder.value.name}"`)
-  moveVisible.value = false
-  selectedTargetFolder.value = null
+  try {
+    const ids = selectedFiles.value.map(f => f.id)
+    const response = await axios.post('/api/personal/move', {
+      entryIds: ids,
+      targetId: selectedTargetFolder.value.id
+    })
 
-  // 从列表移除已移动的文件
-  const ids = selectedFiles.value.map(f => f.id)
-  fileList.value = fileList.value.filter(f => !ids.includes(f.id))
-  selectedFiles.value = []
+    if (response.data.code === 200) {
+      ElMessage.success(`已将 ${selectedFiles.value.length} 个文件移动到 "${selectedTargetFolder.value.name}"`)
+      moveVisible.value = false
+      selectedTargetFolder.value = null
+      selectedFiles.value = []
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.message || '移动失败')
+    }
+  } catch (error) {
+    console.error('移动失败:', error)
+    ElMessage.error('移动失败')
+  }
 }
 
 // 复制
@@ -895,6 +879,7 @@ const handleCopy = () => {
 
   selectedTargetFolder.value = null
   copyVisible.value = true
+  loadFolderTree()
 }
 
 // 处理复制对话框中的树节点点击
@@ -903,17 +888,32 @@ const handleCopyTreeNodeClick = (data) => {
 }
 
 // 确认复制
-const confirmCopy = () => {
+const confirmCopy = async () => {
   if (!selectedTargetFolder.value) {
     ElMessage.warning('请选择目标文件夹')
     return
   }
 
   const selectedFile = selectedFiles.value[0]
-  ElMessage.success(`已将 "${selectedFile.name}" 复制到 "${selectedTargetFolder.value.name}"`)
-  copyVisible.value = false
-  selectedTargetFolder.value = null
-  selectedFiles.value = []
+  try {
+    const response = await axios.post('/api/personal/copy', {
+      entryId: selectedFile.id,
+      targetId: selectedTargetFolder.value.id
+    })
+
+    if (response.data.code === 200) {
+      ElMessage.success(`已将 "${selectedFile.name}" 复制到 "${selectedTargetFolder.value.name}"`)
+      copyVisible.value = false
+      selectedTargetFolder.value = null
+      selectedFiles.value = []
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.message || '复制失败')
+    }
+  } catch (error) {
+    console.error('复制失败:', error)
+    ElMessage.error('复制失败')
+  }
 }
 
 // 重命名（批量时禁用，已在按钮中控制）
@@ -932,11 +932,21 @@ const handleBatchDelete = () => {
     cancelButtonText: '取消',
     type: 'warning',
     confirmButtonClass: 'el-button--danger'
-  }).then(() => {
-    const ids = selectedFiles.value.map(f => f.id)
-    fileList.value = fileList.value.filter(f => !ids.includes(f.id))
-    selectedFiles.value = []
-    ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      const ids = selectedFiles.value.map(f => f.id)
+      const response = await axios.post('/api/personal/delete', ids)
+      if (response.data.code === 200) {
+        ElMessage.success('删除成功')
+        selectedFiles.value = []
+        loadFileList(currentParentId.value)
+      } else {
+        ElMessage.error(response.data.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
   }).catch(() => {})
 }
 </script>
