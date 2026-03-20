@@ -8,12 +8,12 @@ import java.util.List;
 @Data
 @Builder
 public class UserView {
-    private String id;
+    private Long id;
     private String username;
     private String realName;
     private String mobile;
     private String email;
-    private String status;
-    private String storageQuota;
+    private Boolean isEnabled;
+    private Long storageQuota;
     private List<Long> roles;
 }

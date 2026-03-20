@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @TableName("sys_user_role")
-public class RoleAssignment implements Serializable {
+public class UserRole implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 用户-角色关联ID */

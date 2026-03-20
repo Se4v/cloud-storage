@@ -4,14 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.MemberMapper;
-import org.example.backend.mapper.RoleAssignmentMapper;
+import org.example.backend.mapper.UserRoleMapper;
 import org.example.backend.mapper.RoleMapper;
 import org.example.backend.mapper.RolePermissionMapper;
 import org.example.backend.model.args.CreateRoleArgs;
 import org.example.backend.model.args.UpdateRoleArgs;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.entity.RoleAssignment;
+import org.example.backend.model.entity.UserRole;
 import org.example.backend.model.entity.RolePermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class RoleService {
     @Autowired
     private MemberMapper memberMapper;
     @Autowired
-    private RoleAssignmentMapper roleAssignmentMapper;
+    private UserRoleMapper userRoleMapper;
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
 
@@ -101,13 +101,13 @@ public class RoleService {
         }
 
         // 级联删除用户-角色关联
-        LambdaQueryWrapper<RoleAssignment> assignmentQuery = new LambdaQueryWrapper<>();
-        assignmentQuery.in(RoleAssignment::getRoleId, roleIds);
-        long assignmentCount = roleAssignmentMapper.selectCount(assignmentQuery);
+        LambdaQueryWrapper<UserRole> assignmentQuery = new LambdaQueryWrapper<>();
+        assignmentQuery.in(UserRole::getRoleId, roleIds);
+        long assignmentCount = userRoleMapper.selectCount(assignmentQuery);
         if (assignmentCount > 0) {
             throw new BusinessException("该角色还在被使用，无法删除");
         }
-        if (roleAssignmentMapper.delete(assignmentQuery) != roleIds.size()) {
+        if (userRoleMapper.delete(assignmentQuery) != roleIds.size()) {
             throw new BusinessException("<UNK>");
         }
 

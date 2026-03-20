@@ -8,6 +8,6 @@ public class UpdateUserArgs {
     private String realName;
     private String mobile;
     private String email;
-    private Integer storageQuota;
-    private Integer status;
+    private Long storageQuota;
+    private Boolean isEnabled;
 }

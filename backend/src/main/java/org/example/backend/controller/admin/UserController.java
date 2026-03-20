@@ -1,10 +1,10 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
+import org.example.backend.model.args.AssignGlobalRoleArgs;
 import org.example.backend.model.args.CreateUserArgs;
 import org.example.backend.model.args.DeleteUserArgs;
 import org.example.backend.model.args.UpdateUserArgs;
-import org.example.backend.model.entity.User;
 import org.example.backend.model.view.UserView;
 import org.example.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,20 +36,21 @@ public class UserController {
         return Result.success("更新用户成功");
     }
 
-    @GetMapping("/all")
+    @GetMapping()
     public Result<List<UserView>> listAllUsers() {
-        List<User> users = userService.listAllUsers();
-        return Result.success(users);
+        List<UserView> views = userService.listAllUsers();
+        return Result.success("", views);
     }
 
-    @PostMapping("/")
-    public Result<Void> assignGlobalRole() {
+    @PostMapping("/role")
+    public Result<Void> assignGlobalRole(@RequestBody AssignGlobalRoleArgs args) {
+        userService.assignGlobalRole(args);
         return null;
     }
 
     @PostMapping("/reset")
-    public Result<Void> resetPassword() {
+    public Result<Void> resetPassword(Long userId) {
+        userService.resetPassword(userId);
         return null;
     }
-
 }

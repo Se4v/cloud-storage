@@ -2,22 +2,30 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
+import org.example.backend.mapper.UserRoleMapper;
 import org.example.backend.mapper.UserMapper;
+import org.example.backend.model.args.AssignGlobalRoleArgs;
 import org.example.backend.model.args.CreateUserArgs;
 import org.example.backend.model.args.DeleteUserArgs;
 import org.example.backend.model.args.UpdateUserArgs;
 import org.example.backend.model.entity.Config;
 import org.example.backend.model.entity.Drive;
+import org.example.backend.model.entity.UserRole;
 import org.example.backend.model.entity.User;
+import org.example.backend.model.view.UserView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -27,6 +35,8 @@ public class UserService {
     private ConfigMapper configMapper;
     @Autowired
     private DriveMapper driveMapper;
+    @Autowired
+    private UserRoleMapper userRoleMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -82,16 +92,15 @@ public class UserService {
      */
     @Transactional
     public void deleteUsers(DeleteUserArgs args) {
-        if (args.getIds() == null || args.getIds().isEmpty()) {
+        if (args.getUserIds() == null || args.getUserIds().isEmpty()) {
             throw new BusinessException("请选择要删除的用户");
         }
 
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.in(User::getId, args.getIds())
-                .set(User::getDeleted, DELETED);
+        updateWrapper.in(User::getId, args.getUserIds()).set(User::getDeleted, DELETED);
 
         int count = userMapper.update(updateWrapper);
-        if (count != args.getIds().size()) {
+        if (count != args.getUserIds().size()) {
             throw new BusinessException("删除用户失败");
         }
     }
@@ -105,9 +114,8 @@ public class UserService {
         updateWrapper.set(args.getRealName() != null, User::getRealName, args.getRealName())
                 .set(args.getMobile() != null, User::getMobile, args.getMobile())
                 .set(args.getEmail() != null, User::getEmail, args.getEmail())
-                .set(args.getEnabled() != null, User::getEnabled, args.getEnabled())
-                .eq(User::getId, args.getId())
-                .eq(User::getDeleted, UNDELETED);
+                .set(args.getIsEnabled() != null, User::getEnabled, Boolean.TRUE.equals(args.getIsEnabled()) ? ENABLED : DISABLED)
+                .eq(User::getId, args.getId());
 
         int count = userMapper.update(updateWrapper);
         if (count != 1) {
@@ -118,16 +126,66 @@ public class UserService {
     /**
      * 查询所有未删除的用户
      */
-    public List<User> listAllUsers() {
+    public List<UserView> listAllUsers() {
+        // 查询用户
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getDeleted, UNDELETED)
-                .orderByDesc(User::getCreatedAt);
+        queryWrapper.eq(User::getDeleted, UNDELETED).orderByDesc(User::getCreatedAt);
+        List<User> users = userMapper.selectList(queryWrapper);
+        List<Long> userIds = users.stream().map(User::getId).toList();
 
-        return userMapper.selectList(queryWrapper);
+        // 查询用户配额
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getDriveType, 4).in(Drive::getUserId, userIds);
+        List<Drive> drives = driveMapper.selectList(driveQuery);
+        Map<Long, Long> driveMap = drives.stream().collect(Collectors.toMap(Drive::getUserId, Drive::getTotalQuota));
+
+        // 查询用户全局角色
+        LambdaQueryWrapper<UserRole> userRoleQuery = new LambdaQueryWrapper<>();
+        userRoleQuery.in(UserRole::getUserId, userIds);
+        List<UserRole> userRoles = userRoleMapper.selectList(userRoleQuery);
+        Map<Long, List<Long>> userRoleMap = userRoles.stream()
+                .collect(Collectors.groupingBy(
+                        UserRole::getUserId,
+                        Collectors.mapping(UserRole::getRoleId, Collectors.toList())
+                ));
+
+        // 转换
+        List<UserView> userViews = users.stream()
+                .map(user -> UserView.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .realName(user.getRealName())
+                        .mobile(user.getMobile())
+                        .email(user.getEmail())
+                        .isEnabled(user.getEnabled() == 1)
+                        .storageQuota(driveMap.getOrDefault(user.getId(), null))
+                        .roles(userRoleMap.getOrDefault(user.getId(), List.of()))
+                        .build())
+                .toList();
+
+        return userViews;
     }
 
-    public void assignGlobalRole() {
-        return ;
+    @Transactional
+    public void assignGlobalRole(AssignGlobalRoleArgs args) {
+        List<Long> roleIds = args.getRoleIds();
+        List<UserRole> userRoleList = new ArrayList<>();
+        for (Long roleId : roleIds) {
+            userRoleList.add(UserRole.builder()
+                            .userId(args.getId())
+                            .roleId(roleId)
+                    .build());
+        }
+
+        List<BatchResult> results = userRoleMapper.insert(userRoleList);
+        int insertCount = 0;
+        for (BatchResult result : results) {
+            for (int count : result.getUpdateCounts()) {
+                insertCount += count; // 累加每条SQL的影响行数
+            }
+        }
+
+        if (insertCount != roleIds.size()) throw new BusinessException("<UNK>");
     }
 
     @Transactional

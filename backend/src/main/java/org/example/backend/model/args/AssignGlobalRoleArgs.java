@@ -5,6 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class DeleteUserArgs {
-    private List<Long> userIds;
+public class AssignGlobalRoleArgs {
+    private Long id;
+    private List<Long> roleIds;
 }

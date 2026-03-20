@@ -50,8 +50,8 @@
               class="h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
           >
             <option value="">全部状态</option>
-            <option value="active">正常</option>
-            <option value="disabled">禁用</option>
+            <option value="true">启用</option>
+            <option value="false">禁用</option>
           </select>
 
           <button
@@ -125,7 +125,7 @@
                 <span
                     :class="[
                     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                    user.status === 'active'
+                    user.isEnabled
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-red-50 text-red-700 border-red-200'
                   ]"
@@ -133,10 +133,10 @@
                   <span
                       :class="[
                       'w-1.5 h-1.5 rounded-full mr-1.5',
-                      user.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'
+                      user.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
                     ]"
                   ></span>
-                  {{ user.status === 'active' ? '正常' : '禁用' }}
+                  {{ user.isEnabled ? '启用' : '禁用' }}
                 </span>
             </td>
             <td class="px-6 py-4 text-right">
@@ -363,17 +363,17 @@
             <label class="flex items-center gap-2 cursor-pointer">
               <input
                   type="radio"
-                  v-model="userForm.status"
-                  value="active"
+                  v-model="userForm.isEnabled"
+                  :value="true"
                   class="text-blue-600 focus:ring-blue-500 border-slate-300"
               />
-              <span class="text-sm text-slate-700">正常</span>
+              <span class="text-sm text-slate-700">启用</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input
                   type="radio"
-                  v-model="userForm.status"
-                  value="disabled"
+                  v-model="userForm.isEnabled"
+                  :value="false"
                   class="text-blue-600 focus:ring-blue-500 border-slate-300"
               />
               <span class="text-sm text-slate-700">禁用</span>
@@ -430,12 +430,12 @@ const selectedUsers = ref([])
 // 表格数据
 const tableData = ref([
   {
-    id: 1,
+    id: '1',
     username: 'zhangsan',
     realName: '张三',
     mobile: '13800138000',
     email: 'zhangsan@company.com',
-    status: 'active',
+    isEnabled: true,
     storageQuota: 10737418240, // 10GB in bytes
     roles: [1, 3]
   },
@@ -445,7 +445,7 @@ const tableData = ref([
     realName: '李四',
     mobile: '13900139000',
     email: 'lisi@company.com',
-    status: 'active',
+    isEnabled: true,
     storageQuota: 5368709120,  // 5GB
     roles: [2]
   },
@@ -455,7 +455,7 @@ const tableData = ref([
     realName: '王五',
     mobile: '13700137000',
     email: 'wangwu@company.com',
-    status: 'disabled',
+    isEnabled: false,
     storageQuota: 21474836480, // 20GB
     roles: []
   }
@@ -538,7 +538,7 @@ const userForm = reactive({
   realName: '',
   mobile: '',
   storageQuota: 10,
-  status: 'active'
+  isEnabled: true
 })
 
 const handleAddUser = () => {
@@ -549,7 +549,7 @@ const handleAddUser = () => {
     realName: '',
     mobile: '',
     storageQuota: 10,
-    status: 'active'
+    isEnabled: true
   })
   userDialogVisible.value = true
 }
@@ -562,7 +562,7 @@ const handleEdit = (row) => {
     realName: row.realName,
     mobile: row.mobile,
     storageQuota: Math.round(row.storageQuota / 1024 / 1024 / 1024),
-    status: row.status
+    isEnabled: row.isEnabled
   })
   userDialogVisible.value = true
 }
@@ -576,8 +576,12 @@ const handleSaveUser = async () => {
   // 将GB转换为字节
   const storageQuotaBytes = userForm.storageQuota > 0 ? userForm.storageQuota * 1024 * 1024 * 1024 : 0
   const submitData = {
-    ...userForm,
-    storageQuota: storageQuotaBytes
+    id: userForm.id,
+    username: userForm.username,
+    realName: userForm.realName,
+    mobile: userForm.mobile,
+    storageQuota: storageQuotaBytes,
+    isEnabled: userForm.isEnabled
   }
   // TODO: API调用，使用submitData
   console.log('提交数据:', submitData)
