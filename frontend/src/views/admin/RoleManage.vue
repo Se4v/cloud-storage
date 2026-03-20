@@ -68,7 +68,6 @@
           <template #default="{ row }">
             <div>
               <div class="font-medium text-slate-900">{{ row.name }}</div>
-              <div class="text-xs text-slate-500 mt-0.5">{{ row.description || '暂无描述' }}</div>
             </div>
           </template>
         </el-table-column>
@@ -98,7 +97,7 @@
 
         <el-table-column label="创建时间" width="160">
           <template #default="{ row }">
-            <span class="text-sm text-slate-600">{{ formatDate(row.createTime) }}</span>
+            <span class="text-sm text-slate-600">{{ row.createTime }}</span>
           </template>
         </el-table-column>
 
@@ -340,8 +339,7 @@ const form = reactive({
   id: null,
   name: '',
   code: '',
-  type: 'custom',
-  description: ''
+  type: 'custom'
 })
 
 // 表单验证规则
@@ -366,7 +364,6 @@ const mockData = [
     name: '超级管理员',
     code: 'ROLE_ADMIN',
     type: 'system',
-    description: '系统最高权限，可管理所有资源',
     createTime: '2024-01-15T08:30:00'
   },
   {
@@ -374,7 +371,6 @@ const mockData = [
     name: '普通用户',
     code: 'ROLE_USER',
     type: 'system',
-    description: '普通员工权限，可访问基础功能',
     createTime: '2024-01-15T08:30:00'
   },
   {
@@ -382,7 +378,6 @@ const mockData = [
     name: '部门经理',
     code: 'ROLE_MANAGER',
     type: 'custom',
-    description: '部门管理权限，可查看部门数据',
     createTime: '2024-02-20T14:22:00'
   },
   {
@@ -390,18 +385,17 @@ const mockData = [
     name: '审计员',
     code: 'ROLE_AUDITOR',
     type: 'custom',
-    description: '只读权限，用于安全审计',
     createTime: '2024-03-01T09:15:00'
   }
 ]
 
 // 初始化
 onMounted(() => {
-  fetchRoleList()
+  loadRoleList()
 })
 
 // 获取角色列表
-const fetchRoleList = async () => {
+const loadRoleList = async () => {
   loading.value = true
   try {
     // 模拟 API 请求
@@ -430,7 +424,7 @@ const fetchRoleList = async () => {
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  fetchRoleList()
+  loadRoleList()
 }
 
 // 多选变化
@@ -480,7 +474,7 @@ const handleSubmit = async () => {
         }
 
         dialogVisible.value = false
-        fetchRoleList()
+        loadRoleList()
       } catch (error) {
         ElMessage.error(isEditing.value ? '更新失败' : '创建失败')
       } finally {
@@ -535,7 +529,7 @@ const confirmDelete = async () => {
     }
 
     deleteDialogVisible.value = false
-    fetchRoleList()
+    loadRoleList()
   } catch (error) {
     ElMessage.error('删除失败')
   } finally {
@@ -546,12 +540,12 @@ const confirmDelete = async () => {
 // 分页
 const handleSizeChange = (val) => {
   pageSize.value = val
-  fetchRoleList()
+  loadRoleList()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
-  fetchRoleList()
+  loadRoleList()
 }
 
 // 重置表单
@@ -560,21 +554,9 @@ const resetForm = () => {
   form.name = ''
   form.code = ''
   form.type = 'custom'
-  form.description = ''
   if (formRef.value) {
     formRef.value.resetFields()
   }
-}
-
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
 }
 </script>
 
