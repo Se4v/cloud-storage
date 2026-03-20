@@ -212,7 +212,7 @@ CREATE TABLE `sys_notice` (
     `expired_at`    datetime DEFAULT NULL COMMENT '过期时间',
     `created_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '通知时间',
     PRIMARY KEY (`id`),
-    KEY `idx_target_read` (`target_id`, `read`),
+    KEY `idx_target_read` (`target_id`, `is_read`),
     KEY `idx_target_create` (`target_id`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知表';
 
@@ -234,10 +234,7 @@ CREATE TABLE `sys_log` (
     `client_ip`         varchar(64) NOT NULL DEFAULT '' COMMENT 'IP地址', 
     `user_agent`        varchar(255) NOT NULL DEFAULT '' COMMENT '设备信息',
     `created_at`        datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    KEY idx_user_time (user_id, created_at),
-    KEY idx_target_time (target_type, target_id, created_at),
-    KEY idx_action_time (action_type, created_at)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日志表';
 
 
@@ -249,7 +246,7 @@ CREATE TABLE `sys_config` (
     `is_enabled`    tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否启用: 1-启用; 0-禁用',
     `updated_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_config_key` (`config_key`)
+    UNIQUE KEY `uk_key` (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
 
