@@ -82,7 +82,6 @@ public class ProfileService {
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(args.getEmail() != null, User::getEmail, args.getEmail())
                 .set(args.getMobile() != null, User::getMobile, args.getMobile())
-                .set(User::getUpdaterId, args.getUserId())
                 .eq(User::getId, args.getUserId());
 
         int count = userMapper.update(updateWrapper);
@@ -139,7 +138,6 @@ public class ProfileService {
         // 更新头像信息
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(User::getAvatar, objectName)
-                .set(User::getUpdaterId, args.getUserId())
                 .eq(User::getId, args.getUserId());
 
         int count = userMapper.update(updateWrapper);
@@ -167,7 +165,6 @@ public class ProfileService {
         // 更新密码
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(args.getNewPassword() != null, User::getPassword, passwordEncoder.encode(args.getNewPassword()))
-                .set(User::getUpdaterId, args.getUserId())
                 .eq(User::getId, args.getUserId());
 
         int count = userMapper.update(updateWrapper);

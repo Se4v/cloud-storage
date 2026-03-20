@@ -28,6 +28,10 @@ public class Log implements Serializable {
     @TableField("username")
     private String username;
 
+    /** 真实姓名 */
+    @TableField("real_name")
+    private String realName;
+
     /** 请求路径 */
     @TableField("request_uri")
     private String requestUri;

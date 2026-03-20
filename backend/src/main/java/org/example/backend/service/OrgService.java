@@ -118,8 +118,6 @@ public class OrgService {
                 .enabled(1)
                 .createdAt(LocalDateTime.now())
                 .creatorId(userId)
-                .updatedAt(LocalDateTime.now())
-                .updaterId(userId)
                 .build();
 
         int count = nodeMapper.insert(node);
@@ -205,8 +203,6 @@ public class OrgService {
                 .set(args.getType() != null, Node::getNodeType, args.getType())
                 .set(args.getParentId() != null, Node::getParentId, args.getParentId())
                 .set(args.getEnabled() != null, Node::getEnabled, args.getEnabled())
-                .set(Node::getUpdaterId, userId)
-                .set(Node::getUpdatedAt, LocalDateTime.now())
                 .eq(Node::getId, args.getId());
 
         int count = nodeMapper.update(updateWrapper);

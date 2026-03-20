@@ -102,7 +102,6 @@ public class UploadService {
                     .fileSize(arg.getFileSize())
                     .fileExt(existStorage.getFileExt())
                     .status(1)
-                    .updaterId(args.getUserId())
                     .build();
             fileRepository.saveEntryWithIncreaseRefCount(entry, arg.getSha256());
             return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
@@ -280,7 +279,7 @@ public class UploadService {
             minioAsyncClient.statObject(StatObjectArgs.builder().bucket(minioConfig.getBucketName()).object(objectName).build()).get();
 
             Entry entry = Entry.builder().driveId(driveId).userId(userId).parentId(parentId)
-                    .entryName(entryName).entryType(1).fileSize(fileSize).fileExt(fileExt).status(1).updaterId(userId).build();
+                    .entryName(entryName).entryType(1).fileSize(fileSize).fileExt(fileExt).status(1).build();
 
             Storage storage = Storage.builder().originalName(entryName).fileExt(fileExt).fileSize(fileSize)
                     .sha256(sha256).bucketName(minioConfig.getBucketName()).objectKey(objectName)

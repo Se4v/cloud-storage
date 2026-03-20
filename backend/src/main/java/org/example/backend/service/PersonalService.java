@@ -75,8 +75,7 @@ public class PersonalService {
 
         LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(Entry::getId, entryIds)
-                .set(Entry::getParentId, targetId)
-                .set(Entry::getUpdaterId, userId);
+                .set(Entry::getParentId, targetId);
 
         int count = entryMapper.update(updateWrapper);
         if (count != entryIds.size()) throw new BusinessException("Move entry failed");

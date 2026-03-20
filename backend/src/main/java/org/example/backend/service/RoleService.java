@@ -61,8 +61,6 @@ public class RoleService {
                 .enabled(ENABLED)
                 .createdAt(LocalDateTime.now())
                 .creatorId(userId)
-                .updatedAt(LocalDateTime.now())
-                .updaterId(userId)
                 .build();
 
         int count = roleMapper.insert(role);
@@ -163,8 +161,6 @@ public class RoleService {
                 .set(args.getCode() != null, Role::getCode, args.getCode())
                 .set(args.getType() != null, Role::getType, args.getType())
                 .set(args.getEnabled() != null, Role::getEnabled, args.getEnabled())
-                .set(Role::getUpdatedAt, LocalDateTime.now())
-                .set(Role::getUpdaterId, userId)
                 .eq(Role::getId, args.getId());
 
         int count = roleMapper.update(updateWrapper);
