@@ -200,9 +200,6 @@
                 class="custom-input"
                 :disabled="isEditing && form.type === 'global'"
             >
-              <template #prefix>
-                <span class="text-slate-400 text-sm">ROLE_</span>
-              </template>
             </el-input>
             <p class="mt-1.5 text-xs text-slate-500">代码用于系统识别，创建后不可修改</p>
           </el-form-item>
