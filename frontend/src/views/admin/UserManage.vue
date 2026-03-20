@@ -94,7 +94,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100">
           <tr
-              v-for="user in tableData"
+              v-for="user in paginatedTableData"
               :key="user.id"
               class="hover:bg-slate-50/50 transition-colors"
           >
@@ -200,7 +200,7 @@
       <!-- 分页 -->
       <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
         <span class="text-sm text-slate-500">
-          共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
+          共 <span class="font-medium text-slate-900">{{ filteredTableData.length }}</span> 条记录
         </span>
         <el-pagination
             v-model:current-page="currentPage"
@@ -272,9 +272,6 @@
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-medium text-slate-900">{{ role.name }}</span>
                 </div>
-                <p class="mt-0.5 text-xs text-slate-500 leading-relaxed truncate">
-                  {{ role.description }}
-                </p>
               </div>
             </div>
           </div>
@@ -342,6 +339,16 @@
           />
         </div>
 
+        <div v-if="isEdit">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">邮箱</label>
+          <input
+              v-model="userForm.email"
+              type="email"
+              class="w-full h-10 px-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder="请输入邮箱"
+          />
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">空间配额 <span class="text-red-500">*</span></label>
           <div class="relative">
@@ -404,8 +411,9 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 import {
   Plus,
   Search,
@@ -419,6 +427,19 @@ import {
   Check
 } from '@element-plus/icons-vue'
 
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
 // 搜索与筛选
 const searchQuery = ref('')
 const filterStatus = ref('')
@@ -428,49 +449,48 @@ const total = ref(0)
 const selectedUsers = ref([])
 
 // 表格数据
-const tableData = ref([
-  {
-    id: '1',
-    username: 'zhangsan',
-    realName: '张三',
-    mobile: '13800138000',
-    email: 'zhangsan@company.com',
-    isEnabled: true,
-    storageQuota: 10737418240, // 10GB in bytes
-    roles: [1, 3]
-  },
-  {
-    id: 2,
-    username: 'lisi',
-    realName: '李四',
-    mobile: '13900139000',
-    email: 'lisi@company.com',
-    isEnabled: true,
-    storageQuota: 5368709120,  // 5GB
-    roles: [2]
-  },
-  {
-    id: 3,
-    username: 'wangwu',
-    realName: '王五',
-    mobile: '13700137000',
-    email: 'wangwu@company.com',
-    isEnabled: false,
-    storageQuota: 21474836480, // 20GB
-    roles: []
-  }
-])
+const tableData = ref([])
+const loading = ref(false)
 
-// 全选逻辑
+// 加载用户列表
+const loadUserList = async () => {
+  loading.value = true
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/user/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      tableData.value = res.data.data || []
+      total.value = tableData.value.length
+    } else {
+      ElMessage.error(res.data.msg || '加载用户列表失败')
+    }
+  } catch (error) {
+    console.error('加载用户列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载用户列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadUserList()
+})
+
+// 全选逻辑（仅选中当前页）
 const isAllSelected = computed(() => {
-  return tableData.value.length > 0 && selectedUsers.value.length === tableData.value.length
+  return paginatedTableData.value.length > 0 && 
+    paginatedTableData.value.every(user => selectedUsers.value.includes(user.id))
 })
 
 const toggleSelectAll = () => {
   if (isAllSelected.value) {
-    selectedUsers.value = []
+    // 取消选中当前页的所有用户
+    const currentPageIds = paginatedTableData.value.map(item => item.id)
+    selectedUsers.value = selectedUsers.value.filter(id => !currentPageIds.includes(id))
   } else {
-    selectedUsers.value = tableData.value.map(item => item.id)
+    // 选中当前页的所有用户
+    const currentPageIds = paginatedTableData.value.map(item => item.id)
+    selectedUsers.value = [...new Set([...selectedUsers.value, ...currentPageIds])]
   }
 }
 
@@ -484,11 +504,39 @@ const formatStorage = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// 搜索（前端筛选）
+const filteredTableData = computed(() => {
+  let data = tableData.value
+  
+  // 按关键词搜索
+  if (searchQuery.value) {
+    const keyword = searchQuery.value.toLowerCase()
+    data = data.filter(item => 
+      item.username?.toLowerCase().includes(keyword) ||
+      item.realName?.toLowerCase().includes(keyword) ||
+      item.mobile?.includes(keyword)
+    )
+  }
+  
+  // 按状态筛选
+  if (filterStatus.value !== '') {
+    const isEnabled = filterStatus.value === 'true'
+    data = data.filter(item => item.isEnabled === isEnabled)
+  }
+  
+  return data
+})
+
+// 分页后的数据
+const paginatedTableData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredTableData.value.slice(start, end)
+})
+
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  // TODO: 调用API
-  ElMessage.success('搜索: ' + searchQuery.value)
 }
 
 const handleReset = () => {
@@ -510,9 +558,10 @@ const handleCurrentChange = (val) => {
 }
 
 // 批量删除
-const handleBatchDelete = () => {
+const handleBatchDelete = async () => {
   if (selectedUsers.value.length === 0) return
-  ElMessageBox.confirm(
+  try {
+    await ElMessageBox.confirm(
       `确定要删除选中的 ${selectedUsers.value.length} 个用户吗？<br><span class="text-xs text-slate-500">此操作不可恢复</span>`,
       '批量删除',
       {
@@ -521,11 +570,21 @@ const handleBatchDelete = () => {
         type: 'error',
         dangerouslyUseHTMLString: true
       }
-  ).then(() => {
-    tableData.value = tableData.value.filter(item => !selectedUsers.value.includes(item.id))
-    selectedUsers.value = []
-    ElMessage.success('批量删除成功')
-  }).catch(() => {})
+    )
+    const res = await axios.post(`${API_BASE_URL}/api/user/delete`, { userIds: selectedUsers.value }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('批量删除成功')
+      selectedUsers.value = []
+      await loadUserList()
+    } else {
+      ElMessage.error(res.data.msg || '批量删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error(error.response?.data?.msg || '批量删除失败')
+    }
+  }
 }
 
 // 用户编辑/新增
@@ -537,6 +596,7 @@ const userForm = reactive({
   username: '',
   realName: '',
   mobile: '',
+  email: '',
   storageQuota: 10,
   isEnabled: true
 })
@@ -548,6 +608,7 @@ const handleAddUser = () => {
     username: '',
     realName: '',
     mobile: '',
+    email: '',
     storageQuota: 10,
     isEnabled: true
   })
@@ -561,6 +622,7 @@ const handleEdit = (row) => {
     username: row.username,
     realName: row.realName,
     mobile: row.mobile,
+    email: row.email || '',
     storageQuota: Math.round(row.storageQuota / 1024 / 1024 / 1024),
     isEnabled: row.isEnabled
   })
@@ -573,23 +635,51 @@ const handleSaveUser = async () => {
     return
   }
   saving.value = true
-  // 将GB转换为字节
-  const storageQuotaBytes = userForm.storageQuota > 0 ? userForm.storageQuota * 1024 * 1024 * 1024 : 0
-  const submitData = {
-    id: userForm.id,
-    username: userForm.username,
-    realName: userForm.realName,
-    mobile: userForm.mobile,
-    storageQuota: storageQuotaBytes,
-    isEnabled: userForm.isEnabled
-  }
-  // TODO: API调用，使用submitData
-  console.log('提交数据:', submitData)
-  setTimeout(() => {
+  try {
+    // 将GB转换为字节
+    const storageQuotaBytes = userForm.storageQuota > 0 ? userForm.storageQuota * 1024 * 1024 * 1024 : 0
+    
+    if (isEdit.value) {
+      // 编辑用户
+      const submitData = {
+        id: userForm.id,
+        realName: userForm.realName,
+        mobile: userForm.mobile,
+        email: userForm.email || '',
+        storageQuota: storageQuotaBytes,
+        isEnabled: userForm.isEnabled
+      }
+      const res = await axios.post(`${API_BASE_URL}/api/user/update`, submitData, getAuthConfig())
+      if (res.data.code === 200) {
+        ElMessage.success('修改成功')
+        userDialogVisible.value = false
+        await loadUserList()
+      } else {
+        ElMessage.error(res.data.msg || '修改失败')
+      }
+    } else {
+      // 创建用户
+      const submitData = {
+        username: userForm.username,
+        realName: userForm.realName,
+        mobile: userForm.mobile,
+        storageQuota: storageQuotaBytes
+      }
+      const res = await axios.post(`${API_BASE_URL}/api/user/create`, submitData, getAuthConfig())
+      if (res.data.code === 200) {
+        ElMessage.success('创建成功')
+        userDialogVisible.value = false
+        await loadUserList()
+      } else {
+        ElMessage.error(res.data.msg || '创建失败')
+      }
+    }
+  } catch (error) {
+    console.error('保存用户失败:', error)
+    ElMessage.error(error.response?.data?.msg || '保存用户失败')
+  } finally {
     saving.value = false
-    userDialogVisible.value = false
-    ElMessage.success(isEdit.value ? '修改成功' : '添加成功')
-  }, 500)
+  }
 }
 
 // 角色分配抽屉
@@ -597,18 +687,32 @@ const roleDrawerVisible = ref(false)
 const currentUser = ref(null)
 const selectedRoles = ref([])
 const roleSaving = ref(false)
-const allRoles = ref([
-  { id: 1, name: '系统管理员'},
-  { id: 2, name: '普通用户'},
-  { id: 3, name: '安全审计员'},
-  { id: 4, name: '数据分析师'},
-  { id: 5, name: '运维工程师'}
-])
+const allRoles = ref([])
+const rolesLoaded = ref(false)
 
-const openRoleDrawer = (row) => {
+// 加载角色列表
+const loadRoleList = async () => {
+  if (rolesLoaded.value) return
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/user/role`, getAuthConfig())
+    if (res.data.code === 200) {
+      allRoles.value = res.data.data || []
+      rolesLoaded.value = true
+    } else {
+      ElMessage.error(res.data.msg || '加载角色列表失败')
+    }
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载角色列表失败')
+  }
+}
+
+const openRoleDrawer = async (row) => {
   currentUser.value = row
   // 后端返回的是 roleId 数组
   selectedRoles.value = row.roles || []
+  // 加载角色列表
+  await loadRoleList()
   roleDrawerVisible.value = true
 }
 
@@ -622,22 +726,33 @@ const toggleRole = (roleId) => {
 }
 
 const saveRoles = async () => {
+  if (!currentUser.value) return
   roleSaving.value = true
-  // TODO: API调用
-  setTimeout(() => {
-    // 更新本地数据，只保存 roleId 数组
-    if (currentUser.value) {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/user/assign`, {
+      id: currentUser.value.id,
+      roleIds: selectedRoles.value
+    }, getAuthConfig())
+    if (res.data.code === 200) {
+      // 更新本地数据
       currentUser.value.roles = [...selectedRoles.value]
+      ElMessage.success('角色分配成功')
+      roleDrawerVisible.value = false
+    } else {
+      ElMessage.error(res.data.msg || '角色分配失败')
     }
+  } catch (error) {
+    console.error('角色分配失败:', error)
+    ElMessage.error(error.response?.data?.msg || '角色分配失败')
+  } finally {
     roleSaving.value = false
-    roleDrawerVisible.value = false
-    ElMessage.success('角色分配成功')
-  }, 600)
+  }
 }
 
 // 其他操作
-const handleResetPassword = (row) => {
-  ElMessageBox.confirm(
+const handleResetPassword = async (row) => {
+  try {
+    await ElMessageBox.confirm(
       `确定要重置用户 "${row.username}" 的密码吗？<br><span class="text-xs text-slate-500">重置后的默认密码将发送至用户手机</span>`,
       '重置密码',
       {
@@ -646,13 +761,27 @@ const handleResetPassword = (row) => {
         type: 'warning',
         dangerouslyUseHTMLString: true
       }
-  ).then(() => {
-    ElMessage.success('密码重置成功')
-  }).catch(() => {})
+    )
+    const res = await axios.post(`${API_BASE_URL}/api/user/reset`, null, {
+      ...getAuthConfig(),
+      params: { id: row.id }
+    })
+    if (res.data.code === 200) {
+      ElMessage.success('密码重置成功')
+    } else {
+      ElMessage.error(res.data.msg || '重置密码失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('重置密码失败:', error)
+      ElMessage.error(error.response?.data?.msg || '重置密码失败')
+    }
+  }
 }
 
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
       `确定要删除用户 "${row.username}" 吗？<br><span class="text-xs text-slate-500">此操作将删除该用户的所有数据，且不可恢复</span>`,
       '删除用户',
       {
@@ -661,14 +790,21 @@ const handleDelete = (row) => {
         type: 'error',
         dangerouslyUseHTMLString: true
       }
-  ).then(() => {
-    const index = tableData.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      tableData.value.splice(index, 1)
+    )
+    const res = await axios.post(`${API_BASE_URL}/api/user/delete`, { userIds: [row.id] }, getAuthConfig())
+    if (res.data.code === 200) {
+      selectedUsers.value = selectedUsers.value.filter(id => id !== row.id)
+      ElMessage.success('删除成功')
+      await loadUserList()
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
     }
-    selectedUsers.value = selectedUsers.value.filter(id => id !== row.id)
-    ElMessage.success('删除成功')
-  }).catch(() => {})
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除用户失败:', error)
+      ElMessage.error(error.response?.data?.msg || '删除失败')
+    }
+  }
 }
 </script>
 
