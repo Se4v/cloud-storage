@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
-@Component
+// @Component
 public class OrgFilter extends OncePerRequestFilter {
-    @Autowired
+    // @Autowired
     private RedisTemplate<String, String> redisTemplate;
-    @Autowired
+    // @Autowired
     private JwtUtil jwtUtil;
 
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();

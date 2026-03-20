@@ -24,13 +24,24 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Autowired
+    // @Autowired
     private GlobalUserDetailsService globalUserDetailsService;
-    @Autowired
+    // @Autowired
     private GlobalFilter globalFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .httpBasic(basic -> basic.disable());
+        return http.build();
+    }
+
+    // @Bean
+    public SecurityFilterChain testsecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
@@ -89,7 +100,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+    // @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(globalUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());

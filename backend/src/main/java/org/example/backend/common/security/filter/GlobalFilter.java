@@ -20,11 +20,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Component
+// @Component
 public class GlobalFilter extends OncePerRequestFilter {
-    @Autowired
+    // @Autowired
     private JwtUtil jwtUtil;
-    @Autowired
+    //@Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
