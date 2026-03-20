@@ -2,11 +2,14 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.common.Result;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.UserRoleMapper;
 import org.example.backend.mapper.RoleMapper;
 import org.example.backend.mapper.RolePermissionMapper;
+import org.example.backend.model.args.AssignPermissionArgs;
 import org.example.backend.model.args.CreateRoleArgs;
 import org.example.backend.model.args.UpdateRoleArgs;
 import org.example.backend.model.entity.Member;
@@ -18,7 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class RoleService {
@@ -38,35 +45,27 @@ public class RoleService {
      * 创建角色
      */
     @Transactional
-    public void createRole(CreateRoleArgs args, Long userId) {
+    public void createRole(CreateRoleArgs args) {
+        if (args == null) throw new BusinessException("<UNK>");
+
         // 校验角色编码是否重复
         LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Role::getCode, args.getCode());
-        if (roleMapper.selectCount(queryWrapper) > 0) {
-            throw new BusinessException("角色编码已存在");
-        }
+        if (roleMapper.selectCount(queryWrapper) > 0) throw new BusinessException("角色编码已存在");
 
         // 校验角色名称是否重复
         LambdaQueryWrapper<Role> nameQuery = new LambdaQueryWrapper<>();
         nameQuery.eq(Role::getName, args.getName());
-        if (roleMapper.selectCount(nameQuery) > 0) {
-            throw new BusinessException("角色名称已存在");
-        }
+        if (roleMapper.selectCount(nameQuery) > 0) throw new BusinessException("角色名称已存在");
 
         // 创建角色
         Role role = Role.builder()
                 .name(args.getName())
                 .code(args.getCode())
-                .type(args.getType())
-                .enabled(ENABLED)
-                .createdAt(LocalDateTime.now())
-                .creatorId(userId)
+                .type(args.getType().equals("global") ? 1 : 2)
                 .build();
-
-        int count = roleMapper.insert(role);
-        if (count != 1) {
-            throw new BusinessException("创建角色失败");
-        }
+        int roleInsertCount = roleMapper.insert(role);
+        if (roleInsertCount != 1) throw new BusinessException("创建角色失败");
     }
 
     /**
@@ -74,99 +73,78 @@ public class RoleService {
      */
     @Transactional
     public void deleteRoles(List<Long> roleIds) {
-        if (roleIds == null || roleIds.isEmpty()) {
-            return;
-        }
+        if (roleIds == null || roleIds.isEmpty()) throw new BusinessException("<UNK>");
 
-        // 删除角色
-        LambdaUpdateWrapper<Role> roleUpdate = new LambdaUpdateWrapper<>();
-        roleUpdate.set(Role::getDeleted, DELETED)
-                .in(Role::getId, roleIds);
-        if (roleMapper.update(roleUpdate) != roleIds.size()) {
-            throw new BusinessException("删除角色失败");
-        }
-
-        // 级联删除组织-用户关联
+        // 查询组织角色是否被使用
         LambdaQueryWrapper<Member> memberQuery = new LambdaQueryWrapper<>();
         memberQuery.in(Member::getRoleId, roleIds);
         long memberCount = memberMapper.selectCount(memberQuery);
-        if (memberCount > 0) {
-            throw new BusinessException("该角色还在被使用，无法删除");
-        }
+        if (memberCount > 0) throw new BusinessException("部分组织角色仍被成员使用，无法删除");
+
+        // 查询全局角色是否被使用
+        LambdaQueryWrapper<UserRole> userRoleQuery = new LambdaQueryWrapper<>();
+        userRoleQuery.in(UserRole::getRoleId, roleIds);
+        long userRoleCount = userRoleMapper.selectCount(userRoleQuery);
+        if (userRoleCount > 0) throw new BusinessException("部分全局角色仍被用户绑定，无法删除");
+
+        // 删除角色
+        LambdaUpdateWrapper<Role> roleUpdate = new LambdaUpdateWrapper<>();
+        roleUpdate.set(Role::getDeleted, DELETED).in(Role::getId, roleIds);
+        int roleDeleteCount = roleMapper.update(roleUpdate);
+        if (roleDeleteCount == 0) throw new BusinessException("删除角色失败");
+
+        // 删除组织角色关联
         LambdaUpdateWrapper<Member> memberUpdate = new LambdaUpdateWrapper<>();
-        memberUpdate.set(Member::getDeleted, DELETED)
-                .in(Member::getRoleId, roleIds);
-        if (memberMapper.update(memberUpdate) != roleIds.size()) {
-            throw new BusinessException("<UNK>");
-        }
+        memberUpdate.set(Member::getDeleted, DELETED).in(Member::getRoleId, roleIds);
+        memberMapper.update(memberUpdate);
 
-        // 级联删除用户-角色关联
-        LambdaQueryWrapper<UserRole> assignmentQuery = new LambdaQueryWrapper<>();
-        assignmentQuery.in(UserRole::getRoleId, roleIds);
-        long assignmentCount = userRoleMapper.selectCount(assignmentQuery);
-        if (assignmentCount > 0) {
-            throw new BusinessException("该角色还在被使用，无法删除");
-        }
-        if (userRoleMapper.delete(assignmentQuery) != roleIds.size()) {
-            throw new BusinessException("<UNK>");
-        }
+        // 删除全局角色关联
+        LambdaQueryWrapper<UserRole> userRoleDeleteQuery = new LambdaQueryWrapper<>();
+        userRoleDeleteQuery.in(UserRole::getRoleId, roleIds);
+        userRoleMapper.delete(userRoleDeleteQuery);
 
-        // 级联删除角色-权限关联
-        LambdaQueryWrapper<RolePermission> permissionQuery =
-                new LambdaQueryWrapper<>();
+        // 删除角色-权限关联
+        LambdaQueryWrapper<RolePermission> permissionQuery = new LambdaQueryWrapper<>();
         permissionQuery.in(RolePermission::getRoleId, roleIds);
-        if (rolePermissionMapper.delete(permissionQuery) != roleIds.size()) {
-            throw new BusinessException("<UNK>");
-        }
+        rolePermissionMapper.delete(permissionQuery);
     }
 
     /**
      * 更新角色
      */
     @Transactional
-    public void updateRole(UpdateRoleArgs args, Long userId) {
-        if (args.getId() == null) {
-            throw new BusinessException("角色ID不能为空");
-        }
+    public void updateRole(UpdateRoleArgs args) {
+        if (args == null) throw new BusinessException("<UNK>");
 
         // 校验角色是否存在
         Role existingRole = roleMapper.selectById(args.getId());
-        if (existingRole == null) {
-            throw new BusinessException("角色不存在");
-        }
+        if (existingRole == null) throw new BusinessException("角色不存在");
 
-        // 校验角色编码是否重复（如果编码有变更）
+        // 校验角色编码是否重复
         if (args.getCode() != null && !args.getCode().equals(existingRole.getCode())) {
             LambdaQueryWrapper<Role> codeQuery = new LambdaQueryWrapper<>();
             codeQuery.eq(Role::getCode, args.getCode())
                     .ne(Role::getId, args.getId());
-            if (roleMapper.selectCount(codeQuery) > 0) {
-                throw new BusinessException("角色编码已存在");
-            }
+            if (roleMapper.selectCount(codeQuery) > 0) throw new BusinessException("角色编码已存在");
         }
 
-        // 校验角色名称是否重复（如果名称有变更）
+        // 校验角色名称是否重复
         if (args.getName() != null && !args.getName().equals(existingRole.getName())) {
             LambdaQueryWrapper<Role> nameQuery = new LambdaQueryWrapper<>();
             nameQuery.eq(Role::getName, args.getName())
                     .ne(Role::getId, args.getId());
-            if (roleMapper.selectCount(nameQuery) > 0) {
-                throw new BusinessException("角色名称已存在");
-            }
+            if (roleMapper.selectCount(nameQuery) > 0) throw new BusinessException("角色名称已存在");
         }
 
-        // 构建更新条件
+        // 更新角色
         LambdaUpdateWrapper<Role> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(args.getName() != null, Role::getName, args.getName())
                 .set(args.getCode() != null, Role::getCode, args.getCode())
-                .set(args.getType() != null, Role::getType, args.getType())
-                .set(args.getEnabled() != null, Role::getEnabled, args.getEnabled())
+                .set(args.getIsEnabled() != null, Role::getEnabled, Boolean.TRUE.equals(args.getIsEnabled()) ? 1 : 0)
                 .eq(Role::getId, args.getId());
 
         int count = roleMapper.update(updateWrapper);
-        if (count != 1) {
-            throw new BusinessException("更新角色失败");
-        }
+        if (count != 1) throw new BusinessException("更新角色失败");
     }
 
     /**
@@ -176,5 +154,61 @@ public class RoleService {
         LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(Role::getId);
         return roleMapper.selectList(queryWrapper);
+    }
+
+    @Transactional
+    public void assignPermissions(AssignPermissionArgs args) {
+        // 基础参数校验
+        if (args == null) throw new BusinessException("权限分配参数不能为空");
+        Long roleId = args.getRoleId();
+        // 处理permissionIds：null视为清空所有权限，转为空列表
+        List<Long> targetPermissionIds = args.getPermissionIds() == null ? List.of() : args.getPermissionIds();
+
+        // 2. 查询该角色当前已绑定的权限
+        LambdaQueryWrapper<RolePermission> roleQuery = new LambdaQueryWrapper<>();
+        roleQuery.eq(RolePermission::getRoleId, roleId);
+        List<RolePermission> existingRolePermissions = rolePermissionMapper.selectList(roleQuery);
+
+        // 提取已有的权限ID集合
+        Set<Long> existingPermissionIds = existingRolePermissions.stream()
+                .map(RolePermission::getPermId)
+                .collect(Collectors.toSet());
+        // 目标权限ID集合
+        Set<Long> targetPermissionIdSet = targetPermissionIds.stream()
+                .filter(id -> id != null && id > 0) // 过滤无效ID
+                .collect(Collectors.toSet());
+
+        // 计算需要新增的权限
+        Set<Long> addPermissionIds = targetPermissionIdSet.stream()
+                .filter(id -> !existingPermissionIds.contains(id))
+                .collect(Collectors.toSet());
+        // 计算需要删除的权限
+        Set<Long> deletePermissionIds = existingPermissionIds.stream()
+                .filter(id -> !targetPermissionIdSet.contains(id))
+                .collect(Collectors.toSet());
+
+        // 新增权限关联
+        if (!addPermissionIds.isEmpty()) {
+            List<RolePermission> addRolePermissions = addPermissionIds.stream()
+                    .map(permissionId -> RolePermission.builder()
+                                .roleId(roleId)
+                                .permId(permissionId)
+                                .build())
+                    .collect(Collectors.toList());
+            List<BatchResult> results = rolePermissionMapper.insert(addRolePermissions);
+            int insertCount = results.stream()
+                    .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
+                    .sum();
+            if (insertCount != addRolePermissions.size()) throw new BusinessException("<UNK>");
+        }
+
+        // 删除权限关联
+        if (!deletePermissionIds.isEmpty()) {
+            LambdaQueryWrapper<RolePermission> deleteQuery = new LambdaQueryWrapper<>();
+            deleteQuery.eq(RolePermission::getRoleId, roleId)
+                    .in(RolePermission::getPermId, deletePermissionIds);
+            int deleteCount = rolePermissionMapper.delete(deleteQuery);
+            if (deleteCount != deletePermissionIds.size()) throw new BusinessException("<UNK>");
+        }
     }
 }

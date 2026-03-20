@@ -11,4 +11,5 @@ public class RoleView {
     private String code;
     private String type;
     private String createTime;
+    private Boolean isEnabled;
 }

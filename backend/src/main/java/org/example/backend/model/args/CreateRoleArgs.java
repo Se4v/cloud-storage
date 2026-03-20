@@ -6,5 +6,5 @@ import lombok.Data;
 public class CreateRoleArgs {
     private String name;
     private String code;
-    private Integer type;
+    private String type;
 }

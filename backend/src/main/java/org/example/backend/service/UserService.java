@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -89,17 +90,13 @@ public class UserService {
      */
     @Transactional
     public void deleteUsers(DeleteUserArgs args) {
-        if (args.getUserIds() == null || args.getUserIds().isEmpty()) {
-            throw new BusinessException("请选择要删除的用户");
-        }
+        if (args.getUserIds() == null || args.getUserIds().isEmpty()) throw new BusinessException("请选择要删除的用户");
 
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(User::getId, args.getUserIds()).set(User::getDeleted, DELETED);
 
         int count = userMapper.update(updateWrapper);
-        if (count != args.getUserIds().size()) {
-            throw new BusinessException("删除用户失败");
-        }
+        if (count != args.getUserIds().size()) throw new BusinessException("删除用户失败");
     }
 
     /**
@@ -115,9 +112,7 @@ public class UserService {
                 .eq(User::getId, args.getId());
 
         int count = userMapper.update(updateWrapper);
-        if (count != 1) {
-            throw new BusinessException("更新用户失败");
-        }
+        if (count != 1) throw new BusinessException("更新用户失败");
     }
 
     /**
@@ -164,6 +159,7 @@ public class UserService {
         return userViews;
     }
 
+    // TODO:逻辑需要修改
     @Transactional
     public void assignGlobalRole(AssignGlobalRoleArgs args) {
         List<Long> roleIds = args.getRoleIds();
@@ -172,17 +168,13 @@ public class UserService {
             userRoleList.add(UserRole.builder()
                             .userId(args.getId())
                             .roleId(roleId)
-                    .build());
+                            .build());
         }
 
         List<BatchResult> results = userRoleMapper.insert(userRoleList);
-        int insertCount = 0;
-        for (BatchResult result : results) {
-            for (int count : result.getUpdateCounts()) {
-                insertCount += count; // 累加每条SQL的影响行数
-            }
-        }
-
+        int insertCount = results.stream()
+                .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
+                .sum();
         if (insertCount != roleIds.size()) throw new BusinessException("<UNK>");
     }
 

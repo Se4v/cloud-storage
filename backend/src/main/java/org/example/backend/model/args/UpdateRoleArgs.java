@@ -7,6 +7,5 @@ public class UpdateRoleArgs {
     private Long id;
     private String name;
     private String code;
-    private Integer type;
-    private Integer enabled;
+    private Boolean isEnabled;
 }

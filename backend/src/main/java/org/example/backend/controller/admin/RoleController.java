@@ -1,12 +1,17 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
+import org.example.backend.model.args.AssignPermissionArgs;
 import org.example.backend.model.args.CreateRoleArgs;
 import org.example.backend.model.args.UpdateRoleArgs;
+import org.example.backend.model.entity.Role;
+import org.example.backend.model.view.RoleView;
 import org.example.backend.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -15,28 +20,45 @@ public class RoleController {
     @Autowired
     private RoleService roleService;
 
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     @PostMapping("/create")
     public Result<Void> createRole(@RequestBody CreateRoleArgs args) {
-        return null;
+        roleService.createRole(args);
+        return Result.success("");
     }
 
     @PostMapping("/delete")
     public Result<Void> deleteRoles(@RequestBody List<Long> roleIds) {
-        return null;
+        roleService.deleteRoles(roleIds);
+        return Result.success("");
     }
 
     @PostMapping("/update")
     public Result<Void> updateRole(@RequestBody UpdateRoleArgs args) {
+        roleService.updateRole(args);
         return null;
     }
 
     @GetMapping("/all")
-    public Result<Void> listAllRoles() {
-        return null;
+    public Result<List<RoleView>> listAllRoles() {
+        List<Role> roleList = roleService.listAllRoles();
+        List<RoleView> roleViews = roleList.stream()
+                .map(role -> RoleView.builder()
+                        .id(role.getId())
+                        .name(role.getName())
+                        .code(role.getCode())
+                        .type(role.getType() == 1 ? "global" : "org")
+                        .createTime(role.getCreatedAt().format(formatter))
+                        .isEnabled(role.getEnabled() == 1)
+                        .build())
+                .toList();
+        return Result.success(roleViews);
     }
 
-    @PostMapping("")
-    public Result<Void> assignPermissions() {
+    @PostMapping("/assign")
+    public Result<Void> assignPermissions(@RequestBody AssignPermissionArgs args) {
+        roleService.assignPermissions(args);
         return null;
     }
 }
