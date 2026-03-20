@@ -9,5 +9,5 @@ public class UpdateUserArgs {
     private String mobile;
     private String email;
     private Integer storageQuota;
-    private Integer enabled;
+    private Integer status;
 }

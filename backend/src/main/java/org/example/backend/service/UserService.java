@@ -17,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -49,18 +48,15 @@ public class UserService {
         if (existUser != null) throw new BusinessException("用户名已存在");
 
         // 调用配置表
-        String defaultPassword;
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
         configQuery.eq(Config::getEnabled, ENABLED)
                 .eq(Config::getKey, "default_password");
         Config config = configMapper.selectOne(configQuery);
-        if (config == null || config.getValue().isEmpty()) defaultPassword = "12345";
-        else defaultPassword = config.getValue();
 
         // 创建用户
         User user = User.builder()
                 .username(args.getUsername())
-                .password(passwordEncoder.encode(defaultPassword))
+                .password(passwordEncoder.encode(config.getValue()))
                 .realName(args.getRealName())
                 .mobile(args.getMobile())
                 .build();
@@ -92,8 +88,7 @@ public class UserService {
 
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(User::getId, args.getIds())
-                .set(User::getDeleted, DELETED)
-                .set(User::getUpdatedAt, LocalDateTime.now());
+                .set(User::getDeleted, DELETED);
 
         int count = userMapper.update(updateWrapper);
         if (count != args.getIds().size()) {
@@ -111,7 +106,6 @@ public class UserService {
                 .set(args.getMobile() != null, User::getMobile, args.getMobile())
                 .set(args.getEmail() != null, User::getEmail, args.getEmail())
                 .set(args.getEnabled() != null, User::getEnabled, args.getEnabled())
-                .set(User::getUpdatedAt, LocalDateTime.now())
                 .eq(User::getId, args.getId())
                 .eq(User::getDeleted, UNDELETED);
 
@@ -130,5 +124,31 @@ public class UserService {
                 .orderByDesc(User::getCreatedAt);
 
         return userMapper.selectList(queryWrapper);
+    }
+
+    public void assignGlobalRole() {
+        return ;
+    }
+
+    @Transactional
+    public void resetPassword(Long userId) {
+        // 查询用户
+        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
+        userQuery.eq(User::getId, userId);
+        User user = userMapper.selectOne(userQuery);
+        if (user == null) throw new BusinessException("<UNK>");
+
+        // 调用配置表
+        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
+        configQuery.eq(Config::getEnabled, ENABLED)
+                .eq(Config::getKey, "default_password");
+        Config config = configMapper.selectOne(configQuery);
+
+        // 重置密码
+        LambdaUpdateWrapper<User> userUpdate = new LambdaUpdateWrapper<>();
+        userUpdate.set(User::getPassword, passwordEncoder.encode(config.getValue()))
+                .eq(User::getId, userId);
+        int count = userMapper.update(userUpdate);
+        if (count != 1) throw new BusinessException("<UNK>");
     }
 }

@@ -5,6 +5,7 @@ import org.example.backend.model.args.CreateUserArgs;
 import org.example.backend.model.args.DeleteUserArgs;
 import org.example.backend.model.args.UpdateUserArgs;
 import org.example.backend.model.entity.User;
+import org.example.backend.model.view.UserView;
 import org.example.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    public Result<List<User>> listAllUsers() {
+    public Result<List<UserView>> listAllUsers() {
         List<User> users = userService.listAllUsers();
         return Result.success(users);
     }

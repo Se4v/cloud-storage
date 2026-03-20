@@ -114,7 +114,7 @@
             </td>
             <td class="px-6 py-4">
               <div class="flex flex-col">
-                <span class="text-slate-900">{{ user.phone || '-' }}</span>
+                <span class="text-slate-900">{{ user.mobile || '-' }}</span>
                 <span class="text-xs text-slate-500 mt-0.5">{{ user.email || '-' }}</span>
               </div>
             </td>
@@ -233,7 +233,7 @@
             </div>
             <div>
               <div class="font-medium text-slate-900">{{ currentUser?.realName || currentUser?.username }}</div>
-              <div class="text-xs text-slate-500">{{ currentUser?.phone || '暂无手机号' }}</div>
+              <div class="text-xs text-slate-500">{{ currentUser?.mobile || '暂无手机号' }}</div>
             </div>
           </div>
         </div>
@@ -271,12 +271,6 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-medium text-slate-900">{{ role.name }}</span>
-                  <span
-                      v-if="role.isSystem"
-                      class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200"
-                  >
-                    系统
-                  </span>
                 </div>
                 <p class="mt-0.5 text-xs text-slate-500 leading-relaxed truncate">
                   {{ role.description }}
@@ -285,14 +279,7 @@
             </div>
           </div>
 
-          <!-- 互斥提示 -->
-          <div v-if="conflictWarning" class="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex gap-2">
-            <el-icon class="text-amber-600 mt-0.5 flex-shrink-0" :size="16"><Warning /></el-icon>
-            <div class="text-sm text-amber-800">
-              <p class="font-medium">角色冲突提示</p>
-              <p class="mt-0.5 text-xs text-amber-700">{{ conflictWarning }}</p>
-            </div>
-          </div>
+
         </div>
 
         <!-- 底部操作 -->
@@ -348,7 +335,7 @@
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">手机号</label>
           <input
-              v-model="userForm.phone"
+              v-model="userForm.mobile"
               type="tel"
               class="w-full h-10 px-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               placeholder="请输入手机号"
@@ -362,7 +349,7 @@
                 v-model.number="userForm.storageQuota"
                 type="number"
                 min="0"
-                class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                class="w-full h-10 px-3 pr-12 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 placeholder="请输入空间配额"
             />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">GB</span>
@@ -370,7 +357,7 @@
           <p class="mt-1 text-xs text-slate-500">0 表示无限制</p>
         </div>
 
-        <div>
+        <div v-if="isEdit">
           <label class="block text-sm font-medium text-slate-700 mb-1.5">状态</label>
           <div class="flex gap-4">
             <label class="flex items-center gap-2 cursor-pointer">
@@ -428,7 +415,6 @@ import {
   MoreFilled,
   Lock,
   User,
-  Warning,
   Loading,
   Check
 } from '@element-plus/icons-vue'
@@ -447,38 +433,30 @@ const tableData = ref([
     id: 1,
     username: 'zhangsan',
     realName: '张三',
-    phone: '13800138000',
+    mobile: '13800138000',
     email: 'zhangsan@company.com',
     status: 'active',
     storageQuota: 10737418240, // 10GB in bytes
-    storageUsed: 2147483648,   // 2GB
-    roles: [
-      { id: 1, name: '系统管理员', color: 'red' },
-      { id: 3, name: '审计员', color: 'amber' }
-    ]
+    roles: [1, 3]
   },
   {
     id: 2,
     username: 'lisi',
     realName: '李四',
-    phone: '13900139000',
+    mobile: '13900139000',
     email: 'lisi@company.com',
     status: 'active',
     storageQuota: 5368709120,  // 5GB
-    storageUsed: 1073741824,   // 1GB
-    roles: [
-      { id: 2, name: '普通用户', color: 'blue' }
-    ]
+    roles: [2]
   },
   {
     id: 3,
     username: 'wangwu',
     realName: '王五',
-    phone: '13700137000',
+    mobile: '13700137000',
     email: 'wangwu@company.com',
     status: 'disabled',
     storageQuota: 21474836480, // 20GB
-    storageUsed: 16106127360,  // 15GB
     roles: []
   }
 ])
@@ -558,7 +536,7 @@ const userForm = reactive({
   id: null,
   username: '',
   realName: '',
-  phone: '',
+  mobile: '',
   storageQuota: 10,
   status: 'active'
 })
@@ -569,7 +547,7 @@ const handleAddUser = () => {
     id: null,
     username: '',
     realName: '',
-    phone: '',
+    mobile: '',
     storageQuota: 10,
     status: 'active'
   })
@@ -582,7 +560,7 @@ const handleEdit = (row) => {
     id: row.id,
     username: row.username,
     realName: row.realName,
-    phone: row.phone,
+    mobile: row.mobile,
     storageQuota: Math.round(row.storageQuota / 1024 / 1024 / 1024),
     status: row.status
   })
@@ -595,7 +573,14 @@ const handleSaveUser = async () => {
     return
   }
   saving.value = true
-  // TODO: API调用
+  // 将GB转换为字节
+  const storageQuotaBytes = userForm.storageQuota > 0 ? userForm.storageQuota * 1024 * 1024 * 1024 : 0
+  const submitData = {
+    ...userForm,
+    storageQuota: storageQuotaBytes
+  }
+  // TODO: API调用，使用submitData
+  console.log('提交数据:', submitData)
   setTimeout(() => {
     saving.value = false
     userDialogVisible.value = false
@@ -609,31 +594,17 @@ const currentUser = ref(null)
 const selectedRoles = ref([])
 const roleSaving = ref(false)
 const allRoles = ref([
-  { id: 1, name: '系统管理员', description: '拥有系统的所有管理权限，包括用户管理、系统配置等', color: 'red', isSystem: true },
-  { id: 2, name: '普通用户', description: '基础网盘使用权限，可创建团队和个人空间', color: 'blue', isSystem: true },
-  { id: 3, name: '安全审计员', description: '仅可查看操作日志和安全审计相关功能', color: 'amber', isSystem: false },
-  { id: 4, name: '数据分析师', description: '可访问数据统计报表和用户行为分析', color: 'purple', isSystem: false },
-  { id: 5, name: '运维工程师', description: '管理系统配置、备份恢复和服务器监控', color: 'emerald', isSystem: false }
+  { id: 1, name: '系统管理员'},
+  { id: 2, name: '普通用户'},
+  { id: 3, name: '安全审计员'},
+  { id: 4, name: '数据分析师'},
+  { id: 5, name: '运维工程师'}
 ])
-
-// 角色冲突检测
-const conflictRules = [
-  { roles: [1, 2], message: '系统管理员与普通用户角色互斥' },
-  { roles: [3, 4], message: '审计员与数据分析师角色建议分开' }
-]
-
-const conflictWarning = computed(() => {
-  for (const rule of conflictRules) {
-    if (rule.roles.every(r => selectedRoles.value.includes(r))) {
-      return rule.message
-    }
-  }
-  return ''
-})
 
 const openRoleDrawer = (row) => {
   currentUser.value = row
-  selectedRoles.value = row.roles?.map(r => r.id) || []
+  // 后端返回的是 roleId 数组
+  selectedRoles.value = row.roles || []
   roleDrawerVisible.value = true
 }
 
@@ -650,9 +621,9 @@ const saveRoles = async () => {
   roleSaving.value = true
   // TODO: API调用
   setTimeout(() => {
-    // 更新本地数据
+    // 更新本地数据，只保存 roleId 数组
     if (currentUser.value) {
-      currentUser.value.roles = allRoles.value.filter(r => selectedRoles.value.includes(r.id))
+      currentUser.value.roles = [...selectedRoles.value]
     }
     roleSaving.value = false
     roleDrawerVisible.value = false
