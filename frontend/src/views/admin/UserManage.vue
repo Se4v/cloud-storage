@@ -707,10 +707,15 @@ const loadRoleList = async () => {
   }
 }
 
+// 保存用户原始角色，用于计算新增角色
+const originalRoles = ref([])
+
 const openRoleDrawer = async (row) => {
   currentUser.value = row
   // 后端返回的是 roleId 数组
-  selectedRoles.value = row.roles || []
+  selectedRoles.value = [...(row.roles || [])]
+  // 保存原始角色，用于后续计算新增角色
+  originalRoles.value = [...(row.roles || [])]
   // 加载角色列表
   await loadRoleList()
   roleDrawerVisible.value = true
@@ -729,9 +734,12 @@ const saveRoles = async () => {
   if (!currentUser.value) return
   roleSaving.value = true
   try {
+    // 计算新增的角色（当前选中但原始没有的角色）
+    const newRoleIds = selectedRoles.value.filter(roleId => !originalRoles.value.includes(roleId))
+    
     const res = await axios.post(`${API_BASE_URL}/api/user/assign`, {
       id: currentUser.value.id,
-      roleIds: selectedRoles.value
+      roleIds: newRoleIds
     }, getAuthConfig())
     if (res.data.code === 200) {
       // 更新本地数据
