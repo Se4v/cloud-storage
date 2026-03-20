@@ -2,6 +2,7 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
+import org.example.backend.common.security.OrgUserDetails;
 import org.example.backend.model.args.SimpleUploadArgs;
 import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.args.MergeChunksArgs;
@@ -13,7 +14,9 @@ import org.example.backend.model.view.UploadChunkView;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,26 +35,34 @@ public class EnterpriseController {
     }
 
     @PostMapping("/init-upload")
-    public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args,
-                                             @AuthenticationPrincipal GlobalUserDetails userDetails) {
+    public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+
         return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
     }
 
-    @PostMapping("/direct-upload")
-    public Result<SimpleUploadView> directUpload(SimpleUploadArgs args,
-                                                 @AuthenticationPrincipal GlobalUserDetails userDetails) {
-        return Result.success(uploadService.directUpload(args, userDetails.getUserId()));
+    @PostMapping("/simple-upload")
+    public Result<SimpleUploadView> simpleUpload(SimpleUploadArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+
+        return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
     }
 
-    @PostMapping("/chunk-upload")
-    public Result<UploadChunkView> chunkUpload(@RequestBody UploadChunkArgs args,
-                                               @AuthenticationPrincipal GlobalUserDetails userDetails) {
-        return Result.success(uploadService.recordChunks(args, userDetails.getUserId()));
+    @PostMapping("/upload-chunk")
+    public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+
+        return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
     }
 
-    @PostMapping("/merge-chunk")
-    public Result<MergeChunksView> mergeChunk(@RequestBody MergeChunksArgs args,
-                                              @AuthenticationPrincipal GlobalUserDetails userDetails) {
+    @PostMapping("/merge-chunks")
+    public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+
         return Result.success(uploadService.mergeChunks(args.getUploadId(), userDetails.getUserId()));
     }
 

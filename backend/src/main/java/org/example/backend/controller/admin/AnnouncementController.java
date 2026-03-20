@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/system/notice")
-public class NoticeController {
+@RequestMapping("/api/announcement")
+public class AnnouncementController {
     @Autowired
     private NoticeService noticeService;
 
@@ -23,19 +23,19 @@ public class NoticeController {
         return Result.success();
     }
 
-    @PostMapping("/create")
+    @PostMapping("/delete")
     public Result<Void> deleteNotices(@RequestBody List<Long> noticeIds) {
         noticeService.deleteNotices(noticeIds);
         return Result.success();
     }
 
-    @PostMapping("/create")
+    @PostMapping("/update")
     public Result<Void> updateNotice(@RequestBody UpdateNoticeArgs args) {
         noticeService.updateNotice(args);
         return Result.success();
     }
 
-    @GetMapping("")
+    @GetMapping("/all")
     public Result<List<NoticeView>> listAllNotices() {
         List<Notice> results = noticeService.listAllNotices();
 

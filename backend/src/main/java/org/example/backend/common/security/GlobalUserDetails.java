@@ -11,11 +11,11 @@ import java.util.List;
 
 @Getter
 public class GlobalUserDetails implements UserDetails {
-    private final Long userId;                  // 用户ID
-    private final String username;              // 用户名
-    private final String password;              // 密码
-    private final List<String> roles;           // 用户角色
-    private final String token;                 // JWT令牌
+    private Long userId;                  // 用户ID
+    private String username;              // 用户名
+    private String password;              // 密码
+    private List<String> roles;           // 用户角色
+    private String token;                 // JWT令牌
 
     public GlobalUserDetails(Long userId,
                              String username,

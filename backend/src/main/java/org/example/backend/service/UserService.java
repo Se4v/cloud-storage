@@ -3,10 +3,14 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.mapper.ConfigMapper;
+import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.UserMapper;
 import org.example.backend.model.args.CreateUserArgs;
 import org.example.backend.model.args.DeleteUserArgs;
 import org.example.backend.model.args.UpdateUserArgs;
+import org.example.backend.model.entity.Config;
+import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +24,10 @@ import java.util.List;
 public class UserService {
     @Autowired
     private UserMapper userMapper;
-
+    @Autowired
+    private ConfigMapper configMapper;
+    @Autowired
+    private DriveMapper driveMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -35,31 +42,43 @@ public class UserService {
     @Transactional
     public void createUser(CreateUserArgs args) {
         // 检查用户名是否已存在
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getUsername, args.getUsername())
+        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
+        userQuery.eq(User::getUsername, args.getUsername())
                 .eq(User::getDeleted, UNDELETED);
-        Long count = userMapper.selectCount(queryWrapper);
-        if (count > 0) {
-            throw new BusinessException("用户名已存在");
-        }
+        User existUser = userMapper.selectOne(userQuery);
+        if (existUser != null) throw new BusinessException("用户名已存在");
+
+        // 调用配置表
+        String defaultPassword;
+        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
+        configQuery.eq(Config::getEnabled, ENABLED)
+                .eq(Config::getKey, "default_password");
+        Config config = configMapper.selectOne(configQuery);
+        if (config == null || config.getValue().isEmpty()) defaultPassword = "12345";
+        else defaultPassword = config.getValue();
 
         // 创建用户
         User user = User.builder()
                 .username(args.getUsername())
-                .password(passwordEncoder.encode(args.getPassword()))
+                .password(passwordEncoder.encode(defaultPassword))
                 .realName(args.getRealName())
                 .mobile(args.getMobile())
-                .email(args.getEmail())
-                .enabled(ENABLED)
-                .deleted(UNDELETED)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
-        int insertCount = userMapper.insert(user);
-        if (insertCount != 1) {
-            throw new BusinessException("创建用户失败");
-        }
+        int userCount = userMapper.insert(user);
+        if (userCount != 1) throw new BusinessException("创建用户失败");
+
+        Drive drive = Drive.builder()
+                .driveName("个人空间")
+                .driveType(4)
+                .nodeId(0L)
+                .userId(user.getId())
+                .totalQuota(args.getStorageQuota())
+                .usedQuota(0L)
+                .build();
+
+        int driveCount = driveMapper.insert(drive);
+        if (driveCount != 1) throw new BusinessException("<UNK>");
     }
 
     /**

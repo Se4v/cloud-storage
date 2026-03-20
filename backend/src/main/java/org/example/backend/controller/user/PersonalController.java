@@ -1,6 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
+import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.*;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.view.*;
@@ -9,6 +10,8 @@ import org.example.backend.service.DriveService;
 import org.example.backend.service.PersonalService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
@@ -30,21 +33,33 @@ public class PersonalController {
 
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+
         return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
     }
 
     @PostMapping("/simple-upload")
     public Result<SimpleUploadView> simpleUpload(@RequestBody SimpleUploadArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+
         return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
     }
 
     @PostMapping("/upload-chunk")
     public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+
         return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
     }
 
     @PostMapping("/merge-chunks")
     public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+
         return Result.success(uploadService.mergeChunks(args.getUploadId(), userDetails.getUserId()));
     }
 

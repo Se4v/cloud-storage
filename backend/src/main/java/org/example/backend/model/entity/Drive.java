@@ -51,12 +51,4 @@ public class Drive implements Serializable {
     /** 创建者ID */
     @TableField("creator_id")
     private Long creatorId;
-
-    /** 更新时间 */
-    @TableField("updated_at")
-    private LocalDateTime updatedAt;
-
-    /** 更新者ID */
-    @TableField("updater_id")
-    private Long updaterId;
 }

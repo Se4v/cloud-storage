@@ -39,7 +39,7 @@ public class Config implements Serializable {
     @TableField("is_enabled")
     private Integer enabled;
 
-    /** 最后更新时间 */
-    @TableField("updated_at")
-    private LocalDateTime updatedAt;
+    /** 创建时间 */
+    @TableField("created_at")
+    private LocalDateTime createdAt;
 }

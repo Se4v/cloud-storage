@@ -11,11 +11,11 @@ import java.util.stream.Stream;
 
 @Getter
 public class OrgUserDetails implements UserDetails {
-    private final Long userId;                  // 用户ID
-    private final String username;              // 用户名
-    private final Long nodeId;                  // 组织节点ID
-    private final String role;                  // 组织内角色
-    private final List<String> permissions;     // 组织内权限
+    private Long userId;                  // 用户ID
+    private String username;              // 用户名
+    private Long nodeId;                  // 组织节点ID
+    private String role;                  // 组织内角色
+    private List<String> permissions;     // 组织内权限
 
     public OrgUserDetails(Long userId, String username, Long nodeId, String role, List<String> permissions) {
         this.userId = userId;
