@@ -139,16 +139,15 @@
                 </div>
                 <div class="flex flex-col">
                   <span class="font-medium text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{{ row.name }}</span>
-                  <span v-if="row.type === 'folder'" class="text-xs text-slate-400 mt-0.5">{{ row.itemCount }} 项</span>
                 </div>
               </div>
             </template>
           </el-table-column>
 
-          <el-table-column label="修改时间" width="260">
+          <el-table-column label="创建时间" width="260">
             <template #default="{ row }">
               <div class="flex items-center gap-2 text-sm text-slate-600">
-                <span>{{ formatDate(row.modifiedTime) }}</span>
+                <span>{{ formatDate(row.createTime) }}</span>
               </div>
             </template>
           </el-table-column>
@@ -544,88 +543,84 @@ const fileList = ref([
     id: 1,
     name: '企业网盘移动端图标PNG格式',
     type: 'folder',
-    modifiedTime: '2022-08-16 19:54:00',
-    size: 0,
-    itemCount: 24
+    createTime: '2022-08-16 19:54:00',
+    size: 0
   },
   {
     id: 2,
     name: '多种格式预览库',
     type: 'folder',
-    modifiedTime: '2022-08-16 19:53:48',
-    size: 0,
-    itemCount: 156
+    createTime: '2022-08-16 19:53:48',
+    size: 0
   },
   {
     id: 3,
     name: '新建文件夹',
     type: 'folder',
-    modifiedTime: '2022-08-16 19:53:29',
-    size: 0,
-    itemCount: 0
+    createTime: '2022-08-16 19:53:29',
+    size: 0
   },
   {
     id: 4,
     name: '新建文件夹 (1)',
     type: 'folder',
-    modifiedTime: '2022-08-30 16:04:56',
-    size: 0,
-    itemCount: 3
+    createTime: '2022-08-30 16:04:56',
+    size: 0
   },
   {
     id: 5,
     name: '产品设计规范文档.pdf',
     type: 'pdf',
-    modifiedTime: '2022-08-31 15:59:55',
+    createTime: '2022-08-31 15:59:55',
     size: 3460300
   },
   {
     id: 6,
     name: '项目需求分析.xlsx',
     type: 'excel',
-    modifiedTime: '2022-08-31 15:59:49',
+    createTime: '2022-08-31 15:59:49',
     size: 24064
   },
   {
     id: 7,
     name: '会议纪要-20220830.docx',
     type: 'word',
-    modifiedTime: '2022-08-31 15:59:49',
+    createTime: '2022-08-31 15:59:49',
     size: 11400
   },
   {
     id: 8,
     name: 'logo-design-v2.png',
     type: 'image',
-    modifiedTime: '2022-08-30 16:05:22',
+    createTime: '2022-08-30 16:05:22',
     size: 13000
   },
   {
     id: 9,
     name: '演示视频.mp4',
     type: 'video',
-    modifiedTime: '2022-08-30 16:05:22',
+    createTime: '2022-08-30 16:05:22',
     size: 52428800
   },
   {
     id: 10,
     name: '录音文件.mp3',
     type: 'audio',
-    modifiedTime: '2022-08-30 16:05:22',
+    createTime: '2022-08-30 16:05:22',
     size: 2097152
   },
   {
     id: 11,
     name: 'source-code.zip',
     type: 'zip',
-    modifiedTime: '2022-08-30 16:05:22',
+    createTime: '2022-08-30 16:05:22',
     size: 10485760
   },
   {
     id: 12,
     name: 'index.html',
     type: 'code',
-    modifiedTime: '2022-08-30 16:05:22',
+    createTime: '2022-08-30 16:05:22',
     size: 4096
   }
 ])
@@ -751,7 +746,7 @@ const confirmCreateFolder = () => {
     id: Date.now(),
     name: newFolderName.value,
     type: 'folder',
-    modifiedTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+    createTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
     size: 0,
     itemCount: 0
   }
@@ -820,7 +815,7 @@ const handleRenameSingle = async (row) => {
     })
 
     row.name = value
-    row.modifiedTime = new Date().toISOString().replace('T', ' ').substring(0, 19)
+    row.createTime = new Date().toISOString().replace('T', ' ').substring(0, 19)
     ElMessage.success('重命名成功')
   } catch {
     // 用户取消

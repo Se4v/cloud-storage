@@ -32,7 +32,7 @@ const routes = [
         component: DriveLayout,
         children: [
             {
-                path: 'personal',
+                path: 'personal/:driveId?',
                 name: 'PersonalDrive',
                 component: PersonalDrive
             },

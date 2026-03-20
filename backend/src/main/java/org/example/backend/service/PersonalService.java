@@ -28,19 +28,12 @@ public class PersonalService {
     private static final int FOLDER = 2;
     private static final int EXPIRE_DAYS = 15;
 
-    public List<Entry> listEntries(Long userId, Long parentId) {
-        // 查询用户空间
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getUserId, userId)
-                .eq(Drive::getDriveType, PERSONAL_DRIVE);
-        Drive drive = driveMapper.selectOne(driveQuery);
-        if (drive == null) throw new BusinessException("<UNK>");
-
+    public List<Entry> listEntries(Long driveId, Long parentId) {
         // 查询文件列表
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         if (parentId == null) parentId = 0L;
         entryQuery.eq(Entry::getParentId, parentId)
-                .eq(Entry::getDriveId, drive.getId())
+                .eq(Entry::getDriveId, driveId)
                 .eq(Entry::getStatus, UNDELETED);
         List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("<UNK>");
