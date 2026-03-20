@@ -4,14 +4,15 @@ import org.example.backend.common.Result;
 import org.example.backend.model.args.AssignPermissionArgs;
 import org.example.backend.model.args.CreateRoleArgs;
 import org.example.backend.model.args.UpdateRoleArgs;
+import org.example.backend.model.entity.Permission;
 import org.example.backend.model.entity.Role;
+import org.example.backend.model.view.PermissionView;
 import org.example.backend.model.view.RoleView;
 import org.example.backend.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -37,7 +38,7 @@ public class RoleController {
     @PostMapping("/update")
     public Result<Void> updateRole(@RequestBody UpdateRoleArgs args) {
         roleService.updateRole(args);
-        return null;
+        return Result.success("");
     }
 
     @GetMapping("/all")
@@ -59,6 +60,18 @@ public class RoleController {
     @PostMapping("/assign")
     public Result<Void> assignPermissions(@RequestBody AssignPermissionArgs args) {
         roleService.assignPermissions(args);
-        return null;
+        return Result.success("");
+    }
+
+    @GetMapping("/perm")
+    public Result<List<PermissionView>> listPermissions() {
+        List<Permission> permissionList = roleService.listPermissions();
+        List<PermissionView> permissionViews = permissionList.stream()
+                .map(permission -> PermissionView.builder()
+                        .id(permission.getId())
+                        .name(permission.getName())
+                        .build())
+                .toList();
+        return Result.success("", permissionViews);
     }
 }

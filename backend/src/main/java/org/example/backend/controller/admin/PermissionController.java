@@ -21,7 +21,7 @@ public class PermissionController {
 
         List<PermissionView> permissionViews = results.stream()
                 .map(result -> PermissionView.builder()
-                        .id(String.valueOf(result.getId()))
+                        .id(result.getId())
                         .name(result.getName())
                         .code(result.getCode())
                         .build())

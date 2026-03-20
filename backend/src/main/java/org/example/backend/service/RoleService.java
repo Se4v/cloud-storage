@@ -3,25 +3,16 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.apache.ibatis.executor.BatchResult;
-import org.example.backend.common.Result;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.mapper.MemberMapper;
-import org.example.backend.mapper.UserRoleMapper;
-import org.example.backend.mapper.RoleMapper;
-import org.example.backend.mapper.RolePermissionMapper;
+import org.example.backend.mapper.*;
 import org.example.backend.model.args.AssignPermissionArgs;
 import org.example.backend.model.args.CreateRoleArgs;
 import org.example.backend.model.args.UpdateRoleArgs;
-import org.example.backend.model.entity.Member;
-import org.example.backend.model.entity.Role;
-import org.example.backend.model.entity.UserRole;
-import org.example.backend.model.entity.RolePermission;
+import org.example.backend.model.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +26,8 @@ public class RoleService {
     private MemberMapper memberMapper;
     @Autowired
     private UserRoleMapper userRoleMapper;
+    @Autowired
+    private PermissionMapper permissionMapper;
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
 
@@ -151,9 +144,9 @@ public class RoleService {
      * 查询所有角色
      */
     public List<Role> listAllRoles() {
-        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.orderByAsc(Role::getId);
-        return roleMapper.selectList(queryWrapper);
+        LambdaQueryWrapper<Role> roleQuery = new LambdaQueryWrapper<>();
+        roleQuery.eq(Role::getDeleted, 0);
+        return roleMapper.selectList(roleQuery);
     }
 
     @Transactional
@@ -210,5 +203,11 @@ public class RoleService {
             int deleteCount = rolePermissionMapper.delete(deleteQuery);
             if (deleteCount != deletePermissionIds.size()) throw new BusinessException("<UNK>");
         }
+    }
+
+    public List<Permission> listPermissions() {
+        LambdaQueryWrapper<Permission> permissionQuery = new LambdaQueryWrapper<>();
+        permissionQuery.eq(Permission::getType, 2);
+        return permissionMapper.selectList(permissionQuery);
     }
 }

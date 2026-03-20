@@ -466,7 +466,7 @@ const permissionsLoaded = ref(false)
 const loadPermissionList = async () => {
   if (permissionsLoaded.value) return
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/perm`, getAuthConfig())
+    const res = await axios.get(`${API_BASE_URL}/api/role/perm`, getAuthConfig())
     if (res.data.code === 200) {
       permissionList.value = res.data.data || []
       permissionsLoaded.value = true
@@ -510,43 +510,7 @@ const formRules = {
   ]
 }
 
-// 模拟数据（实际项目中应该从 API 获取）
-const mockData = [
-  {
-    id: 1,
-    name: '超级管理员',
-    code: 'ROLE_ADMIN',
-    type: 'global',
-    isEnabled: true,
-    createTime: '2024-01-15T08:30:00'
-  },
-  {
-    id: 2,
-    name: '普通用户',
-    code: 'ROLE_USER',
-    type: 'global',
-    isEnabled: true,
-    createTime: '2024-01-15T08:30:00'
-  },
-  {
-    id: 3,
-    name: '部门经理',
-    code: 'ROLE_MANAGER',
-    type: 'org',
-    isEnabled: true,
-    permissions: ['read', 'upload', 'download', 'share'],
-    createTime: '2024-02-20T14:22:00'
-  },
-  {
-    id: 4,
-    name: '审计员',
-    code: 'ROLE_AUDITOR',
-    type: 'org',
-    isEnabled: false,
-    permissions: ['read', 'download'],
-    createTime: '2024-03-01T09:15:00'
-  }
-]
+
 
 // 初始化
 onMounted(() => {
@@ -557,24 +521,27 @@ onMounted(() => {
 const loadRoleList = async () => {
   loading.value = true
   try {
-    // 模拟 API 请求
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const res = await axios.get(`${API_BASE_URL}/api/role/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      let filtered = res.data.data || []
 
-    let filtered = [...mockData]
+      // 搜索过滤
+      if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        filtered = filtered.filter(item =>
+            item.name?.toLowerCase().includes(query) ||
+            item.code?.toLowerCase().includes(query)
+        )
+      }
 
-    // 搜索过滤
-    if (searchQuery.value) {
-      const query = searchQuery.value.toLowerCase()
-      filtered = filtered.filter(item =>
-          item.name.toLowerCase().includes(query) ||
-          item.code.toLowerCase().includes(query)
-      )
+      total.value = filtered.length
+      roleList.value = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
+    } else {
+      ElMessage.error(res.data.msg || '获取角色列表失败')
     }
-
-    total.value = filtered.length
-    roleList.value = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
   } catch (error) {
-    ElMessage.error('获取角色列表失败')
+    console.error('获取角色列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取角色列表失败')
   } finally {
     loading.value = false
   }
@@ -610,8 +577,8 @@ const handlePermissionConfig = async (row) => {
   currentRole.value = row
   // 加载权限列表
   await loadPermissionList()
-  // 设置已选中的权限
-  selectedPermissions.value = [...(row.permissions || [])]
+  // 设置已选中的权限（从后端获取）
+  selectedPermissions.value = [...(row.permissionIds || row.permissions || [])]
   permDialogVisible.value = true
 }
 
@@ -620,19 +587,22 @@ const savePermissions = async () => {
   if (!currentRole.value) return
   permLoading.value = true
   try {
-    // 模拟 API 请求
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // 更新本地数据
-    const index = mockData.findIndex(item => item.id === currentRole.value.id)
-    if (index !== -1) {
-      mockData[index].permissions = [...selectedPermissions.value]
+    const submitData = {
+      roleId: currentRole.value.id,
+      permissionIds: selectedPermissions.value
     }
-    
-    ElMessage.success('权限配置成功')
-    permDialogVisible.value = false
+    const res = await axios.post(`${API_BASE_URL}/api/role/assign`, submitData, getAuthConfig())
+    if (res.data.code === 200) {
+      // 更新本地数据
+      currentRole.value.permissions = [...selectedPermissions.value]
+      ElMessage.success('权限配置成功')
+      permDialogVisible.value = false
+    } else {
+      ElMessage.error(res.data.msg || '权限配置失败')
+    }
   } catch (error) {
-    ElMessage.error('权限配置失败')
+    console.error('权限配置失败:', error)
+    ElMessage.error(error.response?.data?.msg || '权限配置失败')
   } finally {
     permLoading.value = false
   }
@@ -646,30 +616,41 @@ const handleSubmit = async () => {
     if (valid) {
       submitLoading.value = true
       try {
-        // 模拟 API 请求
-        await new Promise(resolve => setTimeout(resolve, 800))
-
         if (isEditing.value) {
-          const index = mockData.findIndex(item => item.id === form.id)
-          if (index !== -1) {
-            mockData[index] = { ...mockData[index], ...form }
+          // 编辑角色
+          const submitData = {
+            id: form.id,
+            name: form.name,
+            code: form.code,
+            isEnabled: form.isEnabled
           }
-          ElMessage.success('角色更新成功')
+          const res = await axios.post(`${API_BASE_URL}/api/role/update`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('角色更新成功')
+            dialogVisible.value = false
+            loadRoleList()
+          } else {
+            ElMessage.error(res.data.msg || '更新失败')
+          }
         } else {
-          const newRole = {
-            ...form,
-            id: Date.now(),
-            isEnabled: true,
-            createTime: new Date().toISOString()
+          // 创建角色
+          const submitData = {
+            name: form.name,
+            code: form.code,
+            type: form.type
           }
-          mockData.unshift(newRole)
-          ElMessage.success('角色创建成功')
+          const res = await axios.post(`${API_BASE_URL}/api/role/create`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('角色创建成功')
+            dialogVisible.value = false
+            loadRoleList()
+          } else {
+            ElMessage.error(res.data.msg || '创建失败')
+          }
         }
-
-        dialogVisible.value = false
-        loadRoleList()
       } catch (error) {
-        ElMessage.error(isEditing.value ? '更新失败' : '创建失败')
+        console.error(isEditing.value ? '更新角色失败:' : '创建角色失败:', error)
+        ElMessage.error(error.response?.data?.msg || (isEditing.value ? '更新失败' : '创建失败'))
       } finally {
         submitLoading.value = false
       }
@@ -699,32 +680,40 @@ const handleBatchDelete = () => {
 const confirmDelete = async () => {
   deleteLoading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 600))
-
     if (isBatchDelete.value) {
       // 过滤掉全局角色
       const deletableIds = selectedRoles.value
           .filter(item => item.type !== 'global')
           .map(item => item.id)
 
-      const indices = mockData.map((item, index) => deletableIds.includes(item.id) ? index : -1).filter(i => i !== -1)
-      indices.reverse().forEach(index => mockData.splice(index, 1))
+      if (deletableIds.length === 0) {
+        ElMessage.warning('选中的角色中包含全局角色，无法删除')
+        deleteDialogVisible.value = false
+        return
+      }
 
-      const actualDeleted = deletableIds.length
-      ElMessage.success(`成功删除 ${actualDeleted} 个角色`)
-      selectedRoles.value = []
+      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, deletableIds, getAuthConfig())
+      if (res.data.code === 200) {
+        ElMessage.success(`成功删除 ${deletableIds.length} 个角色`)
+        selectedRoles.value = []
+        deleteDialogVisible.value = false
+        loadRoleList()
+      } else {
+        ElMessage.error(res.data.msg || '删除失败')
+      }
     } else {
-      const index = mockData.findIndex(item => item.id === currentRow.value.id)
-      if (index !== -1) {
-        mockData.splice(index, 1)
+      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, [currentRow.value.id], getAuthConfig())
+      if (res.data.code === 200) {
         ElMessage.success('角色删除成功')
+        deleteDialogVisible.value = false
+        loadRoleList()
+      } else {
+        ElMessage.error(res.data.msg || '删除失败')
       }
     }
-
-    deleteDialogVisible.value = false
-    loadRoleList()
   } catch (error) {
-    ElMessage.error('删除失败')
+    console.error('删除角色失败:', error)
+    ElMessage.error(error.response?.data?.msg || '删除失败')
   } finally {
     deleteLoading.value = false
   }
