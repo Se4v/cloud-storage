@@ -234,15 +234,16 @@
 
           <!-- 组织角色权限选择 -->
           <el-form-item v-if="form.type === 'org'" label="角色权限">
-            <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+            <div class="border border-slate-200 rounded-lg p-4 space-y-3 max-h-60 overflow-y-auto">
               <div class="text-sm text-slate-500 mb-2">请勾选该角色拥有的权限</div>
               <el-checkbox-group v-model="form.permissions" class="flex flex-wrap gap-4">
-                <el-checkbox label="read">查看文件</el-checkbox>
-                <el-checkbox label="upload">上传文件</el-checkbox>
-                <el-checkbox label="download">下载文件</el-checkbox>
-                <el-checkbox label="delete">删除文件</el-checkbox>
-                <el-checkbox label="share">分享文件</el-checkbox>
-                <el-checkbox label="manage">管理成员</el-checkbox>
+                <el-checkbox 
+                  v-for="perm in permissionList" 
+                  :key="perm.id" 
+                  :label="perm.id"
+                >
+                  {{ perm.name }}
+                </el-checkbox>
               </el-checkbox-group>
             </div>
           </el-form-item>
@@ -314,6 +315,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import {
   Plus,
   Delete,
@@ -323,6 +325,19 @@ import {
   User,
   Warning
 } from '@element-plus/icons-vue'
+
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 // 加载状态
 const loading = ref(false)
@@ -338,6 +353,24 @@ const total = ref(0)
 // 表格数据
 const roleList = ref([])
 const selectedRoles = ref([])
+
+// 权限列表（从后端获取）
+const permissionList = ref([])
+const permissionsLoaded = ref(false)
+
+// 加载权限列表
+const loadPermissionList = async () => {
+  if (permissionsLoaded.value) return
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/perm`, getAuthConfig())
+    if (res.data.code === 200) {
+      permissionList.value = res.data.data || []
+      permissionsLoaded.value = true
+    }
+  } catch (error) {
+    console.error('加载权限列表失败:', error)
+  }
+}
 
 // 弹窗控制
 const dialogVisible = ref(false)
@@ -451,16 +484,20 @@ const handleSelectionChange = (selection) => {
 }
 
 // 创建角色
-const handleCreate = () => {
+const handleCreate = async () => {
   isEditing.value = false
   resetForm()
+  // 加载权限列表
+  await loadPermissionList()
   dialogVisible.value = true
 }
 
 // 编辑角色
-const handleEdit = (row) => {
+const handleEdit = async (row) => {
   isEditing.value = true
   Object.assign(form, row)
+  // 加载权限列表
+  await loadPermissionList()
   dialogVisible.value = true
 }
 
