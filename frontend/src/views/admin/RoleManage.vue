@@ -64,7 +64,7 @@
       >
         <el-table-column type="selection" width="48" align="center" />
 
-        <el-table-column label="角色名称" min-width="180">
+        <el-table-column label="角色名称" min-width="160">
           <template #default="{ row }">
             <div>
               <div class="font-medium text-slate-900">{{ row.name }}</div>
@@ -72,7 +72,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="角色代码" width="180">
+        <el-table-column label="角色代码" min-width="160">
           <template #default="{ row }">
             <code class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-mono border border-slate-200">
               {{ row.code }}
@@ -80,28 +80,28 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="类型" width="120" align="center">
+        <el-table-column label="类型" min-width="120">
           <template #default="{ row }">
             <span
                 :class="[
                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                row.type === 'system'
+                row.type === 'global'
                   ? 'bg-amber-50 text-amber-700 border-amber-200'
                   : 'bg-emerald-50 text-emerald-700 border-emerald-200'
               ]"
             >
-              {{ row.type === 'system' ? '系统角色' : '自定义' }}
+              {{ row.type === 'global' ? '全局角色' : '组织角色' }}
             </span>
           </template>
         </el-table-column>
 
-        <el-table-column label="创建时间" width="160">
+        <el-table-column label="创建时间" min-width="160">
           <template #default="{ row }">
             <span class="text-sm text-slate-600">{{ row.createTime }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="140" align="right" fixed="right">
+        <el-table-column label="操作" min-width="120" fixed="right">
           <template #default="{ row }">
             <div class="flex items-center justify-end gap-2">
               <button
@@ -113,10 +113,10 @@
               </button>
               <button
                   @click="handleDelete(row)"
-                  :disabled="row.type === 'system'"
+                  :disabled="row.type === 'global'"
                   :class="[
                   'p-2 rounded-lg transition-colors duration-200',
-                  row.type === 'system'
+                  row.type === 'global'
                     ? 'text-slate-300 cursor-not-allowed'
                     : 'text-slate-600 hover:text-red-600 hover:bg-red-50'
                 ]"
@@ -198,7 +198,7 @@
                 placeholder="请输入角色代码，如：ROLE_USER"
                 size="large"
                 class="custom-input"
-                :disabled="isEditing && form.type === 'system'"
+                :disabled="isEditing && form.type === 'global'"
             >
               <template #prefix>
                 <span class="text-slate-400 text-sm">ROLE_</span>
@@ -215,21 +215,36 @@
                 class="w-full custom-select"
                 :disabled="isEditing"
             >
-              <el-option label="自定义角色" value="custom">
+              <el-option label="组织角色" value="org">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                  <span>自定义角色</span>
+                  <span>组织角色</span>
                   <span class="text-xs text-slate-400 ml-auto">可删除修改</span>
                 </div>
               </el-option>
-              <el-option label="系统角色" value="system">
+              <el-option label="全局角色" value="global">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                  <span>系统角色</span>
+                  <span>全局角色</span>
                   <span class="text-xs text-slate-400 ml-auto">不可删除</span>
                 </div>
               </el-option>
             </el-select>
+          </el-form-item>
+
+          <!-- 组织角色权限选择 -->
+          <el-form-item v-if="form.type === 'org'" label="角色权限">
+            <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+              <div class="text-sm text-slate-500 mb-2">请勾选该角色拥有的权限</div>
+              <el-checkbox-group v-model="form.permissions" class="flex flex-wrap gap-4">
+                <el-checkbox label="read">查看文件</el-checkbox>
+                <el-checkbox label="upload">上传文件</el-checkbox>
+                <el-checkbox label="download">下载文件</el-checkbox>
+                <el-checkbox label="delete">删除文件</el-checkbox>
+                <el-checkbox label="share">分享文件</el-checkbox>
+                <el-checkbox label="manage">管理成员</el-checkbox>
+              </el-checkbox-group>
+            </div>
           </el-form-item>
         </el-form>
       </div>
@@ -339,7 +354,8 @@ const form = reactive({
   id: null,
   name: '',
   code: '',
-  type: 'custom'
+  type: 'org',
+  permissions: []
 })
 
 // 表单验证规则
@@ -363,28 +379,30 @@ const mockData = [
     id: 1,
     name: '超级管理员',
     code: 'ROLE_ADMIN',
-    type: 'system',
+    type: 'global',
     createTime: '2024-01-15T08:30:00'
   },
   {
     id: 2,
     name: '普通用户',
     code: 'ROLE_USER',
-    type: 'system',
+    type: 'global',
     createTime: '2024-01-15T08:30:00'
   },
   {
     id: 3,
     name: '部门经理',
     code: 'ROLE_MANAGER',
-    type: 'custom',
+    type: 'org',
+    permissions: ['read', 'upload', 'download', 'share'],
     createTime: '2024-02-20T14:22:00'
   },
   {
     id: 4,
     name: '审计员',
     code: 'ROLE_AUDITOR',
-    type: 'custom',
+    type: 'org',
+    permissions: ['read', 'download'],
     createTime: '2024-03-01T09:15:00'
   }
 ]
@@ -486,8 +504,8 @@ const handleSubmit = async () => {
 
 // 删除角色
 const handleDelete = (row) => {
-  if (row.type === 'system') {
-    ElMessage.warning('系统角色不可删除')
+  if (row.type === 'global') {
+    ElMessage.warning('全局角色不可删除')
     return
   }
   isBatchDelete.value = false
@@ -509,9 +527,9 @@ const confirmDelete = async () => {
     await new Promise(resolve => setTimeout(resolve, 600))
 
     if (isBatchDelete.value) {
-      // 过滤掉系统角色
+      // 过滤掉全局角色
       const deletableIds = selectedRoles.value
-          .filter(item => item.type !== 'system')
+          .filter(item => item.type !== 'global')
           .map(item => item.id)
 
       const indices = mockData.map((item, index) => deletableIds.includes(item.id) ? index : -1).filter(i => i !== -1)
@@ -553,7 +571,8 @@ const resetForm = () => {
   form.id = null
   form.name = ''
   form.code = ''
-  form.type = 'custom'
+  form.type = 'org'
+  form.permissions = []
   if (formRef.value) {
     formRef.value.resetFields()
   }
