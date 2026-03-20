@@ -3,19 +3,14 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.common.Result;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.mapper.ConfigMapper;
-import org.example.backend.mapper.DriveMapper;
-import org.example.backend.mapper.UserRoleMapper;
-import org.example.backend.mapper.UserMapper;
+import org.example.backend.mapper.*;
 import org.example.backend.model.args.AssignGlobalRoleArgs;
 import org.example.backend.model.args.CreateUserArgs;
 import org.example.backend.model.args.DeleteUserArgs;
 import org.example.backend.model.args.UpdateUserArgs;
-import org.example.backend.model.entity.Config;
-import org.example.backend.model.entity.Drive;
-import org.example.backend.model.entity.UserRole;
-import org.example.backend.model.entity.User;
+import org.example.backend.model.entity.*;
 import org.example.backend.model.view.UserView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +30,8 @@ public class UserService {
     private ConfigMapper configMapper;
     @Autowired
     private DriveMapper driveMapper;
+    @Autowired
+    private RoleMapper roleMapper;
     @Autowired
     private UserRoleMapper userRoleMapper;
     @Autowired
@@ -60,13 +57,13 @@ public class UserService {
         // 调用配置表
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
         configQuery.eq(Config::getEnabled, ENABLED)
-                .eq(Config::getKey, "default_password");
+                .eq(Config::getConfigKey, "default_password");
         Config config = configMapper.selectOne(configQuery);
 
         // 创建用户
         User user = User.builder()
                 .username(args.getUsername())
-                .password(passwordEncoder.encode(config.getValue()))
+                .password(passwordEncoder.encode(config.getConfigValue()))
                 .realName(args.getRealName())
                 .mobile(args.getMobile())
                 .build();
@@ -131,6 +128,7 @@ public class UserService {
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getDeleted, UNDELETED).orderByDesc(User::getCreatedAt);
         List<User> users = userMapper.selectList(queryWrapper);
+        if (users == null || users.isEmpty()) return new ArrayList<>();
         List<Long> userIds = users.stream().map(User::getId).toList();
 
         // 查询用户配额
@@ -199,14 +197,22 @@ public class UserService {
         // 调用配置表
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
         configQuery.eq(Config::getEnabled, ENABLED)
-                .eq(Config::getKey, "default_password");
+                .eq(Config::getConfigKey, "default_password");
         Config config = configMapper.selectOne(configQuery);
 
         // 重置密码
         LambdaUpdateWrapper<User> userUpdate = new LambdaUpdateWrapper<>();
-        userUpdate.set(User::getPassword, passwordEncoder.encode(config.getValue()))
+        userUpdate.set(User::getPassword, passwordEncoder.encode(config.getConfigValue()))
                 .eq(User::getId, userId);
         int count = userMapper.update(userUpdate);
         if (count != 1) throw new BusinessException("<UNK>");
+    }
+
+    public List<Role> listGlobalRole() {
+        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Role::getType, 1)
+                .eq(Role::getEnabled, ENABLED)
+                .eq(Role::getDeleted, UNDELETED);
+        return roleMapper.selectList(queryWrapper);
     }
 }

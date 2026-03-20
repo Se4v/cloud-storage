@@ -24,12 +24,12 @@ public class Config implements Serializable {
     private Long id;
 
     /** 配置键 */
-    @TableField("key")
-    private String key;
+    @TableField("config_key")
+    private String configKey;
 
     /** 配置值(统一存为字符串) */
-    @TableField("value")
-    private String value;
+    @TableField("config_value")
+    private String configValue;
 
     /** 配置描述 */
     @TableField("description")

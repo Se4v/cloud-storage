@@ -5,6 +5,8 @@ import org.example.backend.model.args.AssignGlobalRoleArgs;
 import org.example.backend.model.args.CreateUserArgs;
 import org.example.backend.model.args.DeleteUserArgs;
 import org.example.backend.model.args.UpdateUserArgs;
+import org.example.backend.model.entity.Role;
+import org.example.backend.model.view.RoleView;
 import org.example.backend.model.view.UserView;
 import org.example.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,21 +38,33 @@ public class UserController {
         return Result.success("更新用户成功");
     }
 
-    @GetMapping()
+    @GetMapping("/all")
     public Result<List<UserView>> listAllUsers() {
         List<UserView> views = userService.listAllUsers();
         return Result.success("", views);
     }
 
-    @PostMapping("/role")
+    @PostMapping("/assign")
     public Result<Void> assignGlobalRole(@RequestBody AssignGlobalRoleArgs args) {
         userService.assignGlobalRole(args);
-        return null;
+        return Result.success("<UNK>");
     }
 
     @PostMapping("/reset")
-    public Result<Void> resetPassword(Long userId) {
-        userService.resetPassword(userId);
-        return null;
+    public Result<Void> resetPassword(Long id) {
+        userService.resetPassword(id);
+        return Result.success("<UNK>");
+    }
+
+    @GetMapping("/role")
+    public Result<List<RoleView>> listGlobalRole() {
+        List<Role> roleList = userService.listGlobalRole();
+        List<RoleView> views = roleList.stream()
+                .map(role -> RoleView.builder()
+                        .id(role.getId())
+                        .name(role.getName())
+                        .build()).toList();
+
+        return Result.success("", views);
     }
 }

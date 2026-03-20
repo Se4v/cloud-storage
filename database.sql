@@ -230,13 +230,13 @@ CREATE TABLE `sys_log` (
 
 CREATE TABLE `sys_config` (
     `id`            bigint unsigned NOT NULL COMMENT '主键ID',
-    `key`           varchar(64) NOT NULL DEFAULT '' COMMENT '配置键',
-    `value`         varchar(255) NOT NULL DEFAULT '' COMMENT '配置值 (统一存为字符串)',
+    `config_key`    varchar(64) NOT NULL DEFAULT '' COMMENT '配置键',
+    `config_value`  varchar(255) NOT NULL DEFAULT '' COMMENT '配置值 (统一存为字符串)',
     `description`   varchar(255) NOT NULL DEFAULT '' COMMENT '配置描述',
     `is_enabled`    tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否启用: 1-启用; 0-禁用',
     `created_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_key` (`key`)
+    UNIQUE KEY `uk_key` (`config_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
 
