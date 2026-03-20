@@ -118,7 +118,7 @@
             style="width: 100%"
             @selection-change="handleSelectionChange"
             @row-click="handleRowClick"
-            :row-class-name="getRowClassName"
+            :row-class-name="() => 'group hover:bg-slate-50/80 transition-colors'"
             class="file-table"
         >
           <el-table-column type="selection" width="55" align="center" />
@@ -130,8 +130,7 @@
                   @dblclick="handleOpenFile(row)"
               >
                 <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105"
-                    :class="getFileIconClass(row)"
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105 bg-blue-500"
                 >
                   <el-icon :size="20">
                     <component :is="getFileIcon(row)" />
@@ -146,9 +145,7 @@
 
           <el-table-column label="创建时间" width="260">
             <template #default="{ row }">
-              <div class="flex items-center gap-2 text-sm text-slate-600">
-                <span>{{ formatDate(row.createTime) }}</span>
-              </div>
+              <span class="text-sm text-slate-600">{{ row.createTime }}</span>
             </template>
           </el-table-column>
 
@@ -494,7 +491,15 @@ const pathHistory = ref([])
 const currentParentId = ref(null)
 
 // 文件列表
-const fileList = ref([])
+const fileList = ref([
+  {
+    id: '123',
+    name: '3',
+    type: 'folder',
+    size: '123',
+    createTime: '123123'
+  }
+])
 
 // 存储空间（单位：字节）
 const usedStorage = ref(49 * 1024 * 1024) // 49MB
@@ -526,42 +531,9 @@ const filteredFiles = computed(() => {
 const getFileIcon = (file) => {
   const iconMap = {
     folder: FolderOpened,
-    image: Picture,
-    video: VideoCamera,
-    audio: Headset,
-    pdf: Document,
-    word: Document,
-    excel: Document,
-    zip: Box,
-    code: Document,
     default: Document
   }
   return iconMap[file.type] || iconMap.default
-}
-
-// 获取文件图标背景色
-const getFileIconClass = (file) => {
-  return 'bg-slate-400'
-}
-
-// 格式化日期
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now - date
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) return '今天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days}天前`
-
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).replace(/\//g, '-')
 }
 
 // 格式化文件大小
@@ -571,11 +543,6 @@ const formatSize = (bytes) => {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
-}
-
-// 表格行类名
-const getRowClassName = () => {
-  return 'group hover:bg-slate-50/80 transition-colors'
 }
 
 // 选择变化

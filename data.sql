@@ -255,16 +255,11 @@ CREATE TABLE `sys_config` (
 
 CREATE TABLE `sys_traffic` (
     `id`            bigint unsigned NOT NULL COMMENT '主键ID',
-    `user_id`       bigint unsigned DEFAULT NULL COMMENT '用户ID',
-    `storage_id`    bigint unsigned DEFAULT NULL COMMENT '文件唯一标识/路径哈希',
+    `user_id`       bigint unsigned NOT NULL COMMENT '用户ID',
+    `storage_id`    bigint unsigned NOT NULL COMMENT '文件唯一标识/路径哈希',
     `type`          tinyint unsigned NOT NULL COMMENT '操作类型: 1-上传, 2-下载',
-    `file_size`     bigint unsigned NOT NULL DEFAULT 0 COMMENT '传输文件大小',
-    `status`        tinyint unsigned DEFAULT 1 COMMENT '操作状态: 1-成功, 0-失败/中断',
-    `traffic_date`  date NOT NULL COMMENT '业务日期',
+    `file_size`          bigint unsigned NOT NULL DEFAULT 0 COMMENT '传输文件大小',
+    `status`        tinyint unsigned NOT NULL DEFAULT 1 COMMENT '操作状态: 1-成功, 0-失败/中断',
     `created_at`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    -- 核心索引：用于统计某用户、某天的流量
-    KEY `idx_user_date` (`user_id`, `traffic_date`),
-    -- 核心索引：用于统计全系统每日流量趋势
-    KEY `idx_date_action` (`traffic_date`, `action_type`),
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件上传下载流量记录表';
