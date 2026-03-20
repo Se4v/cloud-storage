@@ -95,15 +95,44 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="创建时间" min-width="160">
+        <el-table-column label="状态" min-width="100">
+          <template #default="{ row }">
+            <span
+                :class="[
+                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                row.isEnabled
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-red-50 text-red-700 border-red-200'
+              ]"
+            >
+              <span
+                  :class="[
+                  'w-1.5 h-1.5 rounded-full mr-1.5',
+                  row.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
+                ]"
+              ></span>
+              {{ row.isEnabled ? '启用' : '禁用' }}
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="创建时间" min-width="140">
           <template #default="{ row }">
             <span class="text-sm text-slate-600">{{ row.createTime }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" min-width="120" fixed="right">
+        <el-table-column label="操作" min-width="140" fixed="right">
           <template #default="{ row }">
             <div class="flex items-center justify-end gap-2">
+              <button
+                  v-if="row.type === 'org'"
+                  @click="handlePermissionConfig(row)"
+                  class="p-2 text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
+                  title="配置权限"
+              >
+                <el-icon :size="16"><Key /></el-icon>
+              </button>
               <button
                   @click="handleEdit(row)"
                   class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
@@ -229,19 +258,27 @@
             </el-select>
           </el-form-item>
 
-          <!-- 组织角色权限选择 -->
-          <el-form-item v-if="form.type === 'org'" label="角色权限">
-            <div class="border border-slate-200 rounded-lg p-4 space-y-3 max-h-60 overflow-y-auto">
-              <div class="text-sm text-slate-500 mb-2">请勾选该角色拥有的权限</div>
-              <el-checkbox-group v-model="form.permissions" class="flex flex-wrap gap-4">
-                <el-checkbox 
-                  v-for="perm in permissionList" 
-                  :key="perm.id" 
-                  :label="perm.id"
-                >
-                  {{ perm.name }}
-                </el-checkbox>
-              </el-checkbox-group>
+          <!-- 编辑时显示状态 -->
+          <el-form-item v-if="isEditing" label="状态">
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                    type="radio"
+                    v-model="form.isEnabled"
+                    :value="true"
+                    class="text-blue-600 focus:ring-blue-500 border-slate-300"
+                />
+                <span class="text-sm text-slate-700">启用</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                    type="radio"
+                    v-model="form.isEnabled"
+                    :value="false"
+                    class="text-blue-600 focus:ring-blue-500 border-slate-300"
+                />
+                <span class="text-sm text-slate-700">禁用</span>
+              </label>
             </div>
           </el-form-item>
         </el-form>
@@ -306,6 +343,69 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 权限配置对话框 -->
+    <el-dialog
+        v-model="permDialogVisible"
+        :title="`配置权限 - ${currentRole?.name || ''}`"
+        width="500px"
+        destroy-on-close
+        class="custom-dialog"
+        :close-on-click-modal="false"
+    >
+      <div class="p-2">
+        <div class="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+              <el-icon :size="20"><Key /></el-icon>
+            </div>
+            <div>
+              <div class="font-medium text-slate-900">{{ currentRole?.name }}</div>
+              <div class="text-xs text-slate-500">{{ currentRole?.code }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg p-4">
+          <div class="text-sm font-medium text-slate-700 mb-3">选择权限</div>
+          <div v-if="permissionList.length === 0" class="text-sm text-slate-500 py-4 text-center">
+            加载权限列表中...
+          </div>
+          <el-checkbox-group v-else v-model="selectedPermissions" class="space-y-2">
+            <div 
+              v-for="perm in permissionList" 
+              :key="perm.id"
+              class="flex items-center p-2 rounded-lg hover:bg-slate-50"
+            >
+              <el-checkbox :label="perm.id">
+                <div class="ml-2">
+                  <div class="text-sm font-medium text-slate-700">{{ perm.name }}</div>
+                  <div v-if="perm.code" class="text-xs text-slate-400">{{ perm.code }}</div>
+                </div>
+              </el-checkbox>
+            </div>
+          </el-checkbox-group>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button
+              @click="permDialogVisible = false"
+              class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200"
+          >
+            取消
+          </button>
+          <button
+              @click="savePermissions"
+              :loading="permLoading"
+              class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            {{ permLoading ? '保存中...' : '确认保存' }}
+          </button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -320,7 +420,8 @@ import {
   Edit,
   UserFilled,
   User,
-  Warning
+  Warning,
+  Key
 } from '@element-plus/icons-vue'
 
 const API_BASE_URL = 'http://localhost:8080'
@@ -340,6 +441,7 @@ const getAuthConfig = () => {
 const loading = ref(false)
 const submitLoading = ref(false)
 const deleteLoading = ref(false)
+const permLoading = ref(false)
 
 // 搜索和分页
 const searchQuery = ref('')
@@ -350,6 +452,11 @@ const total = ref(0)
 // 表格数据
 const roleList = ref([])
 const selectedRoles = ref([])
+
+// 权限配置对话框
+const permDialogVisible = ref(false)
+const currentRole = ref(null)
+const selectedPermissions = ref([])
 
 // 权限列表（从后端获取）
 const permissionList = ref([])
@@ -385,7 +492,7 @@ const form = reactive({
   name: '',
   code: '',
   type: 'org',
-  permissions: []
+  isEnabled: true
 })
 
 // 表单验证规则
@@ -410,6 +517,7 @@ const mockData = [
     name: '超级管理员',
     code: 'ROLE_ADMIN',
     type: 'global',
+    isEnabled: true,
     createTime: '2024-01-15T08:30:00'
   },
   {
@@ -417,6 +525,7 @@ const mockData = [
     name: '普通用户',
     code: 'ROLE_USER',
     type: 'global',
+    isEnabled: true,
     createTime: '2024-01-15T08:30:00'
   },
   {
@@ -424,6 +533,7 @@ const mockData = [
     name: '部门经理',
     code: 'ROLE_MANAGER',
     type: 'org',
+    isEnabled: true,
     permissions: ['read', 'upload', 'download', 'share'],
     createTime: '2024-02-20T14:22:00'
   },
@@ -432,6 +542,7 @@ const mockData = [
     name: '审计员',
     code: 'ROLE_AUDITOR',
     type: 'org',
+    isEnabled: false,
     permissions: ['read', 'download'],
     createTime: '2024-03-01T09:15:00'
   }
@@ -481,21 +592,50 @@ const handleSelectionChange = (selection) => {
 }
 
 // 创建角色
-const handleCreate = async () => {
+const handleCreate = () => {
   isEditing.value = false
   resetForm()
-  // 加载权限列表
-  await loadPermissionList()
   dialogVisible.value = true
 }
 
 // 编辑角色
-const handleEdit = async (row) => {
+const handleEdit = (row) => {
   isEditing.value = true
   Object.assign(form, row)
+  dialogVisible.value = true
+}
+
+// 配置权限
+const handlePermissionConfig = async (row) => {
+  currentRole.value = row
   // 加载权限列表
   await loadPermissionList()
-  dialogVisible.value = true
+  // 设置已选中的权限
+  selectedPermissions.value = [...(row.permissions || [])]
+  permDialogVisible.value = true
+}
+
+// 保存权限
+const savePermissions = async () => {
+  if (!currentRole.value) return
+  permLoading.value = true
+  try {
+    // 模拟 API 请求
+    await new Promise(resolve => setTimeout(resolve, 800))
+    
+    // 更新本地数据
+    const index = mockData.findIndex(item => item.id === currentRole.value.id)
+    if (index !== -1) {
+      mockData[index].permissions = [...selectedPermissions.value]
+    }
+    
+    ElMessage.success('权限配置成功')
+    permDialogVisible.value = false
+  } catch (error) {
+    ElMessage.error('权限配置失败')
+  } finally {
+    permLoading.value = false
+  }
 }
 
 // 提交表单
@@ -519,6 +659,7 @@ const handleSubmit = async () => {
           const newRole = {
             ...form,
             id: Date.now(),
+            isEnabled: true,
             createTime: new Date().toISOString()
           }
           mockData.unshift(newRole)
@@ -606,7 +747,7 @@ const resetForm = () => {
   form.name = ''
   form.code = ''
   form.type = 'org'
-  form.permissions = []
+  form.isEnabled = true
   if (formRef.value) {
     formRef.value.resetFields()
   }
