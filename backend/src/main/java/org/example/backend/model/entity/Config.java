@@ -37,7 +37,7 @@ public class Config implements Serializable {
 
     /** 是否启用: 1-启用; 0-禁用 */
     @TableField("is_enabled")
-    private Integer enabled;
+    private Integer isEnabled;
 
     /** 创建时间 */
     @TableField("created_at")

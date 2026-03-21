@@ -150,8 +150,7 @@
               </td>
               <td class="px-6 py-4">
                 <div class="flex flex-col">
-                  <span class="text-slate-900">{{ formatDate(log.operationTime) }}</span>
-                  <span class="text-xs text-slate-500 mt-0.5">{{ formatTime(log.operationTime) }}</span>
+                  <span class="text-slate-900">{{ log.operationTime }}</span>
                 </div>
               </td>
               <td class="px-6 py-4">
@@ -259,28 +258,6 @@ const getOperationTypeLabel = (type) => {
 // 获取操作类型样式类
 const getOperationTypeClass = (type) => {
   return operationTypeMap[type]?.class || 'bg-slate-50 text-slate-700 border-slate-200'
-}
-
-// 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
-}
-
-// 格式化时间
-const formatTime = (dateStr) => {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
 }
 
 // 模拟数据

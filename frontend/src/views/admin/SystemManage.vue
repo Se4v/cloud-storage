@@ -85,7 +85,7 @@
               </label>
               <div class="relative">
                 <input
-                  v-model.number="form.defaultStorageQuota"
+                  v-model.number="displayStorageQuota"
                   type="number"
                   min="1"
                   class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -252,8 +252,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import {
   Lock,
   Box,
@@ -266,14 +267,39 @@ import {
   Check
 } from '@element-plus/icons-vue'
 
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
 // 表单数据
 const form = reactive({
   loginFailThreshold: 5,
   defaultPassword: '123456',
-  defaultStorageQuota: 10,
+  defaultStorageQuota: 10737418240, // 10 GB in bytes (10 * 1024 * 1024 * 1024)
   maxFileSize: 500,
   storageWarningThreshold: 80,
   fileTypeBlacklist: ['.exe', '.bat', '.sh', '.php']
+})
+
+// 显示用的存储容量（GB）
+const displayStorageQuota = computed({
+  get: () => {
+    // 将字节转换为 GB 显示
+    return Math.round(form.defaultStorageQuota / 1024 / 1024 / 1024)
+  },
+  set: (value) => {
+    // 将 GB 转换为字节存储
+    form.defaultStorageQuota = value * 1024 * 1024 * 1024
+  }
 })
 
 // 常用危险文件扩展名
@@ -283,6 +309,33 @@ const commonFileExts = ['exe', 'bat', 'sh', 'php', 'jsp', 'asp', 'dll', 'bin', '
 const saving = ref(false)
 const showPassword = ref(false)
 const newFileExt = ref('')
+
+// 加载系统设置
+const loadSystemConfig = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/system`, getAuthConfig())
+    if (res.data.code === 200) {
+      const data = res.data.data
+      // 后端返回的都是 String 类型，需要转换
+      form.loginFailThreshold = parseInt(data.loginFailThreshold) || 5
+      form.defaultPassword = data.defaultPassword || '123456'
+      form.defaultStorageQuota = parseInt(data.defaultStorageQuota) || 10737418240
+      form.maxFileSize = parseInt(data.maxFileSize) || 500
+      form.storageWarningThreshold = parseInt(data.storageWarningThreshold) || 80
+      form.fileTypeBlacklist = data.fileTypeBlacklist || ['.exe', '.bat', '.sh', '.php']
+    } else {
+      ElMessage.error(res.data.msg || '获取系统设置失败')
+    }
+  } catch (error) {
+    console.error('获取系统设置失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取系统设置失败')
+  }
+}
+
+// 页面加载时获取系统设置
+onMounted(() => {
+  loadSystemConfig()
+})
 
 // 获取阈值颜色
 const getThresholdColor = (threshold) => {
@@ -335,7 +388,7 @@ const handleSave = async () => {
     return
   }
   
-  if (!form.defaultStorageQuota || form.defaultStorageQuota < 1) {
+  if (!displayStorageQuota.value || displayStorageQuota.value < 1) {
     ElMessage.error('请输入有效的默认空间存储容量')
     return
   }
@@ -352,11 +405,29 @@ const handleSave = async () => {
   
   saving.value = true
   
-  // 模拟API调用
-  setTimeout(() => {
+  try {
+    // 构造提交数据（后端要求 String 类型）
+    const submitData = {
+      loginFailThreshold: String(form.loginFailThreshold),
+      defaultPassword: form.defaultPassword,
+      defaultStorageQuota: String(form.defaultStorageQuota),
+      maxFileSize: String(form.maxFileSize),
+      storageWarningThreshold: String(form.storageWarningThreshold),
+      fileTypeBlacklist: form.fileTypeBlacklist
+    }
+    
+    const res = await axios.post(`${API_BASE_URL}/api/system/update`, submitData, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('系统设置保存成功')
+    } else {
+      ElMessage.error(res.data.msg || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存系统设置失败:', error)
+    ElMessage.error(error.response?.data?.msg || '保存失败')
+  } finally {
     saving.value = false
-    ElMessage.success('系统设置保存成功')
-  }, 800)
+  }
 }
 </script>
 

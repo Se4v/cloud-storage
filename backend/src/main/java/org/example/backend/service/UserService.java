@@ -54,7 +54,7 @@ public class UserService {
 
         // 调用配置表
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getEnabled, ENABLED)
+        configQuery.eq(Config::getIsEnabled, ENABLED)
                 .eq(Config::getConfigKey, "default_password");
         Config config = configMapper.selectOne(configQuery);
 
@@ -221,7 +221,7 @@ public class UserService {
 
         // 调用配置表
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getEnabled, ENABLED)
+        configQuery.eq(Config::getIsEnabled, ENABLED)
                 .eq(Config::getConfigKey, "default_password");
         Config config = configMapper.selectOne(configQuery);
 
