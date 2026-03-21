@@ -51,7 +51,11 @@
 
     <!-- 数据列表 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
+      <div v-if="loading" class="py-16 text-center">
+        <el-icon :size="32" class="text-slate-400 is-loading"><Loading /></el-icon>
+        <p class="text-sm text-slate-500 mt-2">加载中...</p>
+      </div>
+      <div v-else class="overflow-x-auto">
         <table class="w-full text-left">
           <thead>
           <tr class="border-b border-slate-200 bg-slate-50/50">
@@ -127,73 +131,41 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { Search, Key } from '@element-plus/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
+import { Search, Key, Loading } from '@element-plus/icons-vue'
 
-// 权限类型定义
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
+// 权限类型定义（后端返回 1-菜单, 2-操作, 3-数据）
 const permissionTypes = [
-  { value: 'menu', label: '菜单' },
-  { value: 'button', label: '按钮' },
-  { value: 'api', label: '接口' },
-  { value: 'data', label: '数据' }
+  { value: 1, label: '菜单', code: 'menu' },
+  { value: 2, label: '操作', code: 'operation' },
+  { value: 3, label: '数据', code: 'data' }
 ]
 
 const typeFilters = [
   { value: 'all', label: '全部' },
-  ...permissionTypes
+  { value: 1, label: '菜单' },
+  { value: 2, label: '操作' },
+  { value: 3, label: '数据' }
 ]
 
-// 模拟数据
-const permissions = ref([
-  {
-    id: 1,
-    name: '用户查看',
-    code: 'user:view',
-    type: 'menu'
-  },
-  {
-    id: 2,
-    name: '用户创建',
-    code: 'user:create',
-    type: 'button'
-  },
-  {
-    id: 3,
-    name: '文件上传',
-    code: 'file:upload',
-    type: 'api'
-  },
-  {
-    id: 4,
-    name: '团队管理',
-    code: 'team:manage',
-    type: 'menu'
-  },
-  {
-    id: 5,
-    name: '数据导出',
-    code: 'data:export',
-    type: 'data'
-  },
-  {
-    id: 6,
-    name: '角色分配',
-    code: 'role:assign',
-    type: 'button'
-  },
-  {
-    id: 7,
-    name: '日志查看',
-    code: 'log:view',
-    type: 'menu'
-  },
-  {
-    id: 8,
-    name: '系统配置',
-    code: 'system:config',
-    type: 'api'
-  }
-])
+// 权限数据
+const permissions = ref([])
+const loading = ref(false)
 
 // 状态管理
 const searchQuery = ref('')
@@ -204,10 +176,9 @@ const pageSize = ref(10)
 // 类型样式映射
 const getTypeStyle = (type) => {
   const styles = {
-    menu: 'bg-blue-50 text-blue-700 border border-blue-200',
-    button: 'bg-purple-50 text-purple-700 border border-purple-200',
-    api: 'bg-amber-50 text-amber-700 border border-amber-200',
-    data: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    1: 'bg-blue-50 text-blue-700 border border-blue-200',
+    2: 'bg-amber-50 text-amber-700 border border-amber-200',
+    3: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
   }
   return styles[type] || 'bg-slate-100 text-slate-700'
 }
@@ -216,6 +187,29 @@ const getTypeLabel = (type) => {
   return permissionTypes.find(t => t.value === type)?.label || type
 }
 
+// 获取权限列表
+const loadPermissions = async () => {
+  loading.value = true
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/perm/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      permissions.value = res.data.data || []
+    } else {
+      ElMessage.error(res.data.msg || '获取权限列表失败')
+    }
+  } catch (error) {
+    console.error('获取权限列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取权限列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadPermissions()
+})
+
 // 筛选逻辑
 const filteredPermissions = computed(() => {
   let result = permissions.value
@@ -223,8 +217,8 @@ const filteredPermissions = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(p =>
-        p.name.toLowerCase().includes(query) ||
-        p.code.toLowerCase().includes(query)
+        p.name?.toLowerCase().includes(query) ||
+        p.code?.toLowerCase().includes(query)
     )
   }
 

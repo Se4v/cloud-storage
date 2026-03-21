@@ -380,7 +380,6 @@
               <el-checkbox :label="perm.id">
                 <div class="ml-2">
                   <div class="text-sm font-medium text-slate-700">{{ perm.name }}</div>
-                  <div v-if="perm.code" class="text-xs text-slate-400">{{ perm.code }}</div>
                 </div>
               </el-checkbox>
             </div>

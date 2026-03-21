@@ -12,7 +12,7 @@ public class PermissionService {
     @Autowired
     private PermissionMapper permissionMapper;
 
-    public List<Permission> getAllPermissions() {
+    public List<Permission> listAllPermissions() {
         return permissionMapper.selectList(null);
     }
 }
