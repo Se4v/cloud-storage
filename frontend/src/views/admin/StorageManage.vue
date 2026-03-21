@@ -56,8 +56,8 @@
             class="h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
           >
             <option value="">全部状态</option>
-            <option value="active">正常</option>
-            <option value="disabled">禁用</option>
+            <option value="true">正常</option>
+            <option value="false">禁用</option>
           </select>
 
           <button
@@ -116,7 +116,7 @@
                 <span class="font-medium text-slate-900">{{ item.name }}</span>
               </td>
               <td class="px-6 py-4">
-                <span class="text-slate-700">{{ formatDate(item.uploadTime) }}</span>
+                <span class="text-slate-700">{{ item.uploadTime }}</span>
               </td>
               <td class="px-6 py-4">
                 <span class="text-slate-700 font-medium">{{ formatSize(item.size) }}</span>
@@ -125,7 +125,7 @@
                 <span
                   :class="[
                     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                    item.status === 'active'
+                    item.isEnabled
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-red-50 text-red-700 border-red-200'
                   ]"
@@ -133,10 +133,10 @@
                   <span
                     :class="[
                       'w-1.5 h-1.5 rounded-full mr-1.5',
-                      item.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'
+                      item.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
                     ]"
                   ></span>
-                  {{ item.status === 'active' ? '正常' : '禁用' }}
+                  {{ item.isEnabled ? '正常' : '禁用' }}
                 </span>
               </td>
               <td class="px-6 py-4">
@@ -187,8 +187,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 import {
   Search,
   Document,
@@ -196,6 +197,19 @@ import {
   Check,
   CircleClose
 } from '@element-plus/icons-vue'
+
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 // 搜索与筛选
 const searchQuery = ref('')
@@ -205,84 +219,29 @@ const pageSize = ref(20)
 const total = ref(0)
 const selectedStorages = ref([])
 
-// 模拟表格数据
-const tableData = ref([
-  {
-    id: 1,
-    name: '项目文档.pdf',
-    type: 'PDF 文档',
-    uploadTime: '2024-03-10 14:30:00',
-    size: 15728640, // 15MB
-    status: 'active',
-    refCount: 5
-  },
-  {
-    id: 2,
-    name: '产品原型图.fig',
-    type: 'Figma 文件',
-    uploadTime: '2024-03-09 10:15:00',
-    size: 52428800, // 50MB
-    status: 'active',
-    refCount: 3
-  },
-  {
-    id: 3,
-    name: '年度报表.xlsx',
-    type: 'Excel 表格',
-    uploadTime: '2024-03-08 16:45:00',
-    size: 2097152, // 2MB
-    status: 'disabled',
-    refCount: 0
-  },
-  {
-    id: 4,
-    name: '团队合影.jpg',
-    type: 'JPEG 图片',
-    uploadTime: '2024-03-07 09:20:00',
-    size: 8388608, // 8MB
-    status: 'active',
-    refCount: 12
-  },
-  {
-    id: 5,
-    name: '演示视频.mp4',
-    type: 'MP4 视频',
-    uploadTime: '2024-03-06 11:00:00',
-    size: 536870912, // 512MB
-    status: 'active',
-    refCount: 2
-  },
-  {
-    id: 6,
-    name: '源代码.zip',
-    type: 'ZIP 压缩包',
-    uploadTime: '2024-03-05 15:30:00',
-    size: 104857600, // 100MB
-    status: 'disabled',
-    refCount: 1
-  },
-  {
-    id: 7,
-    name: '设计规范.pdf',
-    type: 'PDF 文档',
-    uploadTime: '2024-03-04 08:45:00',
-    size: 31457280, // 30MB
-    status: 'active',
-    refCount: 8
-  },
-  {
-    id: 8,
-    name: '会议纪要.docx',
-    type: 'Word 文档',
-    uploadTime: '2024-03-03 17:00:00',
-    size: 1048576, // 1MB
-    status: 'active',
-    refCount: 0
-  }
-])
+// 表格数据
+const tableData = ref([])
 
-// 更新总记录数
-total.value = tableData.value.length
+// 加载存储列表
+const loadStorageList = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/storage/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      tableData.value = res.data.data || []
+      total.value = tableData.value.length
+    } else {
+      ElMessage.error(res.data.msg || '获取存储列表失败')
+    }
+  } catch (error) {
+    console.error('获取存储列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取存储列表失败')
+  }
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadStorageList()
+})
 
 // 全选逻辑
 const isAllSelected = computed(() => {
@@ -295,19 +254,6 @@ const toggleSelectAll = () => {
   } else {
     selectedStorages.value = tableData.value.map(item => item.id)
   }
-}
-
-// 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
 }
 
 // 格式化文件大小
@@ -345,47 +291,67 @@ const handleCurrentChange = (val) => {
   handleSearch()
 }
 
-// 批量启用
-const handleBatchEnable = () => {
-  if (selectedStorages.value.length === 0) return
-  ElMessageBox.confirm(
-    `确定要启用选中的 ${selectedStorages.value.length} 个文件吗？`,
-    '批量启用',
-    {
-      confirmButtonText: '启用',
-      cancelButtonText: '取消',
-      type: 'success'
+// 批量更新存储项状态
+const updateStorageItemsStatus = async (ids, isEnabled) => {
+  try {
+    const submitData = {
+      ids: ids,
+      isEnabled: isEnabled
     }
-  ).then(() => {
-    tableData.value.forEach(item => {
-      if (selectedStorages.value.includes(item.id)) {
-        item.status = 'active'
+    const res = await axios.post(`${API_BASE_URL}/api/storage/update`, submitData, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success(isEnabled ? '批量启用成功' : '批量禁用成功')
+      await loadStorageList()
+    } else {
+      ElMessage.error(res.data.msg || (isEnabled ? '批量启用失败' : '批量禁用失败'))
+    }
+  } catch (error) {
+    console.error(isEnabled ? '批量启用失败:' : '批量禁用失败:', error)
+    ElMessage.error(error.response?.data?.msg || (isEnabled ? '批量启用失败' : '批量禁用失败'))
+  }
+}
+
+// 批量启用
+const handleBatchEnable = async () => {
+  if (selectedStorages.value.length === 0) return
+  try {
+    await ElMessageBox.confirm(
+      `确定要启用选中的 ${selectedStorages.value.length} 个文件吗？`,
+      '批量启用',
+      {
+        confirmButtonText: '启用',
+        cancelButtonText: '取消',
+        type: 'success'
       }
-    })
-    ElMessage.success('批量启用成功')
-  }).catch(() => {})
+    )
+    await updateStorageItemsStatus(selectedStorages.value, true)
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量启用失败:', error)
+    }
+  }
 }
 
 // 批量禁用
-const handleBatchDisable = () => {
+const handleBatchDisable = async () => {
   if (selectedStorages.value.length === 0) return
-  ElMessageBox.confirm(
-    `确定要禁用选中的 ${selectedStorages.value.length} 个文件吗？`,
-    '批量禁用',
-    {
-      confirmButtonText: '禁用',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
-    tableData.value.forEach(item => {
-      if (selectedStorages.value.includes(item.id)) {
-        item.status = 'disabled'
+  try {
+    await ElMessageBox.confirm(
+      `确定要禁用选中的 ${selectedStorages.value.length} 个文件吗？`,
+      '批量禁用',
+      {
+        confirmButtonText: '禁用',
+        cancelButtonText: '取消',
+        type: 'warning'
       }
-    })
+    )
+    await updateStorageItemsStatus(selectedStorages.value, false)
     selectedStorages.value = []
-    ElMessage.success('批量禁用成功')
-  }).catch(() => {})
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量禁用失败:', error)
+    }
+  }
 }
 
 
