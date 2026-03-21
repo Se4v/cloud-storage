@@ -214,8 +214,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import {
   Search,
   User,
@@ -224,6 +225,19 @@ import {
   ArrowDown,
   Document
 } from '@element-plus/icons-vue'
+
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 // 查询表单
 const queryForm = reactive({
@@ -260,158 +274,84 @@ const getOperationTypeClass = (type) => {
   return operationTypeMap[type]?.class || 'bg-slate-50 text-slate-700 border-slate-200'
 }
 
-// 模拟数据
-const mockData = [
-  {
-    id: 1,
-    username: 'zhangsan',
-    operationType: 'LOGIN',
-    detail: '用户登录系统成功，IP: 192.168.1.100',
-    operationTime: '2026-03-11 14:32:18',
-    success: true
-  },
-  {
-    id: 2,
-    username: 'lisi',
-    operationType: 'UPLOAD',
-    detail: '上传文件 "项目文档.pdf" 到 /工作文件/',
-    operationTime: '2026-03-11 14:28:45',
-    success: true
-  },
-  {
-    id: 3,
-    username: 'wangwu',
-    operationType: 'DELETE',
-    detail: '删除文件夹 "/旧资料/2024" 及其包含的 15 个文件',
-    operationTime: '2026-03-11 14:15:22',
-    success: true
-  },
-  {
-    id: 4,
-    username: 'zhangsan',
-    operationType: 'SHARE',
-    detail: '创建分享链接，文件: "会议记录.docx"',
-    operationTime: '2026-03-11 13:58:07',
-    success: true
-  },
-  {
-    id: 5,
-    username: 'lisi',
-    operationType: 'DOWNLOAD',
-    detail: '下载文件 "设计稿_v2.psd"',
-    operationTime: '2026-03-11 13:45:33',
-    success: false
-  },
-  {
-    id: 6,
-    username: 'admin',
-    operationType: 'CREATE',
-    detail: '创建新用户 "zhaoliu"，分配角色：普通用户',
-    operationTime: '2026-03-11 12:30:15',
-    success: true
-  },
-  {
-    id: 7,
-    username: 'wangwu',
-    operationType: 'UPDATE',
-    detail: '修改个人资料：更新手机号',
-    operationTime: '2026-03-11 11:22:48',
-    success: true
-  },
-  {
-    id: 8,
-    username: 'zhangsan',
-    operationType: 'LOGOUT',
-    detail: '用户登出系统',
-    operationTime: '2026-03-11 10:15:36',
-    success: true
-  },
-  {
-    id: 9,
-    username: 'lisi',
-    operationType: 'LOGIN',
-    detail: '用户登录系统失败，原因：密码错误',
-    operationTime: '2026-03-11 09:45:12',
-    success: false
-  },
-  {
-    id: 10,
-    username: 'admin',
-    operationType: 'UPDATE',
-    detail: '修改系统设置：更新存储配额为 100GB',
-    operationTime: '2026-03-11 09:30:00',
-    success: true
-  }
-]
-
 // 表格数据
 const tableData = ref([])
 
 // 加载数据
-const loadData = () => {
-  // 模拟筛选
-  let result = [...mockData]
-  
-  if (queryForm.username) {
-    result = result.filter(item => item.username.includes(queryForm.username))
-  }
-  
-  if (queryForm.operationType) {
-    result = result.filter(item => item.operationType === queryForm.operationType)
-  }
-  
-  if (queryForm.success !== '') {
-    result = result.filter(item => item.success === queryForm.success)
-  }
-  
-  if (queryForm.timeRange && queryForm.timeRange.length === 2) {
-    const startTime = new Date(queryForm.timeRange[0]).getTime()
-    const endTime = new Date(queryForm.timeRange[1]).getTime()
-    result = result.filter(item => {
-      const itemTime = new Date(item.operationTime).getTime()
-      return itemTime >= startTime && itemTime <= endTime
+const loadData = async () => {
+  try {
+    // 构建查询参数
+    const params = {
+      page: currentPage.value,
+      size: pageSize.value
+    }
+    
+    if (queryForm.username) {
+      params.username = queryForm.username
+    }
+    
+    if (queryForm.operationType) {
+      params.operationType = queryForm.operationType
+    }
+    
+    if (queryForm.success !== '') {
+      params.success = queryForm.success
+    }
+    
+    if (queryForm.timeRange && queryForm.timeRange.length === 2) {
+      params.startTime = queryForm.timeRange[0]
+      params.endTime = queryForm.timeRange[1]
+    }
+    
+    const res = await axios.get(`${API_BASE_URL}/api/log/all`, {
+      ...getAuthConfig(),
+      params
     })
+    
+    if (res.data.code === 200) {
+      tableData.value = res.data.data || []
+      total.value = res.data.total || 0
+    } else {
+      ElMessage.error(res.data.msg || '获取日志列表失败')
+    }
+  } catch (error) {
+    console.error('获取日志列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取日志列表失败')
   }
-  
-  total.value = result.length
-  
-  // 分页
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  tableData.value = result.slice(start, end)
 }
 
-// 搜索
-const handleSearch = () => {
-  currentPage.value = 1
+// 页面加载时获取数据
+onMounted(() => {
   loadData()
-  ElMessage.success('查询成功')
+})
+
+// 搜索
+const handleSearch = async () => {
+  currentPage.value = 1
+  await loadData()
 }
 
 // 重置
-const handleReset = () => {
+const handleReset = async () => {
   queryForm.username = ''
   queryForm.operationType = ''
   queryForm.success = ''
   queryForm.timeRange = null
   currentPage.value = 1
-  loadData()
+  await loadData()
 }
 
 // 分页大小变化
-const handleSizeChange = (val) => {
+const handleSizeChange = async (val) => {
   pageSize.value = val
-  loadData()
+  await loadData()
 }
 
 // 页码变化
-const handleCurrentChange = (val) => {
+const handleCurrentChange = async (val) => {
   currentPage.value = val
-  loadData()
+  await loadData()
 }
-
-// 初始化加载
-loadData()
 </script>
 
 <style scoped>
