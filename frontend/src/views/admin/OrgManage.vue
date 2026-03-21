@@ -183,16 +183,20 @@
         </el-form-item>
 
         <el-form-item label="父节点" prop="parentId">
-          <el-tree-select
+          <el-select
               v-model="formData.parentId"
-              :data="treeData"
-              :props="defaultProps"
-              check-strictly
-              :render-after-expand="false"
               placeholder="请选择父节点（不选则为根节点）"
               class="w-full !rounded-lg"
               clearable
-          />
+          >
+            <el-option label="根节点" :value="null" />
+            <el-option
+                v-for="org in orgList"
+                :key="org.id"
+                :label="org.name"
+                :value="org.id"
+            />
+          </el-select>
         </el-form-item>
 
         <el-form-item label="空间配额" prop="storageQuota">
@@ -263,7 +267,6 @@ const formData = reactive({
   name: '',
   type: 'dept',
   parentId: null,
-  sort: 0,
   storageQuota: 10,
   adminName: ''
 })
@@ -273,52 +276,18 @@ const formRules = {
   type: [{ required: true, message: '请选择组织类型', trigger: 'change' }]
 }
 
-const defaultProps = {
-  children: 'children',
-  label: 'name',
-  value: 'id'
-}
+
 
 // 模拟数据
 const orgList = ref([
-  { id: 1, name: '总经办', type: 'company', parentId: null, parentName: null, createTime: '2024-01-15 10:00:00', sort: 1, storageQuota: 100, adminId: 1, adminName: '张三' },
-  { id: 2, name: '技术研发中心', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', sort: 2, storageQuota: 50, adminId: 2, adminName: '李四' },
-  { id: 3, name: '前端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', sort: 1, storageQuota: 20, adminId: null, adminName: null },
-  { id: 4, name: '后端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', sort: 2, storageQuota: 20, adminId: null, adminName: null },
-  { id: 5, name: '产品设计部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', sort: 3, storageQuota: 30, adminId: 3, adminName: '王五' },
-  { id: 6, name: 'UI设计组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', sort: 1, storageQuota: 10, adminId: null, adminName: null },
-  { id: 7, name: '用户体验组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', sort: 2, storageQuota: 10, adminId: null, adminName: null },
-  { id: 8, name: '市场运营部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', sort: 4, storageQuota: 40, adminId: 4, adminName: '赵六' },
-])
-
-// 树形数据（用于父节点选择）
-const treeData = ref([
-  {
-    id: 1,
-    name: '总经办',
-    children: [
-      {
-        id: 2,
-        name: '技术研发中心',
-        children: [
-          { id: 3, name: '前端开发部' },
-          { id: 4, name: '后端开发部' }
-        ]
-      },
-      {
-        id: 5,
-        name: '产品设计部',
-        children: [
-          { id: 6, name: 'UI设计组' },
-          { id: 7, name: '用户体验组' }
-        ]
-      },
-      {
-        id: 8,
-        name: '市场运营部'
-      }
-    ]
-  }
+  { id: 1, name: '总经办', type: 'company', parentId: null, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 100, adminId: 1, adminName: '张三' },
+  { id: 2, name: '技术研发中心', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00',storageQuota: 50, adminId: 2, adminName: '李四' },
+  { id: 3, name: '前端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 20, adminId: null, adminName: null },
+  { id: 4, name: '后端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 20, adminId: null, adminName: null },
+  { id: 5, name: '产品设计部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 30, adminId: 3, adminName: '王五' },
+  { id: 6, name: 'UI设计组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10, adminId: null, adminName: null },
+  { id: 7, name: '用户体验组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10, adminId: null, adminName: null },
+  { id: 8, name: '市场运营部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 40, adminId: 4, adminName: '赵六' },
 ])
 
 // 过滤后的列表
@@ -333,8 +302,12 @@ const filteredList = computed(() => {
 
 // 格式化存储配额显示
 const formatStorageQuota = (quota) => {
-  if (!quota || quota <= 0) return '0 GB'
-  return `${quota} GB`
+  if (quota === 0) return '0 B'
+  if (!quota) return '-'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(quota) / Math.log(k))
+  return parseFloat((quota / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // 类型标签映射

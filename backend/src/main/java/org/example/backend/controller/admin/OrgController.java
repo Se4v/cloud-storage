@@ -20,10 +20,8 @@ public class OrgController {
 
     @PostMapping("/create")
     public Result<Void> createNode(@RequestBody CreateNodeArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        orgService.createNode(args, userDetails.getUserId());
+        orgService.createNode(args);
         return Result.success();
     }
 
@@ -35,11 +33,7 @@ public class OrgController {
 
     @PostMapping("/update")
     public Result<Void> updateNode(@RequestBody UpdateNodeArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-
-        orgService.updateNode(args, userDetails.getUserId());
-
+        orgService.updateNode(args);
         return Result.success();
     }
 

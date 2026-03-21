@@ -10,12 +10,11 @@ import org.example.backend.model.args.UpdateNodeArgs;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.result.NodeDetailResult;
-import org.example.backend.model.view.NodeView;
+import org.example.backend.model.view.TreeView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,7 @@ public class OrgService {
 
     private static final int DELETED = 1;
 
-    public List<NodeView> getOrgTree(Long userId) {
+    public List<TreeView> getOrgTree(Long userId) {
         LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Member::getUserId, userId);
         List<Member> members = memberMapper.selectList(queryWrapper);
@@ -39,9 +38,9 @@ public class OrgService {
 
         List<Node> nodeList = nodeMapper.selectNodeWithParents(nodeIds);
 
-        List<NodeView> viewList = nodeList.stream()
+        List<TreeView> viewList = nodeList.stream()
                 .map(node -> {
-                    NodeView view = new NodeView();
+                    TreeView view = new TreeView();
 
                     view.setId(String.valueOf(node.getId()));
                     view.setLabel(node.getNodeName());
@@ -61,25 +60,25 @@ public class OrgService {
         return buildTree(viewList);
     }
 
-    private List<NodeView> buildTree(List<NodeView> flatList) {
+    private List<TreeView> buildTree(List<TreeView> flatList) {
         if (flatList == null || flatList.isEmpty()) {
             return List.of();
         }
 
         // 建立 ID -> 节点的映射表，用于快速查找
-        Map<String, NodeView> nodeMap = flatList.stream()
-                .collect(Collectors.toMap(NodeView::getId, node -> node));
+        Map<String, TreeView> nodeMap = flatList.stream()
+                .collect(Collectors.toMap(TreeView::getId, node -> node));
 
         // 2. 组装父子关系
-        List<NodeView> roots = new ArrayList<>();
+        List<TreeView> roots = new ArrayList<>();
 
-        for (NodeView node : flatList) {
+        for (TreeView node : flatList) {
             if (node.getParentId() == null || node.getParentId() == 0L) {
                 // 根节点（parent_id = 0）
                 roots.add(node);
             } else {
                 // 挂载到父节点下
-                NodeView parent = nodeMap.get(String.valueOf(node.getParentId()));
+                TreeView parent = nodeMap.get(String.valueOf(node.getParentId()));
                 if (parent != null) parent.getChildren().add(node);
                     // 父节点不存在（数据异常），作为根节点处理
                 else roots.add(node);
@@ -89,11 +88,8 @@ public class OrgService {
         return roots;
     }
 
-    /**
-     * 创建部门节点
-     */
     @Transactional
-    public void createNode(CreateNodeArgs args, Long userId) {
+    public void createNode(CreateNodeArgs args) {
         // 校验父节点是否存在（如果不是根节点）
         if (args.getParentId() != null && args.getParentId() > 0) {
             Node parentNode = nodeMapper.selectById(args.getParentId());
@@ -116,8 +112,6 @@ public class OrgService {
                 .nodeType(args.getType())
                 .parentId(args.getParentId())
                 .enabled(1)
-                .createdAt(LocalDateTime.now())
-                .creatorId(userId)
                 .build();
 
         int count = nodeMapper.insert(node);
@@ -162,7 +156,7 @@ public class OrgService {
     }
 
     @Transactional
-    public void updateNode(UpdateNodeArgs args, Long userId) {
+    public void updateNode(UpdateNodeArgs args) {
         if (args.getId() == null) {
             throw new BusinessException("节点ID不能为空");
         }
