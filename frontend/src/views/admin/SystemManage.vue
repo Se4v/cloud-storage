@@ -12,7 +12,6 @@
             </div>
             <div>
               <h2 class="text-base font-semibold text-slate-900">安全设置</h2>
-              <p class="text-xs text-slate-500">登录安全和密码策略配置</p>
             </div>
           </div>
 
@@ -74,7 +73,6 @@
             </div>
             <div>
               <h2 class="text-base font-semibold text-slate-900">存储设置</h2>
-              <p class="text-xs text-slate-500">存储空间和文件上传限制配置</p>
             </div>
           </div>
 
@@ -143,7 +141,7 @@
                     :style="{ width: form.storageWarningThreshold + '%' }"
                   ></div>
                 </div>
-                <span class="text-sm text-slate-600 w-24">
+                <span class="text-sm text-slate-600 w-28">
                   超过 {{ form.storageWarningThreshold }}% 时预警
                 </span>
               </div>
@@ -160,7 +158,6 @@
             </div>
             <div>
               <h2 class="text-base font-semibold text-slate-900">文件类型设置</h2>
-              <p class="text-xs text-slate-500">限制上传的文件类型黑名单</p>
             </div>
           </div>
 
@@ -210,7 +207,7 @@
                   type="button"
                   @click="addFileExt"
                   :disabled="!newFileExt.trim()"
-                  class="h-10 px-4 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1"
+                  class="h-10 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1"
                 >
                   <el-icon :size="16"><Plus /></el-icon>
                   添加
@@ -240,13 +237,6 @@
         <!-- 底部操作按钮 -->
         <div class="pt-6 border-t border-slate-200 flex items-center justify-end gap-3">
           <button
-            type="button"
-            @click="handleReset"
-            class="h-10 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-md text-sm font-medium transition-colors"
-          >
-            恢复默认
-          </button>
-          <button
             type="submit"
             :disabled="saving"
             class="h-10 px-5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2"
@@ -263,7 +253,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import {
   Lock,
   Box,
@@ -285,16 +275,6 @@ const form = reactive({
   storageWarningThreshold: 80,
   fileTypeBlacklist: ['.exe', '.bat', '.sh', '.php']
 })
-
-// 默认配置（用于恢复默认）
-const defaultConfig = {
-  loginFailThreshold: 5,
-  defaultPassword: '123456',
-  defaultStorageQuota: 10,
-  maxFileSize: 500,
-  storageWarningThreshold: 80,
-  fileTypeBlacklist: ['.exe', '.bat', '.sh', '.php']
-}
 
 // 常用危险文件扩展名
 const commonFileExts = ['exe', 'bat', 'sh', 'php', 'jsp', 'asp', 'dll', 'bin', 'cmd']
@@ -377,22 +357,6 @@ const handleSave = async () => {
     saving.value = false
     ElMessage.success('系统设置保存成功')
   }, 800)
-}
-
-// 恢复默认
-const handleReset = () => {
-  ElMessageBox.confirm(
-    '确定要恢复默认设置吗？当前配置将被覆盖。',
-    '恢复默认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
-    Object.assign(form, JSON.parse(JSON.stringify(defaultConfig)))
-    ElMessage.success('已恢复默认设置')
-  }).catch(() => {})
 }
 </script>
 
