@@ -85,7 +85,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="过期时间" width="180" align="center">
+        <el-table-column label="过期时间" width="220" align="center">
           <template #default="{ row }">
             <div class="flex flex-col items-center">
               <span class="text-sm text-slate-700">{{ formatDate(row.expireTime) }}</span>
@@ -209,7 +209,21 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 import { Plus, Delete, Edit, Bell, Search } from '@element-plus/icons-vue'
+
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 const loading = ref(false)
 const announcementList = ref([])
@@ -260,36 +274,16 @@ const rules = {
 const loadData = async () => {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    announcementList.value = [
-      {
-        id: 1,
-        title: '系统维护通知',
-        content: '尊敬的用户，我们将于本周六凌晨 2:00-6:00 进行系统升级维护，期间服务可能暂时不可用。',
-        expireTime: '2026-03-15 23:59:59'
-      },
-      {
-        id: 2,
-        title: '新功能上线：团队文件夹权限管理',
-        content: '现在您可以为团队文件夹设置更细粒度的权限控制，包括查看、编辑、下载等操作的独立权限设置。',
-        expireTime: '2026-04-01 23:59:59'
-      },
-      {
-        id: 3,
-        title: '存储空间扩容优惠活动',
-        content: '即日起至月底，升级专业版可享受双倍存储空间，原价 99 元/月，现仅需 49 元/月。',
-        expireTime: '2026-02-28 23:59:59'
-      },
-      {
-        id: 4,
-        title: '安全提醒：定期修改密码',
-        content: '为了保障您的账户安全，建议您每 90 天修改一次登录密码，并使用包含字母、数字和符号的强密码。',
-        expireTime: '2026-12-31 23:59:59'
-      }
-    ]
-    total.value = 4
+    const res = await axios.get(`${API_BASE_URL}/api/announcement/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      announcementList.value = res.data.data || []
+      total.value = announcementList.value.length
+    } else {
+      ElMessage.error(res.data.msg || '加载数据失败')
+    }
   } catch (error) {
-    ElMessage.error('加载数据失败')
+    console.error('加载数据失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载数据失败')
   } finally {
     loading.value = false
   }
@@ -345,13 +339,17 @@ const handleDelete = async (row) => {
           customClass: '!rounded-xl'
         }
     )
-    await new Promise(resolve => setTimeout(resolve, 300))
-    announcementList.value = announcementList.value.filter(item => item.id !== row.id)
-    total.value--
-    ElMessage.success('删除成功')
+    const res = await axios.post(`${API_BASE_URL}/api/announcement/delete`, { ids: [row.id] }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadData()
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
+    }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      console.error('删除失败:', error)
+      ElMessage.error(error.response?.data?.msg || '删除失败')
     }
   }
 }
@@ -375,13 +373,18 @@ const handleBatchDelete = async () => {
         }
     )
     const ids = selectedAnnouncements.value.map(item => item.id)
-    announcementList.value = announcementList.value.filter(item => !ids.includes(item.id))
-    total.value -= selectedAnnouncements.value.length
-    selectedAnnouncements.value = []
-    ElMessage.success('批量删除成功')
+    const res = await axios.post(`${API_BASE_URL}/api/announcement/delete`, { ids }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('批量删除成功')
+      selectedAnnouncements.value = []
+      await loadData()
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
+    }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      console.error('删除失败:', error)
+      ElMessage.error(error.response?.data?.msg || '删除失败')
     }
   }
 }
@@ -391,22 +394,39 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        await new Promise(resolve => setTimeout(resolve, 500))
         if (isEdit.value) {
-          const index = announcementList.value.findIndex(item => item.id === form.id)
-          if (index !== -1) {
-            announcementList.value[index] = { ...form }
+          const submitData = {
+            id: form.id,
+            title: form.title,
+            content: form.content,
+            expireTime: form.expireTime
           }
-          ElMessage.success('修改成功')
+          const res = await axios.post(`${API_BASE_URL}/api/announcement/update`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('修改成功')
+            dialogVisible.value = false
+            await loadData()
+          } else {
+            ElMessage.error(res.data.msg || '修改失败')
+          }
         } else {
-          const newId = Math.max(...announcementList.value.map(item => item.id), 0) + 1
-          announcementList.value.unshift({ ...form, id: newId })
-          total.value++
-          ElMessage.success('创建成功')
+          const submitData = {
+            title: form.title,
+            content: form.content,
+            expireTime: form.expireTime
+          }
+          const res = await axios.post(`${API_BASE_URL}/api/announcement/create`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('创建成功')
+            dialogVisible.value = false
+            await loadData()
+          } else {
+            ElMessage.error(res.data.msg || '创建失败')
+          }
         }
-        dialogVisible.value = false
       } catch (error) {
-        ElMessage.error(isEdit.value ? '修改失败' : '创建失败')
+        console.error(isEdit.value ? '修改失败:' : '创建失败:', error)
+        ElMessage.error(error.response?.data?.msg || (isEdit.value ? '修改失败' : '创建失败'))
       }
     }
   })
