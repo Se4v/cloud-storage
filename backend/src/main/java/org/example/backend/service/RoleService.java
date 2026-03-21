@@ -157,7 +157,7 @@ public class RoleService {
         // 处理permissionIds：null视为清空所有权限，转为空列表
         List<Long> targetPermissionIds = args.getPermissionIds() == null ? List.of() : args.getPermissionIds();
 
-        // 2. 查询该角色当前已绑定的权限
+        // 查询该角色当前已绑定的权限
         LambdaQueryWrapper<RolePermission> roleQuery = new LambdaQueryWrapper<>();
         roleQuery.eq(RolePermission::getRoleId, roleId);
         List<RolePermission> existingRolePermissions = rolePermissionMapper.selectList(roleQuery);
@@ -187,7 +187,7 @@ public class RoleService {
                                 .roleId(roleId)
                                 .permId(permissionId)
                                 .build())
-                    .collect(Collectors.toList());
+                    .toList();
             List<BatchResult> results = rolePermissionMapper.insert(addRolePermissions);
             int insertCount = results.stream()
                     .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
@@ -198,8 +198,7 @@ public class RoleService {
         // 删除权限关联
         if (!deletePermissionIds.isEmpty()) {
             LambdaQueryWrapper<RolePermission> deleteQuery = new LambdaQueryWrapper<>();
-            deleteQuery.eq(RolePermission::getRoleId, roleId)
-                    .in(RolePermission::getPermId, deletePermissionIds);
+            deleteQuery.eq(RolePermission::getRoleId, roleId).in(RolePermission::getPermId, deletePermissionIds);
             int deleteCount = rolePermissionMapper.delete(deleteQuery);
             if (deleteCount != deletePermissionIds.size()) throw new BusinessException("<UNK>");
         }

@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class AssignGlobalRoleArgs {
-    private Long id;
+    private Long userId;
     private List<Long> roleIds;
 }

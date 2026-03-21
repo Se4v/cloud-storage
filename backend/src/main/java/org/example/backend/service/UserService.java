@@ -17,10 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -159,23 +156,57 @@ public class UserService {
         return userViews;
     }
 
-    // TODO:逻辑需要修改
     @Transactional
     public void assignGlobalRole(AssignGlobalRoleArgs args) {
-        List<Long> roleIds = args.getRoleIds();
-        List<UserRole> userRoleList = new ArrayList<>();
-        for (Long roleId : roleIds) {
-            userRoleList.add(UserRole.builder()
-                            .userId(args.getId())
+        if (args == null) throw new BusinessException("角色分配参数不能为空");
+        Long userId = args.getUserId();
+        List<Long> targetRoleIds = args.getRoleIds() == null ? List.of() : args.getRoleIds() ;
+
+        // 查询该用户当前已绑定的角色
+        LambdaQueryWrapper<UserRole> userQuery = new LambdaQueryWrapper<>();
+        userQuery.eq(UserRole::getUserId, userId);
+        List<UserRole> existingUserRoles = userRoleMapper.selectList(userQuery);
+
+        // 提取已有的角色ID集合
+        Set<Long> existingRoleIds = existingUserRoles.stream()
+                .map(UserRole::getRoleId)
+                .collect(Collectors.toSet());
+        // 目标角色ID集合
+        Set<Long> targetRoleIdSet = targetRoleIds.stream()
+                .filter(id -> id != null && id > 0) // 过滤无效ID
+                .collect(Collectors.toSet());
+
+        // 计算需要新增的角色
+        Set<Long> addRoleIds = targetRoleIdSet.stream()
+                .filter(id -> !existingRoleIds.contains(id))
+                .collect(Collectors.toSet());
+        // 计算需要删除的角色
+        Set<Long> deleteRoleIds = existingRoleIds.stream()
+                .filter(id -> !targetRoleIdSet.contains(id))
+                .collect(Collectors.toSet());
+
+        // 新增角色关联
+        if (!addRoleIds.isEmpty()) {
+            List<UserRole> addUserRoles = addRoleIds.stream()
+                    .map(roleId -> UserRole.builder()
+                            .userId(userId)
                             .roleId(roleId)
-                            .build());
+                            .build())
+                    .toList();
+            List<BatchResult> results = userRoleMapper.insert(addUserRoles);
+            int insertCount = results.stream()
+                    .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
+                    .sum();
+            if (insertCount != addUserRoles.size()) throw new BusinessException("<UNK>");
         }
 
-        List<BatchResult> results = userRoleMapper.insert(userRoleList);
-        int insertCount = results.stream()
-                .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
-                .sum();
-        if (insertCount != roleIds.size()) throw new BusinessException("<UNK>");
+        // 删除角色关联
+        if (!deleteRoleIds.isEmpty()) {
+            LambdaQueryWrapper<UserRole> deleteQuery = new LambdaQueryWrapper<>();
+            deleteQuery.eq(UserRole::getUserId, userId).in(UserRole::getRoleId, deleteRoleIds);
+            int deleteCount = userRoleMapper.delete(deleteQuery);
+            if (deleteCount != deleteRoleIds.size()) throw new BusinessException("<UNK>");
+        }
     }
 
     @Transactional
