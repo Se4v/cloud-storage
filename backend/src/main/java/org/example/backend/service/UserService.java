@@ -213,7 +213,9 @@ public class UserService {
     public void resetPassword(Long userId) {
         // 查询用户
         LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(User::getId, userId);
+        userQuery.eq(User::getId, userId)
+                .eq(User::getDeleted, 0)
+                .eq(User::getEnabled, 1);
         User user = userMapper.selectOne(userQuery);
         if (user == null) throw new BusinessException("<UNK>");
 

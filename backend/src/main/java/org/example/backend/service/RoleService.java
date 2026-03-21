@@ -43,12 +43,12 @@ public class RoleService {
 
         // 校验角色编码是否重复
         LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Role::getCode, args.getCode());
+        queryWrapper.eq(Role::getCode, args.getCode()).eq(Role::getDeleted, 0);
         if (roleMapper.selectCount(queryWrapper) > 0) throw new BusinessException("角色编码已存在");
 
         // 校验角色名称是否重复
         LambdaQueryWrapper<Role> nameQuery = new LambdaQueryWrapper<>();
-        nameQuery.eq(Role::getName, args.getName());
+        nameQuery.eq(Role::getName, args.getName()).eq(Role::getDeleted, 0);
         if (roleMapper.selectCount(nameQuery) > 0) throw new BusinessException("角色名称已存在");
 
         // 创建角色
@@ -70,7 +70,7 @@ public class RoleService {
 
         // 查询组织角色是否被使用
         LambdaQueryWrapper<Member> memberQuery = new LambdaQueryWrapper<>();
-        memberQuery.in(Member::getRoleId, roleIds);
+        memberQuery.eq(Member::getDeleted, 0).in(Member::getRoleId, roleIds);
         long memberCount = memberMapper.selectCount(memberQuery);
         if (memberCount > 0) throw new BusinessException("部分组织角色仍被成员使用，无法删除");
 
