@@ -158,9 +158,9 @@ const permissionTypes = [
 
 const typeFilters = [
   { value: 'all', label: '全部' },
-  { value: 1, label: '菜单' },
-  { value: 2, label: '操作' },
-  { value: 3, label: '数据' }
+  { value: 1, label: '菜单', code: 'menu' },
+  { value: 2, label: '操作', code: 'operation' },
+  { value: 3, label: '数据', code: 'data' }
 ]
 
 // 权限数据
@@ -173,18 +173,20 @@ const currentType = ref('all')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-// 类型样式映射
+// 类型样式映射（支持数字和字符串）
 const getTypeStyle = (type) => {
   const styles = {
-    1: 'bg-blue-50 text-blue-700 border border-blue-200',
-    2: 'bg-amber-50 text-amber-700 border border-amber-200',
-    3: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    'menu': 'bg-blue-50 text-blue-700 border border-blue-200',
+    'operation': 'bg-amber-50 text-amber-700 border border-amber-200',
+    'data': 'bg-emerald-50 text-emerald-700 border border-emerald-200'
   }
   return styles[type] || 'bg-slate-100 text-slate-700'
 }
 
 const getTypeLabel = (type) => {
-  return permissionTypes.find(t => t.value === type)?.label || type
+  const byCode = permissionTypes.find(t => t.code === type)?.label
+  if (byCode) return byCode
+  return type
 }
 
 // 获取权限列表
@@ -223,7 +225,11 @@ const filteredPermissions = computed(() => {
   }
 
   if (currentType.value !== 'all') {
-    result = result.filter(p => p.type === currentType.value)
+    // 获取当前选中类型的所有可能值（数字和字符串）
+    const selectedType = permissionTypes.find(t => t.value === currentType.value)
+    if (selectedType) {
+      result = result.filter(p => p.type === selectedType.value || p.type === selectedType.code)
+    }
   }
 
   return result
