@@ -81,14 +81,7 @@
 
         <el-table-column label="角色" width="160">
           <template #default="{ row }">
-            <el-tag
-              :type="getRoleType(row.role)"
-              effect="light"
-              class="!rounded-md !border-0 !font-medium"
-              :class="getRoleClass(row.role)"
-            >
-              {{ row.roleName || '未分配' }}
-            </el-tag>
+            <span class="text-slate-700">{{ row.roleName || '未分配' }}</span>
           </template>
         </el-table-column>
 
@@ -142,10 +135,11 @@
       </div>
     </div>
 
-    <!-- 新建/编辑对话框 -->
+    <!-- 添加成员对话框 -->
     <el-dialog
+      v-if="!isEdit"
       v-model="dialogVisible"
-      :title="isEdit ? '编辑成员信息' : '添加成员'"
+      title="添加成员"
       width="500px"
       class="!rounded-xl"
       :close-on-click-modal="false"
@@ -157,34 +151,24 @@
         label-width="80px"
         class="mt-4"
       >
-        <el-form-item label="用户名" prop="username">
-          <el-input
-            v-model="formData.username"
-            placeholder="请输入用户名"
-            class="!rounded-lg"
-            :disabled="isEdit"
-          />
+        <el-form-item label="用户" prop="userId">
+          <el-select
+            v-model="formData.userId"
+            placeholder="请选择用户"
+            class="w-full !rounded-lg"
+            filterable
+            clearable
+          >
+            <el-option
+              v-for="user in allUsers"
+              :key="user.id"
+              :label="user.username + ' (' + user.realName + ')'"
+              :value="user.id"
+            />
+          </el-select>
         </el-form-item>
 
-        <el-form-item v-if="!isEdit" label="密码" prop="password">
-          <el-input
-            v-model="formData.password"
-            type="password"
-            placeholder="请输入密码"
-            class="!rounded-lg"
-            show-password
-          />
-        </el-form-item>
-
-        <el-form-item label="姓名" prop="realName">
-          <el-input
-            v-model="formData.realName"
-            placeholder="请输入真实姓名"
-            class="!rounded-lg"
-          />
-        </el-form-item>
-
-        <el-form-item label="部门" prop="departmentId">
+        <el-form-item label="部门" prop="nodeId">
           <el-select
             v-model="formData.nodeId"
             placeholder="请选择部门"
@@ -212,15 +196,7 @@
               :key="role.id"
               :label="role.name"
               :value="role.id"
-            >
-              <div class="flex items-center gap-2">
-                <span
-                  class="w-2 h-2 rounded-full"
-                  :class="getRoleDotClass(role.type)"
-                ></span>
-                <span>{{ role.name }}</span>
-              </div>
-            </el-option>
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -235,7 +211,74 @@
           </button>
           <button
             @click="handleSubmit"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+          >
+            确认
+          </button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑成员对话框 -->
+    <el-dialog
+      v-if="isEdit"
+      v-model="dialogVisible"
+      title="编辑成员信息"
+      width="500px"
+      class="!rounded-xl"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-width="80px"
+        class="mt-4"
+      >
+        <el-form-item label="部门" prop="nodeId">
+          <el-select
+            v-model="formData.nodeId"
+            placeholder="请选择部门"
+            class="w-full !rounded-lg"
+            clearable
+          >
+            <el-option
+              v-for="dept in orgNodeList"
+              :key="dept.id"
+              :label="dept.name"
+              :value="dept.id"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="角色" prop="roleId">
+          <el-select
+            v-model="formData.roleId"
+            placeholder="请选择角色"
+            class="w-full !rounded-lg"
+            clearable
+          >
+            <el-option
+              v-for="role in roleList"
+              :key="role.id"
+              :label="role.name"
+              :value="role.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button
+            @click="dialogVisible = false"
+            class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200"
+          >
+            取消
+          </button>
+          <button
+            @click="handleSubmit"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
           >
             确认
           </button>
@@ -270,31 +313,39 @@ const isEdit = ref(false)
 const formRef = ref(null)
 const formData = reactive({
   id: null,
-  username: '',
-  password: '',
-  realName: '',
+  userId: null,
   nodeId: null,
   roleId: null
 })
 
 const formRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
   nodeId: [{ required: true, message: '请选择部门', trigger: 'change' }],
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }]
 }
 
+// 模拟用户数据（用于选择）
+const allUsers = ref([
+  { id: 1, username: 'zhangsan', realName: '张三' },
+  { id: 2, username: 'lisi', realName: '李四' },
+  { id: 3, username: 'wangwu', realName: '王五' },
+  { id: 4, username: 'zhaoliu', realName: '赵六' },
+  { id: 5, username: 'qianqi', realName: '钱七' },
+  { id: 6, username: 'sunba', realName: '孙八' },
+  { id: 7, username: 'zhoujiu', realName: '周九' },
+  { id: 8, username: 'wushi', realName: '吴十' }
+])
+
 // 模拟成员数据
 const memberList = ref([
-  { id: 1, username: 'zhangsan', realName: '张三', nodeId: 2, nodeName: '技术研发中心', role: 'admin', roleName: '管理员' },
-  { id: 2, username: 'lisi', realName: '李四', nodeId: 2, nodeName: '技术研发中心', role: 'manager', roleName: '部门经理' },
-  { id: 3, username: 'wangwu', realName: '王五', nodeId: 3, nodeName: '前端开发部', role: 'member', roleName: '普通成员' },
-  { id: 4, username: 'zhaoliu', realName: '赵六', nodeId: 4, nodeName: '后端开发部', role: 'member', roleName: '普通成员' },
-  { id: 5, username: 'qianqi', realName: '钱七', nodeId: 5, nodeName: '产品设计部', role: 'manager', roleName: '部门经理' },
-  { id: 6, username: 'sunba', realName: '孙八', nodeId: 6, nodeName: 'UI设计组', role: 'member', roleName: '普通成员' },
-  { id: 7, username: 'zhoujiu', realName: '周九', nodeId: 7, nodeName: '用户体验组', role: 'member', roleName: '普通成员' },
-  { id: 8, username: 'wushi', realName: '吴十', nodeId: 8, nodeName: '市场运营部', role: 'admin', roleName: '管理员' }
+  { id: 1, username: 'zhangsan', realName: '张三', nodeName: '技术研发中心', roleName: '管理员' },
+  { id: 2, username: 'lisi', realName: '李四', nodeName: '技术研发中心', roleName: '部门经理' },
+  { id: 3, username: 'wangwu', realName: '王五', nodeName: '前端开发部', roleName: '普通成员' },
+  { id: 4, username: 'zhaoliu', realName: '赵六', nodeName: '后端开发部', roleName: '普通成员' },
+  { id: 5, username: 'qianqi', realName: '钱七', nodeName: '产品设计部', roleName: '部门经理' },
+  { id: 6, username: 'sunba', realName: '孙八', nodeName: 'UI设计组', roleName: '普通成员' },
+  { id: 7, username: 'zhoujiu', realName: '周九', nodeName: '用户体验组', roleName: '普通成员' },
+  { id: 8, username: 'wushi', realName: '吴十', nodeName: '市场运营部', roleName: '管理员' }
 ])
 
 // 部门列表（用于下拉选择）
@@ -311,10 +362,10 @@ const orgNodeList = ref([
 
 // 角色列表（用于下拉选择）
 const roleList = ref([
-  { id: 1, name: '管理员', type: 'admin' },
-  { id: 2, name: '部门经理', type: 'manager' },
-  { id: 3, name: '普通成员', type: 'member' },
-  { id: 4, name: '访客', type: 'guest' }
+  { id: 1, name: '管理员' },
+  { id: 2, name: '部门经理' },
+  { id: 3, name: '普通成员' },
+  { id: 4, name: '访客' }
 ])
 
 // 过滤后的列表
@@ -326,33 +377,6 @@ const filteredList = computed(() => {
     item.realName.toLowerCase().includes(query)
   )
 })
-
-// 角色标签样式
-const getRoleType = (role) => {
-  const map = { admin: 'danger', manager: 'warning', member: 'primary', guest: 'info' }
-  return map[role] || 'info'
-}
-
-const getRoleClass = (role) => {
-  const map = {
-    admin: '!bg-red-50 !text-red-700',
-    manager: '!bg-amber-50 !text-amber-700',
-    member: '!bg-blue-50 !text-blue-700',
-    guest: '!bg-slate-100 !text-slate-700'
-  }
-  return map[role] || '!bg-slate-100 !text-slate-700'
-}
-
-// 角色圆点样式
-const getRoleDotClass = (type) => {
-  const map = {
-    admin: 'bg-red-500',
-    manager: 'bg-amber-500',
-    member: 'bg-blue-500',
-    guest: 'bg-slate-400'
-  }
-  return map[type] || 'bg-slate-400'
-}
 
 // 表格选择
 const handleSelectionChange = (selection) => {
@@ -369,9 +393,7 @@ const handleCreate = () => {
   isEdit.value = false
   Object.assign(formData, {
     id: null,
-    username: '',
-    password: '',
-    realName: '',
+    userId: null,
     nodeId: null,
     roleId: null
   })
@@ -386,8 +408,6 @@ const handleEdit = (row) => {
   const role = roleList.value.find(r => r.name === row.roleName)
   Object.assign(formData, {
     id: row.id,
-    username: row.username,
-    realName: row.realName,
     nodeId: dept?.id || null,
     roleId: role?.id || null
   })
@@ -438,23 +458,19 @@ const handleSubmit = async () => {
         if (index > -1) {
           memberList.value[index] = {
             ...memberList.value[index],
-            realName: formData.realName,
-            departmentId: formData.nodeId,
-            departmentName: dept?.name || '',
-            role: role?.type || '',
+            nodeName: dept?.name || '',
             roleName: role?.name || ''
           }
           ElMessage.success('更新成功')
         }
       } else {
+        const selectedUser = allUsers.value.find(u => u.id === formData.userId)
         const newId = Math.max(...memberList.value.map(item => item.id)) + 1
         memberList.value.push({
           id: newId,
-          username: formData.username,
-          realName: formData.realName,
-          departmentId: formData.nodeId,
-          departmentName: dept?.name || '',
-          role: role?.type || '',
+          username: selectedUser?.username || '',
+          realName: selectedUser?.realName || '',
+          nodeName: dept?.name || '',
           roleName: role?.name || ''
         })
         ElMessage.success('创建成功')
