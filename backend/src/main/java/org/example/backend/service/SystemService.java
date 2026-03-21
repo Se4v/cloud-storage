@@ -32,6 +32,7 @@ public class SystemService {
 
     @Transactional
     public void updateSystemConfigs(UpdateSystemConfigArgs args) {
+        // 查询配置项
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
         configQuery.eq(Config::getIsEnabled, 1);
         List<Config> configList = configMapper.selectList(configQuery);
