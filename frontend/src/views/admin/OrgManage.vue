@@ -49,9 +49,8 @@
     </div>
 
     <!-- 主内容区 -->
-    <div class="flex-1 flex gap-6 min-h-0">
-      <!-- 左侧：组织列表 -->
-      <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+    <div class="flex-1 min-h-0">
+      <div class="h-full bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
         <el-table
             v-loading="loading"
             :data="filteredList"
@@ -146,42 +145,6 @@
           />
         </div>
       </div>
-
-      <!-- 右侧：组织架构树 -->
-      <div class="w-80 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden flex-shrink-0">
-        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-          <span class="font-semibold text-slate-800">组织架构树</span>
-          <el-button link type="primary" class="!text-xs" @click="expandAll">
-            {{ isExpandAll ? '收起全部' : '展开全部' }}
-          </el-button>
-        </div>
-
-        <div class="flex-1 overflow-auto p-2 custom-scrollbar">
-          <el-tree
-              ref="treeRef"
-              :data="treeData"
-              node-key="id"
-              :props="defaultProps"
-              :expand-on-click-node="false"
-              :default-expanded-keys="expandedKeys"
-              class="!bg-transparent"
-          >
-            <template #default="{ node, data }">
-              <div
-                  class="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-slate-100 cursor-pointer transition-colors group w-full"
-                  @click="handleTreeNodeClick(data)"
-              >
-                <el-icon class="text-slate-400 group-hover:text-slate-600">
-                  <FolderOpened v-if="node.expanded" />
-                  <Folder v-else />
-                </el-icon>
-                <span class="text-sm text-slate-700 font-medium truncate">{{ node.label }}</span>
-                <span class="text-xs text-slate-400 ml-auto">{{ data.children?.length || 0 }}</span>
-              </div>
-            </template>
-          </el-tree>
-        </div>
-      </div>
     </div>
 
     <!-- 新建/编辑对话框 -->
@@ -233,39 +196,23 @@
         </el-form-item>
 
         <el-form-item label="空间配额" prop="storageQuota">
-          <el-input-number
+          <el-input
               v-model="formData.storageQuota"
-              :min="1"
-              :max="1000"
+              placeholder="请输入空间配额（GB）"
               class="!rounded-lg"
-          />
-          <span class="text-xs text-slate-500 ml-2">GB</span>
+          >
+            <template #append>GB</template>
+          </el-input>
         </el-form-item>
 
-        <el-form-item label="组织管理员" prop="adminId">
-          <el-select
-              v-model="formData.adminId"
-              placeholder="请选择组织管理员"
-              class="w-full !rounded-lg"
-              clearable
-          >
-            <el-option
-                v-for="user in userList"
-                :key="user.id"
-                :label="user.name"
-                :value="user.id"
-            >
-              <div class="flex items-center gap-2">
-                <el-avatar :size="24" :src="user.avatar" class="!text-xs">
-                  {{ user.name.charAt(0) }}
-                </el-avatar>
-                <span>{{ user.name }}</span>
-                <span class="text-xs text-slate-400 ml-auto">{{ user.username }}</span>
-              </div>
-            </el-option>
-          </el-select>
-          <p class="text-xs text-slate-500 mt-1">不选则该组织暂无管理员</p>
+        <el-form-item label="组织管理员" prop="adminName">
+          <el-input
+              v-model="formData.adminName"
+              placeholder="请输入管理员用户名"
+              class="!rounded-lg"
+          />
         </el-form-item>
+
       </el-form>
 
       <template #footer>
@@ -296,12 +243,7 @@ import {
   Delete,
   Search,
   Edit,
-  OfficeBuilding,
-  House,
-  UserFilled,
-  Link,
-  Folder,
-  FolderOpened
+  Link
 } from '@element-plus/icons-vue'
 
 // 数据加载状态
@@ -311,9 +253,6 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const selectedRows = ref([])
-const treeRef = ref(null)
-const isExpandAll = ref(false)
-const expandedKeys = ref([])
 
 // 对话框状态
 const dialogVisible = ref(false)
@@ -326,7 +265,7 @@ const formData = reactive({
   parentId: null,
   sort: 0,
   storageQuota: 10,
-  adminId: null
+  adminName: ''
 })
 
 const formRules = {
@@ -352,6 +291,7 @@ const orgList = ref([
   { id: 8, name: '市场运营部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', sort: 4, storageQuota: 40, adminId: 4, adminName: '赵六' },
 ])
 
+// 树形数据（用于父节点选择）
 const treeData = ref([
   {
     id: 1,
@@ -391,16 +331,6 @@ const filteredList = computed(() => {
   )
 })
 
-// 用户列表（用于选择组织管理员）
-const userList = ref([
-  { id: 1, name: '张三', username: 'zhangsan', avatar: '' },
-  { id: 2, name: '李四', username: 'lisi', avatar: '' },
-  { id: 3, name: '王五', username: 'wangwu', avatar: '' },
-  { id: 4, name: '赵六', username: 'zhaoliu', avatar: '' },
-  { id: 5, name: '钱七', username: 'qianqi', avatar: '' },
-  { id: 6, name: '孙八', username: 'sunba', avatar: '' }
-])
-
 // 格式化存储配额显示
 const formatStorageQuota = (quota) => {
   if (!quota || quota <= 0) return '0 GB'
@@ -437,34 +367,6 @@ const handleSearch = () => {
   currentPage.value = 1
 }
 
-// 树操作
-const expandAll = () => {
-  isExpandAll.value = !isExpandAll.value
-  if (isExpandAll.value) {
-    expandedKeys.value = getAllIds(treeData.value)
-  } else {
-    expandedKeys.value = []
-  }
-}
-
-const getAllIds = (data) => {
-  const ids = []
-  const traverse = (list) => {
-    list.forEach(item => {
-      ids.push(item.id)
-      if (item.children?.length) traverse(item.children)
-    })
-  }
-  traverse(data)
-  return ids
-}
-
-const handleTreeNodeClick = (data) => {
-  // 点击树节点筛选左侧列表
-  searchQuery.value = data.name
-  handleSearch()
-}
-
 // 增删改查操作
 const handleCreate = () => {
   isEdit.value = false
@@ -475,7 +377,7 @@ const handleCreate = () => {
     parentId: null,
     sort: 0,
     storageQuota: 10,
-    adminId: null
+    adminName: ''
   })
   dialogVisible.value = true
 }
@@ -519,7 +421,6 @@ const handleSubmit = async () => {
   if (!formRef.value) return
   await formRef.value.validate((valid) => {
     if (valid) {
-      const admin = userList.value.find(item => item.id === formData.adminId)
       if (isEdit.value) {
         const index = orgList.value.findIndex(item => item.id === formData.id)
         if (index > -1) {
@@ -527,8 +428,7 @@ const handleSubmit = async () => {
           orgList.value[index] = {
             ...orgList.value[index],
             ...formData,
-            parentName: parent?.name || null,
-            adminName: admin?.name || null
+            parentName: parent?.name || null
           }
           ElMessage.success('更新成功')
         }
@@ -539,7 +439,6 @@ const handleSubmit = async () => {
           ...formData,
           id: newId,
           parentName: parent?.name || null,
-          adminName: admin?.name || null,
           createTime: new Date().toLocaleString()
         })
         ElMessage.success('创建成功')
