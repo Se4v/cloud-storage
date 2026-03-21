@@ -75,7 +75,8 @@ public class MemberService {
         if (memberIds == null) throw new BusinessException("");
 
         LambdaUpdateWrapper<Member> memberUpdate = new LambdaUpdateWrapper<>();
-        memberUpdate.in(Member::getId, memberIds);
+        memberUpdate.set(Member::getDeleted, 1)
+                .in(Member::getId, memberIds);
         int memberDeleteCount = memberMapper.update(memberUpdate);
         if (memberDeleteCount != memberIds.size()) throw new BusinessException("<UNK>");
     }

@@ -40,14 +40,12 @@ public class AnnouncementController {
         List<Notice> results = noticeService.listAllNotices();
 
         List<NoticeView> noticeViews = results.stream()
-                .map(result -> {
-                    return NoticeView.builder()
-                            .noticeId(String.valueOf(result.getId()))
-                            .title(result.getTitle())
-                            .content(result.getContent())
-                            .expiredAt(String.valueOf(result.getExpiredAt()))
-                            .build();
-                })
+                .map(result -> NoticeView.builder()
+                        .noticeId(String.valueOf(result.getId()))
+                        .title(result.getTitle())
+                        .content(result.getContent())
+                        .expiredAt(String.valueOf(result.getExpiredAt()))
+                        .build())
                 .toList();
 
         return Result.success("", noticeViews);
