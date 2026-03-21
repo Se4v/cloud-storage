@@ -295,7 +295,7 @@ const handleCurrentChange = (val) => {
 const updateStorageItemsStatus = async (ids, isEnabled) => {
   try {
     const submitData = {
-      ids: ids,
+      storageIds: ids,
       isEnabled: isEnabled
     }
     const res = await axios.post(`${API_BASE_URL}/api/storage/update`, submitData, getAuthConfig())
