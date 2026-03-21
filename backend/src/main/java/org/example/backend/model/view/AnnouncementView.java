@@ -5,10 +5,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public class NoticeView {
+public class AnnouncementView {
     private Long id;
     private String title;
     private String content;
     private String expiredTime;
-    private String createdTime;
 }

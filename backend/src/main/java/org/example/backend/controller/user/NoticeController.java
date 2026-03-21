@@ -2,7 +2,6 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
-import org.example.backend.model.args.CreateNoticeArgs;
 import org.example.backend.model.entity.Notice;
 import org.example.backend.model.view.NoticeView;
 import org.example.backend.service.NoticeService;

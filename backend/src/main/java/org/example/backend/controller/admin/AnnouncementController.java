@@ -1,53 +1,57 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.CreateNoticeArgs;
-import org.example.backend.model.args.UpdateNoticeArgs;
+import org.example.backend.model.args.CreateAnnouncementArgs;
+import org.example.backend.model.args.DeleteAnnouncementArgs;
+import org.example.backend.model.args.UpdateAnnouncementArgs;
 import org.example.backend.model.entity.Notice;
-import org.example.backend.model.view.NoticeView;
-import org.example.backend.service.NoticeService;
+import org.example.backend.model.view.AnnouncementView;
+import org.example.backend.service.AnnouncementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/announcement")
 public class AnnouncementController {
     @Autowired
-    private NoticeService noticeService;
+    private AnnouncementService announcementService;
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @PostMapping("/create")
-    public Result<Void> createNotice(@RequestBody CreateNoticeArgs args) {
-        noticeService.createNotice(args);
+    public Result<Void> createAnnouncement(@RequestBody CreateAnnouncementArgs args) {
+        announcementService.createAnnouncement(args);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteNotices(@RequestBody List<Long> noticeIds) {
-        noticeService.deleteNotices(noticeIds);
+    public Result<Void> deleteAnnouncements(@RequestBody DeleteAnnouncementArgs args) {
+        announcementService.deleteAnnouncement(args);
         return Result.success();
     }
 
     @PostMapping("/update")
-    public Result<Void> updateNotice(@RequestBody UpdateNoticeArgs args) {
-        noticeService.updateNotice(args);
+    public Result<Void> updateAnnouncement(@RequestBody UpdateAnnouncementArgs args) {
+        announcementService.updateAnnouncement(args);
         return Result.success();
     }
 
     @GetMapping("/all")
-    public Result<List<NoticeView>> listAllNotices() {
-        List<Notice> results = noticeService.listAllNotices();
+    public Result<List<AnnouncementView>> listAllAnnouncements() {
+        List<Notice> announcementList = announcementService.listAllAnnouncement();
 
-        List<NoticeView> noticeViews = results.stream()
-                .map(result -> NoticeView.builder()
-                        .noticeId(String.valueOf(result.getId()))
-                        .title(result.getTitle())
-                        .content(result.getContent())
-                        .expiredAt(String.valueOf(result.getExpiredAt()))
+        List<AnnouncementView> announcementViews = announcementList.stream()
+                .map(announcement -> AnnouncementView.builder()
+                        .id(announcement.getId())
+                        .title(announcement.getTitle())
+                        .content(announcement.getContent())
+                        .expiredTime(announcement.getExpiredAt().format(formatter))
                         .build())
                 .toList();
 
-        return Result.success("", noticeViews);
+        return Result.success("", announcementViews);
     }
 }

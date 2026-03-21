@@ -7,7 +7,7 @@ import Links from "@/views/Links.vue";
 import Profile from '@/views/Profile.vue';
 import Recovery from "@/views/Recovery.vue";
 import AdminLayout from "@/components/AdminLayout.vue";
-import NoticeManage from "@/views/admin/NoticeManage.vue";
+import AnnouncementManage from "@/views/admin/AnnouncementManage.vue";
 import UserManage from "@/views/admin/UserManage.vue";
 import PermissionManage from "@/views/admin/PermissionManage.vue";
 import RoleManage from "@/views/admin/RoleManage.vue";
@@ -64,9 +64,9 @@ const routes = [
         component: AdminLayout,
         children: [
             {
-                path: 'notice',
-                name: 'NoticeManage',
-                component: NoticeManage
+                path: 'announcement',
+                name: 'AnnouncementManage',
+                component: AnnouncementManage
             },
             {
                 path: 'user',
