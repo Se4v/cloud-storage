@@ -280,8 +280,9 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 import {
   Plus,
   Delete,
@@ -289,6 +290,19 @@ import {
   Edit,
   OfficeBuilding
 } from '@element-plus/icons-vue'
+
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 // 数据加载状态
 const loading = ref(false)
@@ -315,37 +329,60 @@ const formRules = {
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }]
 }
 
-// 模拟成员数据
-const memberList = ref([
-  { id: 1, username: 'zhangsan', realName: '张三', nodeName: '技术研发中心', roleName: '管理员' },
-  { id: 2, username: 'lisi', realName: '李四', nodeName: '技术研发中心', roleName: '部门经理' },
-  { id: 3, username: 'wangwu', realName: '王五', nodeName: '前端开发部', roleName: '普通成员' },
-  { id: 4, username: 'zhaoliu', realName: '赵六', nodeName: '后端开发部', roleName: '普通成员' },
-  { id: 5, username: 'qianqi', realName: '钱七', nodeName: '产品设计部', roleName: '部门经理' },
-  { id: 6, username: 'sunba', realName: '孙八', nodeName: 'UI设计组', roleName: '普通成员' },
-  { id: 7, username: 'zhoujiu', realName: '周九', nodeName: '用户体验组', roleName: '普通成员' },
-  { id: 8, username: 'wushi', realName: '吴十', nodeName: '市场运营部', roleName: '管理员' }
-])
+// 成员列表
+const memberList = ref([])
 
 // 部门列表（用于下拉选择）
-const orgNodeList = ref([
-  { id: 1, name: '总经办' },
-  { id: 2, name: '技术研发中心' },
-  { id: 3, name: '前端开发部' },
-  { id: 4, name: '后端开发部' },
-  { id: 5, name: '产品设计部' },
-  { id: 6, name: 'UI设计组' },
-  { id: 7, name: '用户体验组' },
-  { id: 8, name: '市场运营部' }
-])
+const orgNodeList = ref([])
 
 // 角色列表（用于下拉选择）
-const roleList = ref([
-  { id: 1, name: '管理员' },
-  { id: 2, name: '部门经理' },
-  { id: 3, name: '普通成员' },
-  { id: 4, name: '访客' }
-])
+const roleList = ref([])
+
+// 加载成员列表
+const loadMemberList = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/member/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      memberList.value = res.data.data || []
+      total.value = memberList.value.length
+    } else {
+      ElMessage.error(res.data.msg || '获取成员列表失败')
+    }
+  } catch (error) {
+    console.error('获取成员列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取成员列表失败')
+  }
+}
+
+// 加载部门列表
+const loadOrgNodeList = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/member/org`, getAuthConfig())
+    if (res.data.code === 200) {
+      orgNodeList.value = res.data.data || []
+    } else {
+      ElMessage.error(res.data.msg || '获取部门列表失败')
+    }
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取部门列表失败')
+  }
+}
+
+// 加载角色列表
+const loadRoleList = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/member/role`, getAuthConfig())
+    if (res.data.code === 200) {
+      roleList.value = res.data.data || []
+    } else {
+      ElMessage.error(res.data.msg || '获取角色列表失败')
+    }
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+    ElMessage.error(error.response?.data?.msg || '获取角色列表失败')
+  }
+}
 
 // 过滤后的列表
 const filteredList = computed(() => {
@@ -368,7 +405,7 @@ const handleSearch = () => {
 }
 
 // 打开创建对话框
-const handleCreate = () => {
+const handleCreate = async () => {
   isEdit.value = false
   Object.assign(formData, {
     id: null,
@@ -376,12 +413,16 @@ const handleCreate = () => {
     nodeId: null,
     roleId: null
   })
+  // 加载部门和角色列表
+  await Promise.all([loadOrgNodeList(), loadRoleList()])
   dialogVisible.value = true
 }
 
 // 打开编辑对话框
-const handleEdit = (row) => {
+const handleEdit = async (row) => {
   isEdit.value = true
+  // 加载部门和角色列表
+  await Promise.all([loadOrgNodeList(), loadRoleList()])
   // 查找对应的部门和角色ID
   const dept = orgNodeList.value.find(d => d.name === row.nodeName)
   const role = roleList.value.find(r => r.name === row.roleName)
@@ -394,11 +435,18 @@ const handleEdit = (row) => {
 }
 
 // 删除单个成员
-const handleDelete = (row) => {
-  const index = memberList.value.findIndex(item => item.id === row.id)
-  if (index > -1) {
-    memberList.value.splice(index, 1)
-    ElMessage.success('删除成功')
+const handleDelete = async (row) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/member/delete`, { memberIds: [row.id] }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadMemberList()
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除成员失败:', error)
+    ElMessage.error(error.response?.data?.msg || '删除失败')
   }
 }
 
@@ -416,58 +464,78 @@ const handleBatchDelete = async () => {
       }
     )
     const ids = selectedRows.value.map(row => row.id)
-    memberList.value = memberList.value.filter(item => !ids.includes(item.id))
-    selectedRows.value = []
-    ElMessage.success('批量删除成功')
-  } catch {
-    // 取消删除
+    const res = await axios.post(`${API_BASE_URL}/api/member/delete`, { memberIds: ids }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('批量删除成功')
+      selectedRows.value = []
+      await loadMemberList()
+    } else {
+      ElMessage.error(res.data.msg || '批量删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error(error.response?.data?.msg || '批量删除失败')
+    }
   }
 }
 
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate((valid) => {
+  await formRef.value.validate(async (valid) => {
     if (valid) {
-      const dept = orgNodeList.value.find(d => d.id === formData.nodeId)
-      const role = roleList.value.find(r => r.id === formData.roleId)
-      
-      if (isEdit.value) {
-        const index = memberList.value.findIndex(item => item.id === formData.id)
-        if (index > -1) {
-          memberList.value[index] = {
-            ...memberList.value[index],
-            nodeName: dept?.name || '',
-            roleName: role?.name || ''
+      try {
+        if (isEdit.value) {
+          // 更新成员
+          const submitData = {
+            memberId: formData.id,
+            nodeId: formData.nodeId,
+            roleId: formData.roleId
           }
-          ElMessage.success('更新成功')
+          const res = await axios.post(`${API_BASE_URL}/api/member/update`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('更新成功')
+            dialogVisible.value = false
+            await loadMemberList()
+          } else {
+            ElMessage.error(res.data.msg || '更新失败')
+          }
+        } else {
+          // 创建成员
+          const submitData = {
+            username: formData.username,
+            nodeId: formData.nodeId,
+            roleId: formData.roleId
+          }
+          const res = await axios.post(`${API_BASE_URL}/api/member/create`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('创建成功')
+            dialogVisible.value = false
+            await loadMemberList()
+          } else {
+            ElMessage.error(res.data.msg || '创建失败')
+          }
         }
-      } else {
-        const newId = Math.max(...memberList.value.map(item => item.id)) + 1
-        memberList.value.push({
-          id: newId,
-          username: formData.username,
-          realName: '',
-          nodeName: dept?.name || '',
-          roleName: role?.name || ''
-        })
-        ElMessage.success('创建成功')
+      } catch (error) {
+        console.error(isEdit.value ? '更新成员失败:' : '创建成员失败:', error)
+        ElMessage.error(error.response?.data?.msg || (isEdit.value ? '更新失败' : '创建失败'))
       }
-      dialogVisible.value = false
     }
   })
 }
 
 // 初始化加载数据
-const loadData = () => {
+const loadData = async () => {
   loading.value = true
-  setTimeout(() => {
-    total.value = memberList.value.length
-    loading.value = false
-  }, 500)
+  await loadMemberList()
+  loading.value = false
 }
 
-loadData()
+// 页面加载时获取数据
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped>
