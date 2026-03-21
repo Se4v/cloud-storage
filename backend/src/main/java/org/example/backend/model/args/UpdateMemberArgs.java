@@ -3,8 +3,8 @@ package org.example.backend.model.args;
 import lombok.Data;
 
 @Data
-public class CreateMemberArgs {
-    private String username;
+public class UpdateMemberArgs {
+    private Long memberId;
     private Long nodeId;
     private Long roleId;
 }

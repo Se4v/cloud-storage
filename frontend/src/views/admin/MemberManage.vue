@@ -151,21 +151,12 @@
         label-width="80px"
         class="mt-4"
       >
-        <el-form-item label="用户" prop="userId">
-          <el-select
-            v-model="formData.userId"
-            placeholder="请选择用户"
-            class="w-full !rounded-lg"
-            filterable
-            clearable
-          >
-            <el-option
-              v-for="user in allUsers"
-              :key="user.id"
-              :label="user.username + ' (' + user.realName + ')'"
-              :value="user.id"
-            />
-          </el-select>
+        <el-form-item label="用户名" prop="username">
+          <el-input
+            v-model="formData.username"
+            placeholder="请输入用户名"
+            class="!rounded-lg"
+          />
         </el-form-item>
 
         <el-form-item label="部门" prop="nodeId">
@@ -313,28 +304,16 @@ const isEdit = ref(false)
 const formRef = ref(null)
 const formData = reactive({
   id: null,
-  userId: null,
+  username: '',
   nodeId: null,
   roleId: null
 })
 
 const formRules = {
-  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   nodeId: [{ required: true, message: '请选择部门', trigger: 'change' }],
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }]
 }
-
-// 模拟用户数据（用于选择）
-const allUsers = ref([
-  { id: 1, username: 'zhangsan', realName: '张三' },
-  { id: 2, username: 'lisi', realName: '李四' },
-  { id: 3, username: 'wangwu', realName: '王五' },
-  { id: 4, username: 'zhaoliu', realName: '赵六' },
-  { id: 5, username: 'qianqi', realName: '钱七' },
-  { id: 6, username: 'sunba', realName: '孙八' },
-  { id: 7, username: 'zhoujiu', realName: '周九' },
-  { id: 8, username: 'wushi', realName: '吴十' }
-])
 
 // 模拟成员数据
 const memberList = ref([
@@ -393,7 +372,7 @@ const handleCreate = () => {
   isEdit.value = false
   Object.assign(formData, {
     id: null,
-    userId: null,
+    username: '',
     nodeId: null,
     roleId: null
   })
@@ -464,12 +443,11 @@ const handleSubmit = async () => {
           ElMessage.success('更新成功')
         }
       } else {
-        const selectedUser = allUsers.value.find(u => u.id === formData.userId)
         const newId = Math.max(...memberList.value.map(item => item.id)) + 1
         memberList.value.push({
           id: newId,
-          username: selectedUser?.username || '',
-          realName: selectedUser?.realName || '',
+          username: formData.username,
+          realName: '',
           nodeName: dept?.name || '',
           roleName: role?.name || ''
         })
