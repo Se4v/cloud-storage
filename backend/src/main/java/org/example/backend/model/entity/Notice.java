@@ -38,11 +38,11 @@ public class Notice implements Serializable {
 
     /** 是否已读: 0-未读; 1-已读 */
     @TableField("is_read")
-    private Integer read;
+    private Integer isRead;
 
     /** 是否删除: 0-未删除; 1-已删除 */
     @TableField("is_deleted")
-    private Integer deleted;
+    private Integer isDeleted;
 
     /** 过期时间 */
     @TableField("expired_at")

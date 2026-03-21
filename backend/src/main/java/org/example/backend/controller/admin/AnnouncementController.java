@@ -10,7 +10,6 @@ import org.example.backend.service.AnnouncementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -18,8 +17,6 @@ import java.util.List;
 public class AnnouncementController {
     @Autowired
     private AnnouncementService announcementService;
-
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @PostMapping("/create")
     public Result<Void> createAnnouncement(@RequestBody CreateAnnouncementArgs args) {
@@ -48,7 +45,7 @@ public class AnnouncementController {
                         .id(announcement.getId())
                         .title(announcement.getTitle())
                         .content(announcement.getContent())
-                        .expiredTime(announcement.getExpiredAt().format(formatter))
+                        .expireTime(announcement.getExpiredAt())
                         .build())
                 .toList();
 

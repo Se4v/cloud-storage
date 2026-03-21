@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -17,6 +18,8 @@ import java.util.List;
 public class NoticeController {
     @Autowired
     private NoticeService noticeService;
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @PostMapping("/unread")
     public Result<List<NoticeView>> listUnreadAlerts() {
@@ -27,10 +30,10 @@ public class NoticeController {
 
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> NoticeView.builder()
-                        .noticeId(String.valueOf(result.getId()))
+                        .id(result.getId())
                         .title(result.getTitle())
                         .content(result.getContent())
-                        .createdAt(String.valueOf(result.getCreatedAt()))
+                        .createdTime(result.getCreatedAt().format(formatter))
                         .build())
                 .toList();
 
@@ -43,10 +46,10 @@ public class NoticeController {
 
         List<NoticeView> noticeViews = results.stream()
                 .map(result -> NoticeView.builder()
-                        .noticeId(String.valueOf(result.getId()))
+                        .id(result.getId())
                         .title(result.getTitle())
                         .content(result.getContent())
-                        .createdAt(String.valueOf(result.getCreatedAt()))
+                        .createdTime(result.getCreatedAt().format(formatter))
                         .build())
                 .toList();
 

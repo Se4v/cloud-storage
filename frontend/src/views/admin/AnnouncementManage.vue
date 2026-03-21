@@ -88,8 +88,7 @@
         <el-table-column label="过期时间" width="220" align="center">
           <template #default="{ row }">
             <div class="flex flex-col items-center">
-              <span class="text-sm text-slate-700">{{ formatDate(row.expireTime) }}</span>
-              <span class="text-xs text-slate-400 mt-0.5">{{ formatTime(row.expireTime) }}</span>
+              <span class="text-sm text-slate-700">{{ row.expireTime }}</span>
             </div>
           </template>
         </el-table-column>
@@ -311,16 +310,6 @@ const isExpired = (expireTime) => {
   return new Date(expireTime) < new Date()
 }
 
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
-}
-
-const formatTime = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-}
-
 const handleSelectionChange = (selection) => {
   selectedAnnouncements.value = selection
 }
@@ -357,7 +346,7 @@ const handleDelete = async (row) => {
           customClass: '!rounded-xl'
         }
     )
-    const res = await axios.post(`${API_BASE_URL}/api/announcement/delete`, { ids: [row.id] }, getAuthConfig())
+    const res = await axios.post(`${API_BASE_URL}/api/announcement/delete`, { announcementIds: [row.id] }, getAuthConfig())
     if (res.data.code === 200) {
       ElMessage.success('删除成功')
       await loadData()

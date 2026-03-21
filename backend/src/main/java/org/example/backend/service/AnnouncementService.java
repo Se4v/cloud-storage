@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,7 +28,7 @@ public class AnnouncementService {
                 .title(args.getTitle())
                 .content(args.getContent())
                 .type(1)
-                .expiredAt(LocalDateTime.now().plusDays(15))
+                .expiredAt(args.getExpireTime())
                 .build();
 
         int count = noticeMapper.insert(notice);
@@ -43,7 +42,7 @@ public class AnnouncementService {
 
         LambdaUpdateWrapper<Notice> noticeUpdate = new LambdaUpdateWrapper<>();
         noticeUpdate.in(Notice::getId, args.getAnnouncementIds())
-                .set(Notice::getDeleted, 1);
+                .set(Notice::getIsDeleted, 1);
         int count = noticeMapper.update(noticeUpdate);
         if (count != args.getAnnouncementIds().size()) throw new BusinessException("<UNK>");
     }
@@ -55,7 +54,7 @@ public class AnnouncementService {
         LambdaUpdateWrapper<Notice> noticeUpdate = new LambdaUpdateWrapper<>();
         noticeUpdate.set(args.getTitle() != null, Notice::getTitle, args.getTitle())
                 .set(args.getContent() != null, Notice::getContent, args.getContent())
-                .set(args.getExpiredTime() != null, Notice::getExpiredAt, LocalDateTime.parse(args.getExpiredTime()))
+                .set(args.getExpireTime() != null, Notice::getExpiredAt, args.getExpireTime())
                 .eq(Notice::getId, args.getId());
 
         int count = noticeMapper.update(noticeUpdate);
@@ -66,7 +65,7 @@ public class AnnouncementService {
         LambdaQueryWrapper<Notice> noticeQuery = new LambdaQueryWrapper<>();
         noticeQuery.eq(Notice::getTargetId, 0)
                 .eq(Notice::getType, 1)
-                .eq(Notice::getDeleted, 0);
+                .eq(Notice::getIsDeleted, 0);
 
         return noticeMapper.selectList(noticeQuery);
     }

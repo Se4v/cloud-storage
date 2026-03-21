@@ -4,9 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.NoticeMapper;
-import org.example.backend.model.args.UpdateAnnouncementArgs;
 import org.example.backend.model.entity.Notice;
-import org.example.backend.model.args.CreateAnnouncementArgs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +27,7 @@ public class NoticeService {
     public List<Notice> listUnreadAlerts(Long userId) {
         LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Notice::getTargetId, userId)
-                .eq(Notice::getRead, UNREAD);
+                .eq(Notice::getIsRead, UNREAD);
 
         return noticeMapper.selectList(queryWrapper);
     }
@@ -38,7 +36,7 @@ public class NoticeService {
         LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Notice::getTargetId, ALL_USER)
                 .eq(Notice::getType, NOTICE)
-                .eq(Notice::getDeleted, UNDELETED)
+                .eq(Notice::getIsDeleted, UNDELETED)
                 .gt(Notice::getExpiredAt, LocalDateTime.now());
 
         return noticeMapper.selectList(queryWrapper);
