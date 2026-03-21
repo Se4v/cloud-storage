@@ -118,6 +118,24 @@
             </div>
           </template>
         </el-table-column>
+
+        <!-- 空状态 -->
+        <template #empty>
+          <div class="py-12 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <el-icon :size="32" class="text-slate-400"><Bell /></el-icon>
+            </div>
+            <h3 class="text-sm font-medium text-slate-900 mb-1">暂无公告数据</h3>
+            <p class="text-sm text-slate-500 mb-4">开始创建你的第一条公告</p>
+            <button
+                @click="handleCreate"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+            >
+              <el-icon :size="16"><Plus /></el-icon>
+              新建公告
+            </button>
+          </div>
+        </template>
       </el-table>
 
       <!-- 分页 -->
