@@ -74,7 +74,7 @@
           <template #default="{ row }">
             <div class="flex items-center gap-2 text-slate-600">
               <el-icon class="text-slate-400"><OfficeBuilding /></el-icon>
-              <span>{{ row.departmentName || '未分配' }}</span>
+              <span>{{ row.nodeName || '未分配' }}</span>
             </div>
           </template>
         </el-table-column>
@@ -186,13 +186,13 @@
 
         <el-form-item label="部门" prop="departmentId">
           <el-select
-            v-model="formData.departmentId"
+            v-model="formData.nodeId"
             placeholder="请选择部门"
             class="w-full !rounded-lg"
             clearable
           >
             <el-option
-              v-for="dept in departmentList"
+              v-for="dept in orgNodeList"
               :key="dept.id"
               :label="dept.name"
               :value="dept.id"
@@ -273,7 +273,7 @@ const formData = reactive({
   username: '',
   password: '',
   realName: '',
-  departmentId: null,
+  nodeId: null,
   roleId: null
 })
 
@@ -281,24 +281,24 @@ const formRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
   realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  departmentId: [{ required: true, message: '请选择部门', trigger: 'change' }],
+  nodeId: [{ required: true, message: '请选择部门', trigger: 'change' }],
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }]
 }
 
 // 模拟成员数据
 const memberList = ref([
-  { id: 1, username: 'zhangsan', realName: '张三', departmentId: 2, departmentName: '技术研发中心', role: 'admin', roleName: '管理员' },
-  { id: 2, username: 'lisi', realName: '李四', departmentId: 2, departmentName: '技术研发中心', role: 'manager', roleName: '部门经理' },
-  { id: 3, username: 'wangwu', realName: '王五', departmentId: 3, departmentName: '前端开发部', role: 'member', roleName: '普通成员' },
-  { id: 4, username: 'zhaoliu', realName: '赵六', departmentId: 4, departmentName: '后端开发部', role: 'member', roleName: '普通成员' },
-  { id: 5, username: 'qianqi', realName: '钱七', departmentId: 5, departmentName: '产品设计部', role: 'manager', roleName: '部门经理' },
-  { id: 6, username: 'sunba', realName: '孙八', departmentId: 6, departmentName: 'UI设计组', role: 'member', roleName: '普通成员' },
-  { id: 7, username: 'zhoujiu', realName: '周九', departmentId: 7, departmentName: '用户体验组', role: 'member', roleName: '普通成员' },
-  { id: 8, username: 'wushi', realName: '吴十', departmentId: 8, departmentName: '市场运营部', role: 'admin', roleName: '管理员' }
+  { id: 1, username: 'zhangsan', realName: '张三', nodeId: 2, nodeName: '技术研发中心', role: 'admin', roleName: '管理员' },
+  { id: 2, username: 'lisi', realName: '李四', nodeId: 2, nodeName: '技术研发中心', role: 'manager', roleName: '部门经理' },
+  { id: 3, username: 'wangwu', realName: '王五', nodeId: 3, nodeName: '前端开发部', role: 'member', roleName: '普通成员' },
+  { id: 4, username: 'zhaoliu', realName: '赵六', nodeId: 4, nodeName: '后端开发部', role: 'member', roleName: '普通成员' },
+  { id: 5, username: 'qianqi', realName: '钱七', nodeId: 5, nodeName: '产品设计部', role: 'manager', roleName: '部门经理' },
+  { id: 6, username: 'sunba', realName: '孙八', nodeId: 6, nodeName: 'UI设计组', role: 'member', roleName: '普通成员' },
+  { id: 7, username: 'zhoujiu', realName: '周九', nodeId: 7, nodeName: '用户体验组', role: 'member', roleName: '普通成员' },
+  { id: 8, username: 'wushi', realName: '吴十', nodeId: 8, nodeName: '市场运营部', role: 'admin', roleName: '管理员' }
 ])
 
 // 部门列表（用于下拉选择）
-const departmentList = ref([
+const orgNodeList = ref([
   { id: 1, name: '总经办' },
   { id: 2, name: '技术研发中心' },
   { id: 3, name: '前端开发部' },
@@ -372,7 +372,7 @@ const handleCreate = () => {
     username: '',
     password: '',
     realName: '',
-    departmentId: null,
+    nodeId: null,
     roleId: null
   })
   dialogVisible.value = true
@@ -382,13 +382,13 @@ const handleCreate = () => {
 const handleEdit = (row) => {
   isEdit.value = true
   // 查找对应的部门和角色ID
-  const dept = departmentList.value.find(d => d.name === row.departmentName)
+  const dept = orgNodeList.value.find(d => d.name === row.nodeName)
   const role = roleList.value.find(r => r.name === row.roleName)
   Object.assign(formData, {
     id: row.id,
     username: row.username,
     realName: row.realName,
-    departmentId: dept?.id || null,
+    nodeId: dept?.id || null,
     roleId: role?.id || null
   })
   dialogVisible.value = true
@@ -430,7 +430,7 @@ const handleSubmit = async () => {
   if (!formRef.value) return
   await formRef.value.validate((valid) => {
     if (valid) {
-      const dept = departmentList.value.find(d => d.id === formData.departmentId)
+      const dept = orgNodeList.value.find(d => d.id === formData.nodeId)
       const role = roleList.value.find(r => r.id === formData.roleId)
       
       if (isEdit.value) {
@@ -439,7 +439,7 @@ const handleSubmit = async () => {
           memberList.value[index] = {
             ...memberList.value[index],
             realName: formData.realName,
-            departmentId: formData.departmentId,
+            departmentId: formData.nodeId,
             departmentName: dept?.name || '',
             role: role?.type || '',
             roleName: role?.name || ''
@@ -452,7 +452,7 @@ const handleSubmit = async () => {
           id: newId,
           username: formData.username,
           realName: formData.realName,
-          departmentId: formData.departmentId,
+          departmentId: formData.nodeId,
           departmentName: dept?.name || '',
           role: role?.type || '',
           roleName: role?.name || ''
