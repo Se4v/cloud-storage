@@ -232,10 +232,17 @@
 
         <el-form-item label="组织管理员" prop="adminName">
           <el-input
-              v-model="formData.adminName"
+              v-model="formData.adminUsername"
               placeholder="请输入管理员用户名"
               class="!rounded-lg"
           />
+        </el-form-item>
+
+        <el-form-item label="状态" prop="isEnabled">
+          <el-radio-group v-model="formData.isEnabled">
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
+          </el-radio-group>
         </el-form-item>
 
       </el-form>
@@ -289,7 +296,7 @@ const formData = reactive({
   type: 2,
   parentId: 0,
   storageQuota: 10737418240, // 10GB in bytes
-  adminName: '',
+  adminUsername: '',
   isEnabled: 1
 })
 
@@ -303,14 +310,14 @@ const formRules = {
 
 // 模拟数据
 const orgList = ref([
-  { id: 1, name: '总经办', type: 1, parentId: 0, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 107374182400, adminId: 1, adminName: '张三', isEnabled: 1 },
-  { id: 2, name: '技术研发中心', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', storageQuota: 53687091200, adminId: 2, adminName: '李四', isEnabled: 1 },
-  { id: 3, name: '前端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 21474836480, adminId: null, adminName: null, isEnabled: 1 },
-  { id: 4, name: '后端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 21474836480, adminId: null, adminName: null, isEnabled: 0 },
-  { id: 5, name: '产品设计部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 32212254720, adminId: 3, adminName: '王五', isEnabled: 1 },
-  { id: 6, name: 'UI设计组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10737418240, adminId: null, adminName: null, isEnabled: 1 },
-  { id: 7, name: '用户体验组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10737418240, adminId: null, adminName: null, isEnabled: 0 },
-  { id: 8, name: '市场运营部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 42949672960, adminId: 4, adminName: '赵六', isEnabled: 1 },
+  { id: 1, name: '总经办', type: 1, parentId: 0, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 107374182400, adminUsername: '张三', isEnabled: 1 },
+  { id: 2, name: '技术研发中心', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', storageQuota: 53687091200, adminUsername: '李四', isEnabled: 1 },
+  { id: 3, name: '前端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 21474836480, adminUsername: null, isEnabled: 1 },
+  { id: 4, name: '后端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 21474836480, adminUsername: null, isEnabled: 0 },
+  { id: 5, name: '产品设计部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 32212254720, adminUsername: '王五', isEnabled: 1 },
+  { id: 6, name: 'UI设计组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10737418240, adminUsername: null, isEnabled: 1 },
+  { id: 7, name: '用户体验组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10737418240, adminUsername: null, isEnabled: 0 },
+  { id: 8, name: '市场运营部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 42949672960, adminUsername: '赵六', isEnabled: 1 },
 ])
 
 // 过滤后的列表

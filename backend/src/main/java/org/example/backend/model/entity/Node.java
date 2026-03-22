@@ -34,11 +34,11 @@ public class Node implements Serializable {
 
     /** 是否启用:0-禁用; 1-启用 */
     @TableField("is_enabled")
-    private Integer enabled;
+    private Integer isEnabled;
 
     /** 是否删除:0-未删除; 1-已删除 */
     @TableField("is_deleted")
-    private Integer deleted;
+    private Integer isDeleted;
 
     /** 创建时间 */
     @TableField("created_at")
