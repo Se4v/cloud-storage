@@ -367,7 +367,19 @@ const loadProfile = async () => {
       userInfo.realName = data.realName
       userInfo.email = data.email
       userInfo.mobile = data.mobile || ''
-      userInfo.avatar = data.avatar || ''
+      
+      // 通过 getAvatar 接口获取头像预签名链接
+      try {
+        const avatarRes = await axios.get(`${API_BASE_URL}/api/profile/avatar`, getAuthConfig())
+        if (avatarRes.data.code === 200) {
+          userInfo.avatar = avatarRes.data.data
+        } else {
+          userInfo.avatar = ''
+        }
+      } catch (avatarError) {
+        console.error('获取头像链接失败:', avatarError)
+        userInfo.avatar = ''
+      }
     } else {
       ElMessage.error(msg || '获取个人信息失败')
     }
