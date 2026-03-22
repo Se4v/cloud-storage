@@ -202,6 +202,19 @@ import {
 } from '@element-plus/icons-vue'
 import axios from 'axios'
 
+// API 基础配置
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取请求配置（包含认证头）
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
+  }
+}
+
 const loading = ref(false)
 const saving = ref(false)
 const currentPage = ref(1)
@@ -209,18 +222,7 @@ const pageSize = ref(20)
 const total = ref(0)
 const selectedLinks = ref([])
 const tableRef = ref(null)
-const linkList = ref([
-  {
-    id: "123",
-    linkName: "12314",
-    fileType: 1,
-    linkKey: "123123",
-    expireTime: "2024-12-01 12:12:31",
-    createTime: "2024-12-01 12:12:31",
-    linkType: 2,
-    accessCode: "abc123"
-  }
-])
+const linkList = ref([])
 
 // 编辑对话框
 const editDialogVisible = ref(false)
@@ -236,15 +238,17 @@ const editForm = ref({
 const loadLinkList = async () => {
   loading.value = true
   try {
-    const response = await axios.get('/api/link')
-    if (response.data.code === 200) {
-      linkList.value = response.data.data || []
+    const response = await axios.get(`${API_BASE_URL}/api/link`, getAuthConfig())
+    const { code, data, msg } = response.data
+    if (code === 200) {
+      linkList.value = data || []
       total.value = linkList.value.length
     } else {
-      ElMessage.error(response.data.message || '获取列表失败')
+      ElMessage.error(msg || '获取列表失败')
     }
   } catch (error) {
-    ElMessage.error('获取分享链接列表失败')
+    const errorMsg = error.response?.data?.msg || error.message || '获取分享链接列表失败'
+    ElMessage.error(errorMsg)
     console.error(error)
   } finally {
     loading.value = false
@@ -308,16 +312,26 @@ const handleEdit = (row) => {
 const handleSaveEdit = async () => {
   saving.value = true
   try {
-    const response = await axios.post('/api/link/update', editForm.value)
-    if (response.data.code === 200) {
+    // 构造 UpdateLinkArgs
+    const updateData = {
+      id: editForm.value.id,
+      linkName: editForm.value.linkName,
+      linkType: editForm.value.linkType,
+      accessCode: editForm.value.accessCode,
+      expireTime: editForm.value.expireTime
+    }
+    const response = await axios.post(`${API_BASE_URL}/api/link/update`, updateData, getAuthConfig())
+    const { code, msg } = response.data
+    if (code === 200) {
       ElMessage.success('更新成功')
       editDialogVisible.value = false
       loadLinkList()
     } else {
-      ElMessage.error(response.data.message || '更新失败')
+      ElMessage.error(msg || '更新失败')
     }
   } catch (error) {
-    ElMessage.error('更新失败')
+    const errorMsg = error.response?.data?.msg || error.message || '更新失败'
+    ElMessage.error(errorMsg)
     console.error(error)
   } finally {
     saving.value = false
@@ -348,15 +362,21 @@ const handleDelete = (row) => {
       }
   ).then(async () => {
     try {
-      const response = await axios.post('/api/link/delete', [parseInt(row.id)])
-      if (response.data.code === 200) {
+      // 构造 DeleteLinkArgs
+      const deleteData = {
+        linkIds: [parseInt(row.id)]
+      }
+      const response = await axios.post(`${API_BASE_URL}/api/link/delete`, deleteData, getAuthConfig())
+      const { code, msg } = response.data
+      if (code === 200) {
         ElMessage.success('删除成功')
         loadLinkList()
       } else {
-        ElMessage.error(response.data.message || '删除失败')
+        ElMessage.error(msg || '删除失败')
       }
     } catch (error) {
-      ElMessage.error('删除失败')
+      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
+      ElMessage.error(errorMsg)
       console.error(error)
     }
   })
@@ -375,17 +395,23 @@ const handleBatchDelete = () => {
       }
   ).then(async () => {
     try {
-      const ids = selectedLinks.value.map(item => parseInt(item.id))
-      const response = await axios.post('/api/link/delete', ids)
-      if (response.data.code === 200) {
+      // 构造 DeleteLinkArgs
+      const linkIds = selectedLinks.value.map(item => parseInt(item.id))
+      const deleteData = {
+        linkIds: linkIds
+      }
+      const response = await axios.post(`${API_BASE_URL}/api/link/delete`, deleteData, getAuthConfig())
+      const { code, msg } = response.data
+      if (code === 200) {
         ElMessage.success('批量删除成功')
         selectedLinks.value = []
         loadLinkList()
       } else {
-        ElMessage.error(response.data.message || '删除失败')
+        ElMessage.error(msg || '删除失败')
       }
     } catch (error) {
-      ElMessage.error('删除失败')
+      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
+      ElMessage.error(errorMsg)
       console.error(error)
     }
   })
