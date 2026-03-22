@@ -85,7 +85,7 @@
             <template #default="{ row }">
               <div class="flex items-center gap-2 text-slate-600">
                 <el-icon class="text-slate-400"><Link /></el-icon>
-                <span>{{ row.parentName || '根节点' }}</span>
+                <span>{{ row.parentName || (row.parentId === 0 ? '根节点' : '-') }}</span>
               </div>
             </template>
           </el-table-column>
@@ -176,9 +176,9 @@
               placeholder="请选择类型"
               class="w-full !rounded-lg"
           >
-            <el-option label="公司" value="company" />
-            <el-option label="部门" value="dept" />
-            <el-option label="小组" value="group" />
+            <el-option label="公司" :value="1" />
+            <el-option label="部门" :value="2" />
+            <el-option label="小组" :value="3" />
           </el-select>
         </el-form-item>
 
@@ -189,7 +189,7 @@
               class="w-full !rounded-lg"
               clearable
           >
-            <el-option label="根节点" :value="null" />
+            <el-option label="根节点" :value="0" />
             <el-option
                 v-for="org in orgList"
                 :key="org.id"
@@ -201,7 +201,7 @@
 
         <el-form-item label="空间配额" prop="storageQuota">
           <el-input
-              v-model="formData.storageQuota"
+              v-model="storageQuotaGB"
               placeholder="请输入空间配额（GB）"
               class="!rounded-lg"
           >
@@ -265,29 +265,30 @@ const formRef = ref(null)
 const formData = reactive({
   id: null,
   name: '',
-  type: 'dept',
-  parentId: null,
-  storageQuota: 10,
+  type: 2,
+  parentId: 0,
+  storageQuota: 10737418240, // 10GB in bytes
   adminName: ''
 })
+
+// 用于对话框显示的GB值
+const storageQuotaGB = ref(10)
 
 const formRules = {
   name: [{ required: true, message: '请输入组织名称', trigger: 'blur' }],
   type: [{ required: true, message: '请选择组织类型', trigger: 'change' }]
 }
 
-
-
 // 模拟数据
 const orgList = ref([
-  { id: 1, name: '总经办', type: 'company', parentId: null, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 100, adminId: 1, adminName: '张三' },
-  { id: 2, name: '技术研发中心', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00',storageQuota: 50, adminId: 2, adminName: '李四' },
-  { id: 3, name: '前端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 20, adminId: null, adminName: null },
-  { id: 4, name: '后端开发部', type: 'group', parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 20, adminId: null, adminName: null },
-  { id: 5, name: '产品设计部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 30, adminId: 3, adminName: '王五' },
-  { id: 6, name: 'UI设计组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10, adminId: null, adminName: null },
-  { id: 7, name: '用户体验组', type: 'group', parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10, adminId: null, adminName: null },
-  { id: 8, name: '市场运营部', type: 'dept', parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 40, adminId: 4, adminName: '赵六' },
+  { id: 1, name: '总经办', type: 1, parentId: 0, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 107374182400, adminId: 1, adminName: '张三' },
+  { id: 2, name: '技术研发中心', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', storageQuota: 53687091200, adminId: 2, adminName: '李四' },
+  { id: 3, name: '前端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 21474836480, adminId: null, adminName: null },
+  { id: 4, name: '后端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 21474836480, adminId: null, adminName: null },
+  { id: 5, name: '产品设计部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 32212254720, adminId: 3, adminName: '王五' },
+  { id: 6, name: 'UI设计组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10737418240, adminId: null, adminName: null },
+  { id: 7, name: '用户体验组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10737418240, adminId: null, adminName: null },
+  { id: 8, name: '市场运营部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 42949672960, adminId: 4, adminName: '赵六' },
 ])
 
 // 过滤后的列表
@@ -312,20 +313,20 @@ const formatStorageQuota = (quota) => {
 
 // 类型标签映射
 const getTypeLabel = (type) => {
-  const map = { company: '公司', dept: '部门', group: '小组' }
+  const map = { 1: '公司', 2: '部门', 3: '小组' }
   return map[type] || type
 }
 
 const getTypeType = (type) => {
-  const map = { company: 'primary', dept: 'success', group: 'info' }
+  const map = { 1: 'primary', 2: 'success', 3: 'info' }
   return map[type] || ''
 }
 
 const getTypeClass = (type) => {
   const map = {
-    company: '!bg-blue-50 !text-blue-700',
-    dept: '!bg-emerald-50 !text-emerald-700',
-    group: '!bg-slate-100 !text-slate-700'
+    1: '!bg-blue-50 !text-blue-700',
+    2: '!bg-emerald-50 !text-emerald-700',
+    3: '!bg-slate-100 !text-slate-700'
   }
   return map[type] || ''
 }
@@ -341,23 +342,27 @@ const handleSearch = () => {
 }
 
 // 增删改查操作
+const GB = 1024 * 1024 * 1024
+
 const handleCreate = () => {
   isEdit.value = false
   Object.assign(formData, {
     id: null,
     name: '',
-    type: 'dept',
-    parentId: null,
+    type: 2,
+    parentId: 0,
     sort: 0,
-    storageQuota: 10,
+    storageQuota: 10 * GB,
     adminName: ''
   })
+  storageQuotaGB.value = 10
   dialogVisible.value = true
 }
 
 const handleEdit = (row) => {
   isEdit.value = true
   Object.assign(formData, row)
+  storageQuotaGB.value = Math.round(row.storageQuota / GB)
   dialogVisible.value = true
 }
 
@@ -394,6 +399,8 @@ const handleSubmit = async () => {
   if (!formRef.value) return
   await formRef.value.validate((valid) => {
     if (valid) {
+      // 将GB转换为字节
+      const storageQuotaBytes = Number(storageQuotaGB.value) * GB
       if (isEdit.value) {
         const index = orgList.value.findIndex(item => item.id === formData.id)
         if (index > -1) {
@@ -401,7 +408,8 @@ const handleSubmit = async () => {
           orgList.value[index] = {
             ...orgList.value[index],
             ...formData,
-            parentName: parent?.name || null
+            storageQuota: storageQuotaBytes,
+            parentName: formData.parentId === 0 ? null : parent?.name || null
           }
           ElMessage.success('更新成功')
         }
@@ -411,7 +419,8 @@ const handleSubmit = async () => {
         orgList.value.push({
           ...formData,
           id: newId,
-          parentName: parent?.name || null,
+          storageQuota: storageQuotaBytes,
+          parentName: formData.parentId === 0 ? null : parent?.name || null,
           createTime: new Date().toLocaleString()
         })
         ElMessage.success('创建成功')
