@@ -71,7 +71,7 @@ public class UserService {
 
         Drive drive = Drive.builder()
                 .driveName("个人空间")
-                .driveType(4)
+                .driveType(2)
                 .nodeId(0L)
                 .userId(user.getId())
                 .totalQuota(args.getStorageQuota())
@@ -125,7 +125,7 @@ public class UserService {
 
         // 查询用户配额
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getDriveType, 4).in(Drive::getUserId, userIds);
+        driveQuery.eq(Drive::getDriveType, 2).in(Drive::getUserId, userIds);
         List<Drive> drives = driveMapper.selectList(driveQuery);
         Map<Long, Long> driveMap = drives.stream().collect(Collectors.toMap(Drive::getUserId, Drive::getTotalQuota));
 

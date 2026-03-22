@@ -55,8 +55,8 @@ public class MemberService {
         // 查询组织节点是否存在
         LambdaQueryWrapper<Node> nodeQuery = new LambdaQueryWrapper<>();
         nodeQuery.eq(Node::getId, args.getNodeId())
-                .eq(Node::getEnabled, 1)
-                .eq(Node::getDeleted, 0);
+                .eq(Node::getIsEnabled, 1)
+                .eq(Node::getIsDeleted, 0);
         if (nodeMapper.selectOne(nodeQuery) == null) throw new BusinessException("<UNK>");
 
         int memberInsertCount = memberMapper.insert(Member.builder()
@@ -140,7 +140,7 @@ public class MemberService {
         Map<Long, Node> nodeMap = new HashMap<>();
         if (!nodeIds.isEmpty()) {
             LambdaQueryWrapper<Node> nodeQuery = new LambdaQueryWrapper<>();
-            nodeQuery.eq(Node::getDeleted, 0).eq(Node::getEnabled, 1).in(Node::getId, nodeIds);
+            nodeQuery.eq(Node::getIsDeleted, 0).eq(Node::getIsEnabled, 1).in(Node::getId, nodeIds);
             List<Node> nodes = nodeMapper.selectList(nodeQuery);
             nodeMap.putAll(
                     nodes.stream().collect(Collectors.toMap(Node::getId, node -> node, (k1, k2) -> k1))
@@ -175,8 +175,8 @@ public class MemberService {
 
     public List<Node> listOrgNodes() {
         LambdaQueryWrapper<Node> nodeQuery = new LambdaQueryWrapper<>();
-        nodeQuery.eq(Node::getEnabled, 1)
-                .eq(Node::getDeleted, 0);
+        nodeQuery.eq(Node::getIsEnabled, 1)
+                .eq(Node::getIsDeleted, 0);
         return nodeMapper.selectList(nodeQuery);
     }
 }

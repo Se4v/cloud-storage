@@ -268,8 +268,9 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 import {
   Plus,
   Delete,
@@ -277,6 +278,19 @@ import {
   Edit,
   Link
 } from '@element-plus/icons-vue'
+
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 // 数据加载状态
 const loading = ref(false)
@@ -308,17 +322,8 @@ const formRules = {
   type: [{ required: true, message: '请选择组织类型', trigger: 'change' }]
 }
 
-// 模拟数据
-const orgList = ref([
-  { id: 1, name: '总经办', type: 1, parentId: 0, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 107374182400, adminUsername: '张三', isEnabled: 1 },
-  { id: 2, name: '技术研发中心', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', storageQuota: 53687091200, adminUsername: '李四', isEnabled: 1 },
-  { id: 3, name: '前端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 21474836480, adminUsername: null, isEnabled: 1 },
-  { id: 4, name: '后端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 21474836480, adminUsername: null, isEnabled: 0 },
-  { id: 5, name: '产品设计部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 32212254720, adminUsername: '王五', isEnabled: 1 },
-  { id: 6, name: 'UI设计组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10737418240, adminUsername: null, isEnabled: 1 },
-  { id: 7, name: '用户体验组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10737418240, adminUsername: null, isEnabled: 0 },
-  { id: 8, name: '市场运营部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 42949672960, adminUsername: '赵六', isEnabled: 1 },
-])
+// 组织列表数据
+const orgList = ref([])
 
 // 过滤后的列表
 const filteredList = computed(() => {
@@ -382,7 +387,7 @@ const handleCreate = () => {
     parentId: 0,
     sort: 0,
     storageQuota: 10 * GB,
-    adminName: '',
+    adminUsername: '',
     isEnabled: 1
   })
   storageQuotaGB.value = 10
@@ -396,80 +401,142 @@ const handleEdit = (row) => {
   dialogVisible.value = true
 }
 
-const handleDelete = (row) => {
-  const index = orgList.value.findIndex(item => item.id === row.id)
-  if (index > -1) {
-    orgList.value.splice(index, 1)
-    ElMessage.success('删除成功')
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+        `确定要删除组织节点 "${row.name}" 吗？此操作不可恢复。`,
+        '确认删除',
+        {
+          confirmButtonText: '删除',
+          cancelButtonText: '取消',
+          type: 'warning',
+          confirmButtonClass: '!bg-red-600 !border-red-600 !rounded-lg',
+          cancelButtonClass: '!rounded-lg',
+          customClass: '!rounded-xl'
+        }
+    )
+    const res = await axios.post(`${API_BASE_URL}/api/org/delete`, { nodeIds: [row.id] }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadData()
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error(error.response?.data?.msg || '删除失败')
+    }
   }
 }
 
 const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先选择要删除的组织节点')
+    return
+  }
   try {
     await ElMessageBox.confirm(
-        `确定要删除选中的 ${selectedRows.value.length} 个组织节点吗？`,
+        `确定要删除选中的 ${selectedRows.value.length} 个组织节点吗？此操作不可恢复。`,
         '批量删除',
         {
-          confirmButtonText: '确认删除',
+          confirmButtonText: '删除',
           cancelButtonText: '取消',
           type: 'warning',
-          confirmButtonClass: '!bg-red-600 !border-red-600'
+          confirmButtonClass: '!bg-red-600 !border-red-600 !rounded-lg',
+          cancelButtonClass: '!rounded-lg',
+          customClass: '!rounded-xl'
         }
     )
     const ids = selectedRows.value.map(row => row.id)
-    orgList.value = orgList.value.filter(item => !ids.includes(item.id))
-    selectedRows.value = []
-    ElMessage.success('批量删除成功')
-  } catch {
-    // 取消删除
+    const res = await axios.post(`${API_BASE_URL}/api/org/delete`, { nodeIds: ids }, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success('批量删除成功')
+      selectedRows.value = []
+      await loadData()
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error(error.response?.data?.msg || '删除失败')
+    }
   }
 }
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate((valid) => {
+  await formRef.value.validate(async (valid) => {
     if (valid) {
-      // 将GB转换为字节
-      const storageQuotaBytes = Number(storageQuotaGB.value) * GB
-      if (isEdit.value) {
-        const index = orgList.value.findIndex(item => item.id === formData.id)
-        if (index > -1) {
-          const parent = orgList.value.find(item => item.id === formData.parentId)
-          orgList.value[index] = {
-            ...orgList.value[index],
-            ...formData,
+      try {
+        // 将GB转换为字节
+        const storageQuotaBytes = Number(storageQuotaGB.value) * GB
+        if (isEdit.value) {
+          const submitData = {
+            id: formData.id,
+            name: formData.name,
+            type: formData.type,
+            parentId: formData.parentId,
             storageQuota: storageQuotaBytes,
-            parentName: formData.parentId === 0 ? null : parent?.name || null
+            isEnabled: formData.isEnabled,
+            adminUsername: formData.adminUsername
           }
-          ElMessage.success('更新成功')
+          const res = await axios.post(`${API_BASE_URL}/api/org/update`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('更新成功')
+            dialogVisible.value = false
+            await loadData()
+          } else {
+            ElMessage.error(res.data.msg || '更新失败')
+          }
+        } else {
+          const submitData = {
+            name: formData.name,
+            type: formData.type,
+            parentId: formData.parentId,
+            storageQuota: storageQuotaBytes,
+            adminUsername: formData.adminUsername
+          }
+          const res = await axios.post(`${API_BASE_URL}/api/org/create`, submitData, getAuthConfig())
+          if (res.data.code === 200) {
+            ElMessage.success('创建成功')
+            dialogVisible.value = false
+            await loadData()
+          } else {
+            ElMessage.error(res.data.msg || '创建失败')
+          }
         }
-      } else {
-        const parent = orgList.value.find(item => item.id === formData.parentId)
-        const newId = Math.max(...orgList.value.map(item => item.id)) + 1
-        orgList.value.push({
-          ...formData,
-          id: newId,
-          storageQuota: storageQuotaBytes,
-          parentName: formData.parentId === 0 ? null : parent?.name || null,
-          createTime: new Date().toLocaleString()
-        })
-        ElMessage.success('创建成功')
+      } catch (error) {
+        console.error(isEdit.value ? '更新失败:' : '创建失败:', error)
+        ElMessage.error(error.response?.data?.msg || (isEdit.value ? '更新失败' : '创建失败'))
       }
-      dialogVisible.value = false
     }
   })
 }
 
-// 初始化加载数据
-const loadData = () => {
+// 加载组织列表
+const loadData = async () => {
   loading.value = true
-  setTimeout(() => {
-    total.value = orgList.value.length
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/org/all`, getAuthConfig())
+    if (res.data.code === 200) {
+      orgList.value = res.data.data || []
+      total.value = orgList.value.length
+    } else {
+      ElMessage.error(res.data.msg || '加载数据失败')
+    }
+  } catch (error) {
+    console.error('加载数据失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载数据失败')
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
-loadData()
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped>

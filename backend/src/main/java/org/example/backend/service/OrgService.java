@@ -130,7 +130,6 @@ public class OrgService {
                 .nodeId(node.getId())
                 .userId(admin.getId())
                 .totalQuota(args.getStorageQuota())
-                .usedQuota(0L)
                 .build();
 
         int driveInsert = driveMapper.insert(drive);
@@ -144,17 +143,12 @@ public class OrgService {
         // 校验是否存在子节点
         LambdaQueryWrapper<Node> childQuery = new LambdaQueryWrapper<>();
         childQuery.in(Node::getParentId, nodeIds);
-        if (nodeMapper.selectCount(childQuery) > 0) throw new BusinessException("请先删除该部门下的所有子部门");
+        if (nodeMapper.selectCount(childQuery) > 0) throw new BusinessException("请先删除该节点下的所有子节点");
 
         // 删除节点
         LambdaUpdateWrapper<Node> nodeWrapper = new LambdaUpdateWrapper<>();
         nodeWrapper.set(Node::getIsDeleted, DELETED).in(Node::getId, nodeIds);
-        if (nodeMapper.update(nodeWrapper) != nodeIds.size()) throw new BusinessException("删除部门失败");
-
-        // 删除相关成员关联
-        LambdaUpdateWrapper<Member> memberWrapper = new LambdaUpdateWrapper<>();
-        memberWrapper.set(Member::getDeleted, DELETED).in(Member::getNodeId, nodeIds);
-        if (memberMapper.update(memberWrapper) != nodeIds.size()) throw new BusinessException("删除部门失败");
+        if (nodeMapper.update(nodeWrapper) != nodeIds.size()) throw new BusinessException("删除节点失败");
     }
 
     @Transactional
@@ -201,15 +195,15 @@ public class OrgService {
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
         driveQuery.eq(Drive::getNodeId, args.getId());
         Drive drive = driveMapper.selectOne(driveQuery);
-
+        if (drive == null) throw new BusinessException("节点对应的存储空间不存在");
         if (drive.getUsedQuota() > args.getStorageQuota()) throw new BusinessException("");
 
         LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
         driveUpdate.set(Drive::getDriveName, args.getName())
                 .set(Drive::getTotalQuota, args.getStorageQuota())
                 .set(Drive::getUserId, admin.getId())
-                .eq(Drive::getNodeId, drive.getId());
-        if (driveMapper.update(driveUpdate) != 1) throw new BusinessException("更新节点失败");
+                .eq(Drive::getNodeId, drive.getNodeId());
+        if (driveMapper.update(driveUpdate) != 1) throw new BusinessException("更新节点-空间失败");
     }
 
     public List<NodeView> listAllOrgNodes() {
@@ -217,6 +211,7 @@ public class OrgService {
         LambdaQueryWrapper<Node> nodeQuery = new LambdaQueryWrapper<>();
         nodeQuery.eq(Node::getIsDeleted, 0);
         List<Node> nodeList = nodeMapper.selectList(nodeQuery);
+        if (nodeList == null || nodeList.isEmpty()) return List.of();
         Map<Long, String> parentNodeMap = nodeList.stream().collect(Collectors.toMap(Node::getId, Node::getNodeName));
 
         // 查询空间
@@ -224,10 +219,10 @@ public class OrgService {
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
         driveQuery.in(Drive::getNodeId, nodeIdList);
         List<Drive> driveList = driveMapper.selectList(driveQuery);
-        Map<Long, Drive> driveMap = driveList.stream().collect(Collectors.toMap(Drive::getId, drive -> drive));
+        Map<Long, Drive> driveMap = driveList.stream().collect(Collectors.toMap(Drive::getNodeId, drive -> drive));
 
         // 查询用户
-        List<Long> adminIdList = driveList.stream().map(Drive::getUserId).toList();
+        Set<Long> adminIdList = driveList.stream().map(Drive::getUserId).collect(Collectors.toSet());
         LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
         userQuery.in(User::getId, adminIdList);
         List<User> userList = userMapper.selectList(userQuery);
@@ -237,7 +232,7 @@ public class OrgService {
                 .map(node -> {
                     String parentName = parentNodeMap.getOrDefault(node.getParentId(), "根节点");
                     Drive drive = driveMap.get(node.getId());
-                    Long storageQuota = drive.getUsedQuota();
+                    Long storageQuota = drive.getTotalQuota();
                     String adminUsername = userMap.getOrDefault(drive.getUserId(), "");
 
                     return NodeView.builder()
