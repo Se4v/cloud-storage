@@ -217,7 +217,7 @@ const tableData = ref([
 const loading = ref(false)
 
 // 获取回收站列表
-const fetchRecycleList = async () => {
+const loadRecycleList = async () => {
   loading.value = true
   try {
     const response = await axios.get('/api/recycle/list')
@@ -237,7 +237,7 @@ const fetchRecycleList = async () => {
 
 // 页面加载时获取数据
 onMounted(() => {
-  fetchRecycleList()
+  loadRecycleList()
 })
 
 // 格式化文件大小
@@ -290,7 +290,7 @@ const handleRestore = async (row) => {
     const response = await axios.post('/api/recycle/restore', [parseInt(row.id)])
     if (response.data.code === 200) {
       ElMessage.success('还原成功')
-      await fetchRecycleList()
+      await loadRecycleList()
       selectedRows.value = []
     } else {
       ElMessage.error(response.data.message || '还原失败')
@@ -323,7 +323,7 @@ const handleDelete = async (row) => {
     const response = await axios.post('/api/recycle/delete', [parseInt(row.id)])
     if (response.data.code === 200) {
       ElMessage.success('已彻底删除')
-      await fetchRecycleList()
+      await loadRecycleList()
       selectedRows.value = []
     } else {
       ElMessage.error(response.data.message || '删除失败')
@@ -363,7 +363,7 @@ const handleBatchRestore = async () => {
     const response = await axios.post('/api/recycle/restore', ids)
     if (response.data.code === 200) {
       ElMessage.success('还原成功')
-      await fetchRecycleList()
+      await loadRecycleList()
       selectedRows.value = []
       tableRef.value?.clearSelection()
     } else {
@@ -404,7 +404,7 @@ const handleBatchDelete = async () => {
     const response = await axios.post('/api/recycle/delete', ids)
     if (response.data.code === 200) {
       ElMessage.success('已彻底删除')
-      await fetchRecycleList()
+      await loadRecycleList()
       selectedRows.value = []
       tableRef.value?.clearSelection()
     } else {
@@ -443,7 +443,7 @@ const handleClearAll = async () => {
     const response = await axios.post('/api/recycle/clear')
     if (response.data.code === 200) {
       ElMessage.success('回收站已清空')
-      await fetchRecycleList()
+      await loadRecycleList()
       selectedRows.value = []
       tableRef.value?.clearSelection()
     } else {
