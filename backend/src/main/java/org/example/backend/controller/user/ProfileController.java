@@ -5,7 +5,6 @@ import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.ChangePasswordArgs;
 import org.example.backend.model.args.UpdateAvatarArgs;
 import org.example.backend.model.args.UpdateProfileArgs;
-import org.example.backend.model.args.UploadAvatarArgs;
 import org.example.backend.model.entity.User;
 import org.example.backend.model.view.AvatarUploadUrlView;
 import org.example.backend.model.view.ProfileView;

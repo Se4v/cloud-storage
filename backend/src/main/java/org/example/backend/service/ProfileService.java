@@ -13,7 +13,6 @@ import org.example.backend.model.args.UpdateAvatarArgs;
 import org.example.backend.model.entity.User;
 import org.example.backend.model.args.ChangePasswordArgs;
 import org.example.backend.model.args.UpdateProfileArgs;
-import org.example.backend.model.args.UploadAvatarArgs;
 import org.example.backend.model.view.AvatarUploadUrlView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,7 +44,7 @@ public class ProfileService {
         if (user == null) throw new BusinessException("用户不存在");
 
         // 获取头像预处理链接
-        String url = null;
+        String url;
         try {
              url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()

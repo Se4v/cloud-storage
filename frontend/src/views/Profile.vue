@@ -356,7 +356,7 @@ const passwordRules = {
 }
 
 // 获取个人信息
-const fetchProfile = async () => {
+const loadProfile = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/profile`, getAuthConfig())
     const { code, data, msg } = response.data
@@ -380,7 +380,7 @@ const fetchProfile = async () => {
 
 // 页面加载时获取个人信息
 onMounted(() => {
-  fetchProfile()
+  loadProfile()
 })
 
 // 触发头像上传
@@ -404,21 +404,40 @@ const handleAvatarChange = async (file) => {
     return
   }
 
-  // 构建 FormData 上传头像
-  const formData = new FormData()
-  formData.append('file', file.raw)
-  formData.append('fileName', file.name)
-  formData.append('mimeType', file.raw.type)
-  formData.append('fileSize', file.raw.size)
-
   try {
-    const config = getAuthConfig()
-    config.headers['Content-Type'] = 'multipart/form-data'
+    // 获取预签名上传链接
+    const res = await axios.get(`${API_BASE_URL}/api/profile/avatar/upload-url`, {
+      ...getAuthConfig(),
+      params: {
+        fileName: file.name,
+        fileSize: file.raw.size
+      }
+    })
     
-    const response = await axios.post(`${API_BASE_URL}/api/profile/avatar`, formData, config)
-    const { code, msg } = response.data
+    const { code, data, msg } = res.data
+    if (code !== 200) {
+      ElMessage.error(msg || '获取上传链接失败')
+      return
+    }
     
-    if (code === 200) {
+    const { uploadUrl, objectName } = data
+
+    // 使用 PUT 请求，直接将文件推送到 MinIO
+    await axios({
+      url: uploadUrl,
+      method: "PUT",
+      data: file.raw,
+      headers: {
+        'Content-Type': file.raw.type
+      }
+    })
+
+    // 上传成功后，把 objectName 提交给后端保存接口
+    const updateRes = await axios.post(`${API_BASE_URL}/api/profile/avatar`, {
+      objectName: objectName
+    }, getAuthConfig())
+    
+    if (updateRes.data.code === 200) {
       // 本地预览
       const reader = new FileReader()
       reader.readAsDataURL(file.raw)
@@ -427,7 +446,7 @@ const handleAvatarChange = async (file) => {
         ElMessage.success('头像更新成功')
       }
     } else {
-      ElMessage.error(msg || '头像上传失败')
+      ElMessage.error(updateRes.data.msg || '头像信息保存失败')
     }
   } catch (error) {
     console.error('头像上传失败:', error)
