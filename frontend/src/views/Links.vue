@@ -34,20 +34,19 @@
           <el-table-column label="链接名称" min-width="380">
             <template #default="{ row }">
               <div class="flex items-center gap-3 py-2">
-                <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
                     :class="getFileIconBg(row)"
                 >
                   <el-icon :size="20">
-                    <Document v-if="row.type === 'file'" />
+                    <Document v-if="row.fileType === 1" />
                     <FolderOpened v-else />
                   </el-icon>
                 </div>
                 <div class="min-w-0 flex-1">
                   <!-- 第一行：文件名 + 标签并列 -->
                   <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-sm font-medium text-slate-900 truncate" :title="row.name">
-                      {{ row.name }}
+                    <span class="text-sm font-medium text-slate-900 truncate" :title="row.linkName">
+                      {{ row.linkName }}
                     </span>
                     <!-- 已过期标签 -->
                     <span
@@ -58,7 +57,7 @@
                     </span>
                     <!-- 有密码标签 -->
                     <span
-                        v-if="row.isProtected"
+                        v-if="row.linkType === 2"
                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-amber-200 bg-amber-50 text-amber-700 flex-shrink-0"
                     >
                       <el-icon :size="10"><Lock /></el-icon>
@@ -213,12 +212,13 @@ const tableRef = ref(null)
 const linkList = ref([
   {
     id: "123",
-    name: "12314",
-    type: "file",
-    key: "123123",
+    linkName: "12314",
+    fileType: 1,
+    linkKey: "123123",
     expireTime: "2024-12-01 12:12:31",
     createTime: "2024-12-01 12:12:31",
-    isProtected: true
+    linkType: 2,
+    accessCode: "abc123"
   }
 ])
 
@@ -233,7 +233,7 @@ const editForm = ref({
 })
 
 // 获取分享链接列表
-const fetchLinkList = async () => {
+const loadLinkList = async () => {
   loading.value = true
   try {
     const response = await axios.get('/api/link')
@@ -253,7 +253,7 @@ const fetchLinkList = async () => {
 
 // 页面加载时获取数据
 onMounted(() => {
-  fetchLinkList()
+  loadLinkList()
 })
 
 // 获取文件图标背景色
@@ -296,9 +296,9 @@ const handleSelectionChange = (selection) => {
 const handleEdit = (row) => {
   editForm.value = {
     shareId: parseInt(row.id),
-    linkName: row.name,
-    linkType: row.isProtected ? 2 : 1,
-    accessCode: row.isProtected ? '******' : '',
+    linkName: row.linkName,
+    linkType: row.linkType,
+    accessCode: row.linkType === 2 ? (row.accessCode || '******') : '',
     expiredAt: row.expireTime
   }
   editDialogVisible.value = true
@@ -312,7 +312,7 @@ const handleSaveEdit = async () => {
     if (response.data.code === 200) {
       ElMessage.success('更新成功')
       editDialogVisible.value = false
-      fetchLinkList()
+      loadLinkList()
     } else {
       ElMessage.error(response.data.message || '更新失败')
     }
@@ -326,7 +326,7 @@ const handleSaveEdit = async () => {
 
 // 复制链接
 const handleCopyLink = async (row) => {
-  const linkUrl = `http://localhost:8080/links/${row.key}`
+  const linkUrl = `http://localhost:8080/links/${row.linkKey}`
   try {
     await navigator.clipboard.writeText(linkUrl)
     ElMessage.success(`已复制分享链接`)
@@ -338,7 +338,7 @@ const handleCopyLink = async (row) => {
 // 删除单个
 const handleDelete = (row) => {
   ElMessageBox.confirm(
-      `确定要删除外链 "${row.name}" 吗？删除后该链接将立即失效。`,
+      `确定要删除外链 "${row.linkName}" 吗？删除后该链接将立即失效。`,
       '确认删除',
       {
         confirmButtonText: '删除',
@@ -351,7 +351,7 @@ const handleDelete = (row) => {
       const response = await axios.post('/api/link/delete', [parseInt(row.id)])
       if (response.data.code === 200) {
         ElMessage.success('删除成功')
-        fetchLinkList()
+        loadLinkList()
       } else {
         ElMessage.error(response.data.message || '删除失败')
       }
@@ -380,7 +380,7 @@ const handleBatchDelete = () => {
       if (response.data.code === 200) {
         ElMessage.success('批量删除成功')
         selectedLinks.value = []
-        fetchLinkList()
+        loadLinkList()
       } else {
         ElMessage.error(response.data.message || '删除失败')
       }
