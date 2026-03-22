@@ -5,8 +5,9 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
-import org.example.backend.model.args.CreateShareLinkArgs;
-import org.example.backend.model.args.UpdateShareLinkArgs;
+import org.example.backend.model.args.CreateLinkArgs;
+import org.example.backend.model.args.DeleteLinkArgs;
+import org.example.backend.model.args.UpdateLinkArgs;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class ShareService {
     public List<Share> listLinks(Long userId) {
         // 查询分享链接列表
         LambdaQueryWrapper<Share> shareQuery = new LambdaQueryWrapper<>();
-        shareQuery.eq(Share::getUserId, userId);
+        shareQuery.eq(Share::getUserId, userId).eq(Share::getDeleted, UNDELETED);
         List<Share> shareList = shareMapper.selectList(shareQuery);
 
         if (shareList == null || shareList.isEmpty()) return List.of();
@@ -38,7 +39,7 @@ public class ShareService {
     }
 
     @Transactional
-    public void createLink(CreateShareLinkArgs args, Long userId) {
+    public void createLink(CreateLinkArgs args, Long userId) {
         // 判断文件条目是否存在
         Entry entry = entryMapper.selectById(args.getEntryId());
         if (entry == null) throw new BusinessException("文件条目不存在");
@@ -60,31 +61,36 @@ public class ShareService {
     }
 
     @Transactional
-    public void updateLink(UpdateShareLinkArgs args) {
+    public void updateLink(UpdateLinkArgs args) {
         // 判断分享链接是否存在
-        Share link = shareMapper.selectById(args.getShareId());
+        Share link = shareMapper.selectById(args.getId());
         if (link == null || link.getDeleted() == DELETED) throw new BusinessException("分享链接不存在");
 
         // 更新链接信息
-        LambdaUpdateWrapper<Share> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(args.getLinkName() != null, Share::getLinkName, args.getLinkName())
-                .set(args.getAccessCode() != null, Share::getAccessCode, args.getAccessCode())
-                .set(args.getLinkType() != null, Share::getLinkType, args.getLinkType())
-                .set(args.getExpiredAt() != null, Share::getExpiredAt, args.getExpiredAt())
-                .eq(Share::getId, args.getShareId());
+        LambdaUpdateWrapper<Share> shareUpdate = new LambdaUpdateWrapper<>();
+        shareUpdate.set(Share::getLinkName, args.getLinkName())
+                .set(Share::getAccessCode, args.getAccessCode())
+                .set(Share::getExpiredAt, args.getExpireTime())
+                .eq(Share::getId, args.getId());
+        if (args.getLinkType() == 1)
+            shareUpdate.set(Share::getLinkType, args.getLinkType()).set(Share::getAccessCode, "");
+        else
+            shareUpdate.set(Share::getLinkType, args.getLinkType()).set(Share::getAccessCode, args.getAccessCode());
 
-        int count = shareMapper.update(updateWrapper);
+        int count = shareMapper.update(shareUpdate);
         if (count != 1) throw new BusinessException("更新分享链接信息失败");
     }
 
     @Transactional
-    public void deleteLinks(List<Long> shareIds) {
+    public void deleteLinks(DeleteLinkArgs args) {
+        List<Long> linkIds = args.getLinkIds();
+
         LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
         wrapper.set(Share::getDeleted, DELETED)
-                .in(Share::getId, shareIds);
+                .in(Share::getId, linkIds);
 
         int count = shareMapper.update(wrapper);
-        if (count != shareIds.size()) throw new BusinessException("删除分享链接失败");
+        if (count != linkIds.size()) throw new BusinessException("删除分享链接失败");
     }
 
     private String generateLinkKey() {

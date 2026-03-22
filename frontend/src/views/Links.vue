@@ -225,11 +225,11 @@ const linkList = ref([
 // 编辑对话框
 const editDialogVisible = ref(false)
 const editForm = ref({
-  shareId: null,
+  id: null,
   linkName: '',
   linkType: 1,
   accessCode: '',
-  expiredAt: null
+  expireTime: null
 })
 
 // 获取分享链接列表
@@ -295,11 +295,11 @@ const handleSelectionChange = (selection) => {
 // 编辑
 const handleEdit = (row) => {
   editForm.value = {
-    shareId: parseInt(row.id),
+    id: parseInt(row.id),
     linkName: row.linkName,
     linkType: row.linkType,
     accessCode: row.linkType === 2 ? (row.accessCode || '******') : '',
-    expiredAt: row.expireTime
+    expireTime: row.expireTime
   }
   editDialogVisible.value = true
 }

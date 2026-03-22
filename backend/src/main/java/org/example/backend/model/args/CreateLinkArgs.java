@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class CreateShareLinkArgs {
+public class CreateLinkArgs {
     private Long entryId;
     private Long driveId;
     private String linkName;

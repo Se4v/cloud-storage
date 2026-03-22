@@ -3,8 +3,6 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
@@ -19,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
