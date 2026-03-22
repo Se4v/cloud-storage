@@ -62,13 +62,13 @@
         >
           <el-table-column type="selection" width="50" align="center" />
 
-          <el-table-column label="组织名称" min-width="200">
+          <el-table-column label="组织名称" min-width="160" flex="2">
             <template #default="{ row }">
               <span class="font-medium text-slate-900">{{ row.name }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column label="类型" width="120">
+          <el-table-column label="类型" min-width="100">
             <template #default="{ row }">
               <el-tag
                   :type="getTypeType(row.type)"
@@ -81,7 +81,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="父节点" min-width="180">
+          <el-table-column label="父节点" min-width="160" flex="2">
             <template #default="{ row }">
               <div class="flex items-center gap-2 text-slate-600">
                 <el-icon class="text-slate-400"><Link /></el-icon>
@@ -90,9 +90,30 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="空间配额" width="120">
+          <el-table-column label="空间配额" min-width="120">
             <template #default="{ row }">
               <span class="text-slate-600 text-sm font-medium">{{ formatStorageQuota(row.storageQuota) }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="状态" min-width="100">
+            <template #default="{ row }">
+              <span
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                  row.isEnabled === 1
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-red-50 text-red-700 border-red-200'
+                ]"
+              >
+                <span
+                  :class="[
+                    'w-1.5 h-1.5 rounded-full mr-1.5',
+                    row.isEnabled === 1 ? 'bg-emerald-500' : 'bg-red-500'
+                  ]"
+                ></span>
+                {{ row.isEnabled === 1 ? '启用' : '禁用' }}
+              </span>
             </template>
           </el-table-column>
 
@@ -268,7 +289,8 @@ const formData = reactive({
   type: 2,
   parentId: 0,
   storageQuota: 10737418240, // 10GB in bytes
-  adminName: ''
+  adminName: '',
+  isEnabled: 1
 })
 
 // 用于对话框显示的GB值
@@ -281,14 +303,14 @@ const formRules = {
 
 // 模拟数据
 const orgList = ref([
-  { id: 1, name: '总经办', type: 1, parentId: 0, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 107374182400, adminId: 1, adminName: '张三' },
-  { id: 2, name: '技术研发中心', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', storageQuota: 53687091200, adminId: 2, adminName: '李四' },
-  { id: 3, name: '前端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 21474836480, adminId: null, adminName: null },
-  { id: 4, name: '后端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 21474836480, adminId: null, adminName: null },
-  { id: 5, name: '产品设计部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 32212254720, adminId: 3, adminName: '王五' },
-  { id: 6, name: 'UI设计组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10737418240, adminId: null, adminName: null },
-  { id: 7, name: '用户体验组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10737418240, adminId: null, adminName: null },
-  { id: 8, name: '市场运营部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 42949672960, adminId: 4, adminName: '赵六' },
+  { id: 1, name: '总经办', type: 1, parentId: 0, parentName: null, createTime: '2024-01-15 10:00:00', storageQuota: 107374182400, adminId: 1, adminName: '张三', isEnabled: 1 },
+  { id: 2, name: '技术研发中心', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-15 10:30:00', storageQuota: 53687091200, adminId: 2, adminName: '李四', isEnabled: 1 },
+  { id: 3, name: '前端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:00:00', storageQuota: 21474836480, adminId: null, adminName: null, isEnabled: 1 },
+  { id: 4, name: '后端开发部', type: 3, parentId: 2, parentName: '技术研发中心', createTime: '2024-01-16 09:30:00', storageQuota: 21474836480, adminId: null, adminName: null, isEnabled: 0 },
+  { id: 5, name: '产品设计部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-17 14:00:00', storageQuota: 32212254720, adminId: 3, adminName: '王五', isEnabled: 1 },
+  { id: 6, name: 'UI设计组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 10:00:00', storageQuota: 10737418240, adminId: null, adminName: null, isEnabled: 1 },
+  { id: 7, name: '用户体验组', type: 3, parentId: 5, parentName: '产品设计部', createTime: '2024-01-18 11:00:00', storageQuota: 10737418240, adminId: null, adminName: null, isEnabled: 0 },
+  { id: 8, name: '市场运营部', type: 2, parentId: 1, parentName: '总经办', createTime: '2024-01-20 09:00:00', storageQuota: 42949672960, adminId: 4, adminName: '赵六', isEnabled: 1 },
 ])
 
 // 过滤后的列表
@@ -353,7 +375,8 @@ const handleCreate = () => {
     parentId: 0,
     sort: 0,
     storageQuota: 10 * GB,
-    adminName: ''
+    adminName: '',
+    isEnabled: 1
   })
   storageQuotaGB.value = 10
   dialogVisible.value = true
