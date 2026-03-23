@@ -34,9 +34,7 @@
           <el-table-column label="链接名称" min-width="380">
             <template #default="{ row }">
               <div class="flex items-center gap-3 py-2">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
-                    :class="getFileIconBg(row)"
-                >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white bg-slate-400">
                   <el-icon :size="20">
                     <Document v-if="row.fileType === 1" />
                     <FolderOpened v-else />
@@ -210,7 +208,8 @@ const getAuthConfig = () => {
   const token = localStorage.getItem('token')
   return {
     headers: {
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
     }
   }
 }
@@ -259,16 +258,6 @@ const loadLinkList = async () => {
 onMounted(() => {
   loadLinkList()
 })
-
-// 获取文件图标背景色
-const getFileIconBg = (row) => {
-  return 'bg-slate-400'
-}
-
-// 获取文件图标颜色
-const getFileIconColor = (row) => {
-  return 'text-white'
-}
 
 // 获取过期状态
 const getExpireStatus = (row) => {
@@ -325,7 +314,7 @@ const handleSaveEdit = async () => {
     if (code === 200) {
       ElMessage.success('更新成功')
       editDialogVisible.value = false
-      loadLinkList()
+      await loadLinkList()
     } else {
       ElMessage.error(msg || '更新失败')
     }
@@ -370,7 +359,7 @@ const handleDelete = (row) => {
       const { code, msg } = response.data
       if (code === 200) {
         ElMessage.success('删除成功')
-        loadLinkList()
+        await loadLinkList()
       } else {
         ElMessage.error(msg || '删除失败')
       }
@@ -405,7 +394,7 @@ const handleBatchDelete = () => {
       if (code === 200) {
         ElMessage.success('批量删除成功')
         selectedLinks.value = []
-        loadLinkList()
+        await loadLinkList()
       } else {
         ElMessage.error(msg || '删除失败')
       }

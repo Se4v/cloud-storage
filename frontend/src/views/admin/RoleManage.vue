@@ -417,7 +417,6 @@ import {
   Delete,
   Search,
   Edit,
-  UserFilled,
   User,
   Warning,
   Key
@@ -627,7 +626,7 @@ const handleSubmit = async () => {
           if (res.data.code === 200) {
             ElMessage.success('角色更新成功')
             dialogVisible.value = false
-            loadRoleList()
+            await loadRoleList()
           } else {
             ElMessage.error(res.data.msg || '更新失败')
           }
@@ -642,7 +641,7 @@ const handleSubmit = async () => {
           if (res.data.code === 200) {
             ElMessage.success('角色创建成功')
             dialogVisible.value = false
-            loadRoleList()
+            await loadRoleList()
           } else {
             ElMessage.error(res.data.msg || '创建失败')
           }
@@ -696,7 +695,7 @@ const confirmDelete = async () => {
         ElMessage.success(`成功删除 ${deletableIds.length} 个角色`)
         selectedRoles.value = []
         deleteDialogVisible.value = false
-        loadRoleList()
+        await loadRoleList()
       } else {
         ElMessage.error(res.data.msg || '删除失败')
       }
@@ -705,7 +704,7 @@ const confirmDelete = async () => {
       if (res.data.code === 200) {
         ElMessage.success('角色删除成功')
         deleteDialogVisible.value = false
-        loadRoleList()
+        await loadRoleList()
       } else {
         ElMessage.error(res.data.msg || '删除失败')
       }

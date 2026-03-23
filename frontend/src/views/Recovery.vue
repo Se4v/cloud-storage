@@ -72,10 +72,7 @@
           >
             <template #default="{ row }">
               <div class="flex items-center gap-3 py-1">
-                <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
-                    :class="getFileIconBg(row.type)"
-                >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white bg-slate-400">
                   <el-icon :size="20">
                     <component :is="getFileIcon(row.type)" />
                   </el-icon>
@@ -198,6 +195,20 @@ import {
   RefreshLeft
 } from '@element-plus/icons-vue'
 
+// API 基础配置
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取请求配置（包含认证头）
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
 const tableRef = ref()
 const selectedRows = ref([])
 const currentPage = ref(1)
@@ -207,7 +218,7 @@ const tableData = ref([
   {
     id: "1234",
     name: "abc",
-    type: "folder",
+    type: 2,
     path: "abc",
     deleteTime: "2024-05-23 12:23:13",
     expireTime: "2024-05-23 12:23:13",
@@ -220,15 +231,17 @@ const loading = ref(false)
 const loadRecycleList = async () => {
   loading.value = true
   try {
-    const response = await axios.get('/api/recycle/list')
-    if (response.data.code === 200) {
-      tableData.value = response.data.data || []
+    const response = await axios.get(`${API_BASE_URL}/api/recycle`, getAuthConfig())
+    const { code, data, msg } = response.data
+    if (code === 200) {
+      tableData.value = data || []
       total.value = tableData.value.length
     } else {
-      ElMessage.error(response.data.message || '获取回收站列表失败')
+      ElMessage.error(msg || '获取回收站列表失败')
     }
   } catch (error) {
-    ElMessage.error('获取回收站列表失败')
+    const errorMsg = error.response?.data?.msg || error.message || '获取回收站列表失败'
+    ElMessage.error(errorMsg)
     console.error(error)
   } finally {
     loading.value = false
@@ -254,17 +267,7 @@ const formatFileSize = (size) => {
 
 // 获取文件图标
 const getFileIcon = (type) => {
-  return type === 'folder' ? Folder : Document
-}
-
-// 获取文件图标背景色
-const getFileIconBg = (type) => {
-  return 'bg-slate-400'
-}
-
-// 获取文件图标颜色
-const getFileIconColor = (type) => {
-  return 'text-white'
+  return type === 2 ? Folder : Document
 }
 
 // 选择变化
@@ -287,13 +290,17 @@ const handleRestore = async (row) => {
     )
 
     loading.value = true
-    const response = await axios.post('/api/recycle/restore', [parseInt(row.id)])
-    if (response.data.code === 200) {
+    const restoreData = {
+      ids: [parseInt(row.id)]
+    }
+    const response = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
+    const { code, msg } = response.data
+    if (code === 200) {
       ElMessage.success('还原成功')
       await loadRecycleList()
       selectedRows.value = []
     } else {
-      ElMessage.error(response.data.message || '还原失败')
+      ElMessage.error(msg || '还原失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -320,17 +327,22 @@ const handleDelete = async (row) => {
     )
 
     loading.value = true
-    const response = await axios.post('/api/recycle/delete', [parseInt(row.id)])
-    if (response.data.code === 200) {
+    const deleteData = {
+      ids: [parseInt(row.id)]
+    }
+    const response = await axios.post(`${API_BASE_URL}/api/recycle/delete`, deleteData, getAuthConfig())
+    const { code, msg } = response.data
+    if (code === 200) {
       ElMessage.success('已彻底删除')
       await loadRecycleList()
       selectedRows.value = []
     } else {
-      ElMessage.error(response.data.message || '删除失败')
+      ElMessage.error(msg || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
+      ElMessage.error(errorMsg)
       console.error(error)
     }
   } finally {
@@ -360,18 +372,23 @@ const handleBatchRestore = async () => {
 
     loading.value = true
     const ids = selectedRows.value.map(row => parseInt(row.id))
-    const response = await axios.post('/api/recycle/restore', ids)
-    if (response.data.code === 200) {
+    const restoreData = {
+      ids: ids
+    }
+    const response = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
+    const { code, msg } = response.data
+    if (code === 200) {
       ElMessage.success('还原成功')
       await loadRecycleList()
       selectedRows.value = []
       tableRef.value?.clearSelection()
     } else {
-      ElMessage.error(response.data.message || '还原失败')
+      ElMessage.error(msg || '还原失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('还原失败')
+      const errorMsg = error.response?.data?.msg || error.message || '还原失败'
+      ElMessage.error(errorMsg)
       console.error(error)
     }
   } finally {
@@ -401,18 +418,23 @@ const handleBatchDelete = async () => {
 
     loading.value = true
     const ids = selectedRows.value.map(row => parseInt(row.id))
-    const response = await axios.post('/api/recycle/delete', ids)
-    if (response.data.code === 200) {
+    const deleteData = {
+      ids: ids
+    }
+    const response = await axios.post(`${API_BASE_URL}/api/recycle/delete`, deleteData, getAuthConfig())
+    const { code, msg } = response.data
+    if (code === 200) {
       ElMessage.success('已彻底删除')
       await loadRecycleList()
       selectedRows.value = []
       tableRef.value?.clearSelection()
     } else {
-      ElMessage.error(response.data.message || '删除失败')
+      ElMessage.error(msg || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
+      ElMessage.error(errorMsg)
       console.error(error)
     }
   } finally {
@@ -440,18 +462,20 @@ const handleClearAll = async () => {
     )
 
     loading.value = true
-    const response = await axios.post('/api/recycle/clear')
-    if (response.data.code === 200) {
+    const response = await axios.post(`${API_BASE_URL}/api/recycle/clear`, {}, getAuthConfig())
+    const { code, msg } = response.data
+    if (code === 200) {
       ElMessage.success('回收站已清空')
       await loadRecycleList()
       selectedRows.value = []
       tableRef.value?.clearSelection()
     } else {
-      ElMessage.error(response.data.message || '清空失败')
+      ElMessage.error(msg || '清空失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('清空失败')
+      const errorMsg = error.response?.data?.msg || error.message || '清空失败'
+      ElMessage.error(errorMsg)
       console.error(error)
     }
   } finally {
