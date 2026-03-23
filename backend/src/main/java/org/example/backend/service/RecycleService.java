@@ -2,10 +2,13 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.apache.ibatis.annotations.Delete;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
+import org.example.backend.model.args.DeleteEntryArgs;
+import org.example.backend.model.args.RestoreEntryArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
@@ -37,7 +40,7 @@ public class RecycleService {
     /**
      * 查询用户回收站中的条目
      */
-    public List<RecycleView> listRecycleEntries(Long userId) {
+    public List<RecycleView> listEntries(Long userId) {
         // 查询用户回收站中的条目（状态为已删除且未过期）
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getDeleterId, userId)
@@ -82,10 +85,10 @@ public class RecycleService {
      * 批量恢复条目
      */
     @Transactional
-    public void restoreRecycleEntries(List<Long> entryIds) {
+    public void restoreEntries(RestoreEntryArgs args) {
         // 查询要恢复的条目
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.in(Entry::getId, entryIds).eq(Entry::getStatus, DELETED);
+        entryQuery.in(Entry::getId, args.getIds()).eq(Entry::getStatus, DELETED);
         List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
@@ -135,11 +138,11 @@ public class RecycleService {
      * 批量永久删除条目
      */
     @Transactional
-    public void permanentlyDeleteRecycleEntries(List<Long> entryIds) {
+    public void deleteEntries(DeleteEntryArgs args) {
         // 查询要删除的条目
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Entry::getId, entryIds).eq(Entry::getStatus, DELETED);
-        List<Entry> entries = entryMapper.selectList(queryWrapper);
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.in(Entry::getId, args.getIds()).eq(Entry::getStatus, DELETED);
+        List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
         // 分类为文件和文件夹，同时收集所有文件的storageId
@@ -203,72 +206,66 @@ public class RecycleService {
      * 清空用户回收站
      */
     @Transactional
-    public void clearRecycleEntries(Long userId) {
-        // 1. 查询用户回收站中所有条目
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getDeleterId, userId)
-                .eq(Entry::getStatus, DELETED);
-        List<Entry> entries = entryMapper.selectList(queryWrapper);
+    public void clearEntries(Long userId) {
+        // 查询用户回收站中所有条目
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getDeleterId, userId).eq(Entry::getStatus, DELETED);
+        List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("clear recycle bin failed");
 
         // 2. 分类为文件和文件夹，同时收集所有文件的storageId
         List<Long> fileIds = new ArrayList<>();
         List<Long> folderIds = new ArrayList<>();
         Set<Long> fileStorageIds = new HashSet<>();
-
-        for (Entry entry : entries) {
+        entries.forEach(entry -> {
             if (entry.getEntryType() == FILE) {
                 fileIds.add(entry.getId());
                 fileStorageIds.add(entry.getStorageId());
-            } else if (entry.getEntryType() == FOLDER) {
+            } else {
                 folderIds.add(entry.getId());
             }
-        }
+        });
 
-        // 3. 查询文件夹的所有子项并分类
+        // 查询文件夹的所有子项并分类
         List<Long> allChildFileIds = new ArrayList<>();
         List<Long> allChildFolderIds = new ArrayList<>();
-
         if (!folderIds.isEmpty()) {
             List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
-            for (Entry child : children) {
-                if (child.getEntryType() == FILE) {
-                    allChildFileIds.add(child.getId());
-                    fileStorageIds.add(child.getStorageId());
-                } else if (child.getEntryType() == FOLDER) {
-                    allChildFolderIds.add(child.getId());
+            children.forEach(entry -> {
+                if (entry.getEntryType() == FILE) {
+                    allChildFileIds.add(entry.getId());
+                    allChildFolderIds.add(entry.getStorageId());
+                } else {
+                    allChildFolderIds.add(entry.getId());
                 }
-            }
+            });
         }
 
-        // 4. 删除所有文件（更新状态为永久删除）
+        // 删除所有文件
         List<Long> allFileIds = new ArrayList<>(fileIds);
         allFileIds.addAll(allChildFileIds);
         if (!allFileIds.isEmpty()) {
-            LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, PERMANENTLY_DELETED)
-                    .in(Entry::getId, allFileIds);
-            int count = entryMapper.update(updateWrapper);
+            LambdaUpdateWrapper<Entry> fileUpdate = new LambdaUpdateWrapper<>();
+            fileUpdate.set(Entry::getStatus, PERMANENTLY_DELETED).in(Entry::getId, allFileIds);
+            int count = entryMapper.update(fileUpdate);
             if (count != allFileIds.size()) throw new BusinessException("clear recycle bin failed");
         }
 
-        // 5. 删除所有文件夹（更新状态为永久删除）
+        // 删除所有文件夹
         List<Long> allFolderIds = new ArrayList<>(folderIds);
         allFolderIds.addAll(allChildFolderIds);
         if (!allFolderIds.isEmpty()) {
-            LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.set(Entry::getStatus, PERMANENTLY_DELETED)
-                    .in(Entry::getId, allFolderIds);
-            int count = entryMapper.update(updateWrapper);
+            LambdaUpdateWrapper<Entry> folderUpdate = new LambdaUpdateWrapper<>();
+            folderUpdate.set(Entry::getStatus, PERMANENTLY_DELETED).in(Entry::getId, allFolderIds);
+            int count = entryMapper.update(folderUpdate);
             if (count != allFolderIds.size()) throw new BusinessException("clear recycle bin failed");
         }
 
-        // 6. 所有文件的storageId对应的refCount减1
+        // 物理文件的引用计数减1
         if (!fileStorageIds.isEmpty()) {
             List<Long> storageIdList = new ArrayList<>(fileStorageIds);
             LambdaUpdateWrapper<Storage> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.setDecrBy(Storage::getRefCount, 1)
-                    .in(Storage::getId, fileStorageIds);
+            updateWrapper.setDecrBy(Storage::getRefCount, 1).in(Storage::getId, fileStorageIds);
             int count = storageMapper.update(updateWrapper);
             if (count != storageIdList.size()) throw new BusinessException("Update storage ref count failed");
         }

@@ -2,6 +2,8 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
+import org.example.backend.model.args.DeleteEntryArgs;
+import org.example.backend.model.args.RestoreEntryArgs;
 import org.example.backend.model.view.RecycleView;
 import org.example.backend.service.RecycleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,21 +27,20 @@ public class RecycleController {
         // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
         // List<RecycleView> recycleViewList = recycleService.listEntries(userDetails.getUserId());
 
-        List<RecycleView> recycleViewList = recycleService.listRecycleEntries(userId);
-
+        List<RecycleView> recycleViewList = recycleService.listEntries(userId);
         return Result.success("", recycleViewList);
     }
 
 
     @PostMapping("/restore")
-    public Result<Void> restoreEntries(@RequestBody List<Long> ids) {
-        recycleService.restoreRecycleEntries(ids);
+    public Result<Void> restoreEntries(@RequestBody RestoreEntryArgs args) {
+        recycleService.restoreEntries(args);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteEntries(@RequestBody List<Long> ids) {
-        recycleService.permanentlyDeleteRecycleEntries(ids);
+    public Result<Void> deleteEntries(@RequestBody DeleteEntryArgs args) {
+        recycleService.deleteEntries(args);
         return Result.success();
     }
 
@@ -48,6 +49,8 @@ public class RecycleController {
         // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
         // recycleService.clearRecycleEntries(userDetails.getUserId());
+
+        recycleService.clearEntries(userId);
 
         return Result.success();
     }
