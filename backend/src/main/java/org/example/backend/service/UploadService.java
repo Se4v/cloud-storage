@@ -1,11 +1,16 @@
 package org.example.backend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.minio.*;
 import io.minio.http.Method;
 import io.minio.messages.Part;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.config.MinioConfig;
+import org.example.backend.mapper.DriveMapper;
+import org.example.backend.mapper.EntryMapper;
+import org.example.backend.mapper.StorageMapper;
 import org.example.backend.model.args.SimpleUploadArgs;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Entry;
@@ -16,6 +21,8 @@ import org.example.backend.model.view.UploadChunkView;
 import org.example.backend.model.view.SimpleUploadView;
 import org.example.backend.model.view.InitUploadView;
 import org.example.backend.repository.FileRepository;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class UploadService {
     @Autowired
-    private FileRepository fileRepository;
+    private RedissonClient redissonClient;
     @Autowired
     private MinioConfig minioConfig;
     @Autowired
@@ -38,11 +45,18 @@ public class UploadService {
     @Autowired
     private MinioAsyncClient minioAsyncClient;
     @Autowired
-    private MinioClient minioClient;
+    private StorageMapper storageMapper;
+    @Autowired
+    private EntryMapper entryMapper;
+    @Autowired
+    private DriveMapper driveMapper;
 
     private static final String TASK_KEY_PREFIX = "upload:task:";
     private static final String CHUNKS_KEY_PREFIX = "upload:chunks:";
+    private static final String LOCK_KEY_PREFIX = "upload:lock:";
     private static final long TASK_EXPIRE_HOURS = 24;
+    private static final long LOCK_WAIT_SECONDS = 10;
+    private static final long LOCK_LEASE_SECONDS = 30;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
     private static final String UPLOAD_TYPE_DIRECT = "direct";
@@ -57,6 +71,10 @@ public class UploadService {
 
     private String getChunksKey(Long userId, String sha256) {
         return CHUNKS_KEY_PREFIX + userId + ":" + sha256;
+    }
+
+    private String getLockKey(Long userId, String sha256) {
+        return LOCK_KEY_PREFIX + userId + ":" + sha256;
     }
 
     // ================== 路线 1 & 2 & 3: 初始化上传 ==================
@@ -91,86 +109,111 @@ public class UploadService {
     }
 
     private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg, InitUploadArgs args) throws Exception {
-        // 【路线一：秒传检查】
-        Storage existStorage = fileRepository.findBlobBySha256(arg.getSha256());
-        if (existStorage != null && existStorage.getEnabled() == 1) {
-            Entry entry = Entry.builder()
-                    .driveId(args.getDriveId())
-                    .parentId(args.getParentId())
-                    .userId(args.getUserId())
-                    .storageId(existStorage.getId())
-                    .entryName(arg.getEntryName())
-                    .entryType(1)
-                    .fileSize(arg.getFileSize())
-                    .fileExt(existStorage.getFileExt())
-                    .status(1)
-                    .build();
-            fileRepository.saveEntryWithIncreaseRefCount(entry, arg.getSha256());
-            return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                    .message("秒传成功").isSkip(true).build();
-        }
+        // 使用Redisson分布式锁
+        String lockKey = getLockKey(args.getUserId(), arg.getSha256());
+        RLock lock = redissonClient.getLock(lockKey);
 
-        String taskKey = getTaskKey(args.getUserId(), arg.getSha256());
-        Map<Object, Object> existingTask = redisTemplate.opsForHash().entries(taskKey);
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
+            }
 
-        // 【断点续传检查】(如果有未完成的任务，直接返回剩下的链接)
-        if (!existingTask.isEmpty()) {
-            String uploadType = existingTask.get("uploadType").toString();
-            String objectName = existingTask.get("objectName").toString();
+            // 路线一：秒传检查
+            LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
+            storageQuery.eq(Storage::getSha256, arg.getSha256());
+            Storage existStorage = storageMapper.selectOne(storageQuery);
+            if (existStorage != null && existStorage.getEnabled() == 1) {
+                Entry entry = Entry.builder()
+                        .driveId(args.getDriveId())
+                        .parentId(args.getParentId())
+                        .userId(args.getUserId())
+                        .storageId(existStorage.getId())
+                        .entryName(arg.getEntryName())
+                        .entryType(1)
+                        .fileSize(arg.getFileSize())
+                        .fileExt(existStorage.getFileExt())
+                        .status(1)
+                        .build();
 
-            if (UPLOAD_TYPE_DIRECT.equals(uploadType)) {
-                // 小文件续传：重新给一个 PUT 链接
+                int entryCount = entryMapper.insert(entry);
+                if (entryCount != 1) throw new BusinessException("Entry插入失败，受影响行数：" + entryCount);
+                LambdaUpdateWrapper<Storage> updateStorage = new LambdaUpdateWrapper<>();
+                updateStorage.setDecrBy(Storage::getRefCount, 1).eq(Storage::getId, existStorage.getId());
+                int blobCount = storageMapper.increaseRefCountBySha256(arg.getSha256());
+                if (blobCount != 1) throw new BusinessException("增加引用计数失败，受影响行数：" + blobCount);
+
+                return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
+                        .message("秒传成功").isSkip(true).build();
+            }
+
+            String taskKey = getTaskKey(args.getUserId(), arg.getSha256());
+            Map<Object, Object> existingTask = redisTemplate.opsForHash().entries(taskKey);
+
+            // 【断点续传检查】(如果有未完成的任务，直接返回剩下的链接)
+            if (!existingTask.isEmpty()) {
+                String uploadType = existingTask.get("uploadType").toString();
+                String objectName = existingTask.get("objectName").toString();
+
+                if (UPLOAD_TYPE_DIRECT.equals(uploadType)) {
+                    // 小文件续传：重新给一个 PUT 链接
+                    String uploadUrl = generateSinglePresignedUrl(objectName);
+                    return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
+                            .message("小文件断点续传").isSkip(false).isMultipart(false)
+                            .uploadUrl(uploadUrl).sha256(arg.getSha256()).build();
+                } else {
+                    // 大文件续传：查出缺失的分片，生成链接
+                    String uploadId = existingTask.get("uploadId").toString();
+                    List<Integer> uploadedChunks = getUploadedChunksFromRedis(args.getUserId(), arg.getSha256());
+                    List<String> chunkUrls = regenerateChunkUrls(uploadId, objectName, arg.getTotalChunks(), uploadedChunks);
+                    return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
+                            .message("大文件分片断点续传").isSkip(false).isMultipart(true)
+                            .sha256(arg.getSha256()).uploadedChunks(uploadedChunks).chunkUrls(chunkUrls).build();
+                }
+            }
+
+            // 新建上传任务
+            String objectName = generateObjectName(arg.getSha256(), arg.getEntryName());
+
+            // 路线二：小文件直传初始化
+            if (arg.getFileSize() <= minioConfig.getDirectUploadThreshold()) {
                 String uploadUrl = generateSinglePresignedUrl(objectName);
+                saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args);
+
                 return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                        .message("小文件断点续传").isSkip(false).isMultipart(false)
+                        .message("获取小文件直传链接成功").isSkip(false).isMultipart(false)
                         .uploadUrl(uploadUrl).sha256(arg.getSha256()).build();
-            } else {
-                // 大文件续传：查出缺失的分片，生成链接
-                String uploadId = existingTask.get("uploadId").toString();
-                List<Integer> uploadedChunks = getUploadedChunksFromRedis(args.getUserId(), arg.getSha256());
-                List<String> chunkUrls = regenerateChunkUrls(uploadId, objectName, arg.getTotalChunks(), uploadedChunks);
-                return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                        .message("大文件分片断点续传").isSkip(false).isMultipart(true)
-                        .sha256(arg.getSha256()).uploadedChunks(uploadedChunks).chunkUrls(chunkUrls).build();
+            }
+
+            // 【路线三：大文件分片初始化】
+            CompletableFuture<CreateMultipartUploadResponse> response = minioAsyncClient.createMultipartUploadAsync(
+                    minioConfig.getBucketName(), null, objectName, null, null);
+            String uploadId = response.get().result().uploadId();
+
+            saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, arg, args);
+            List<String> chunkUrls = generateChunkUrls(uploadId, objectName, arg.getTotalChunks());
+
+            // 初始化分片记录表
+            String chunksKey = getChunksKey(args.getUserId(), arg.getSha256());
+            redisTemplate.opsForHash().putAll(chunksKey, new HashMap<>());
+            redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
+
+            return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
+                    .message("大文件分片上传初始化成功").isSkip(false).isMultipart(true)
+                    .sha256(arg.getSha256()).uploadedChunks(List.of()).chunkUrls(chunkUrls).build();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("<UNK>");
+        } finally {
+            if (locked) {
+                lock.unlock();
             }
         }
-
-        // 新建上传任务
-        String objectName = generateObjectName(arg.getSha256(), arg.getEntryName());
-
-        // 【路线二：小文件直传初始化】
-        if (arg.getFileSize() <= minioConfig.getDirectUploadThreshold()) {
-            String uploadUrl = generateSinglePresignedUrl(objectName);
-            saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args);
-
-            return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                    .message("获取小文件直传链接成功").isSkip(false).isMultipart(false)
-                    .uploadUrl(uploadUrl).sha256(arg.getSha256()).build();
-        }
-
-        // 【路线三：大文件分片初始化】
-        CompletableFuture<CreateMultipartUploadResponse> response = minioAsyncClient.createMultipartUploadAsync(
-                minioConfig.getBucketName(), null, objectName, null, null);
-        String uploadId = response.get().result().uploadId();
-
-        saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, arg, args);
-        List<String> chunkUrls = generateChunkUrls(uploadId, objectName, arg.getTotalChunks());
-
-        // 初始化分片记录表
-        String chunksKey = getChunksKey(args.getUserId(), arg.getSha256());
-        redisTemplate.opsForHash().putAll(chunksKey, new HashMap<>());
-        redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
-
-        return InitUploadView.View.builder().entryName(arg.getEntryName()).success(true)
-                .message("大文件分片上传初始化成功").isSkip(false).isMultipart(true)
-                .sha256(arg.getSha256()).uploadedChunks(List.of()).chunkUrls(chunkUrls).build();
     }
 
-
-    // ================== 收尾工作 ==================
-
     /**
-     * 【路线二 收尾】小文件直传完成确认
+     * 小文件直传完成确认
      */
     public SimpleUploadView simpleUpload(SimpleUploadArgs args, Long userId) {
         String taskKey = getTaskKey(userId, args.getSha256());
@@ -184,7 +227,7 @@ public class UploadService {
     }
 
     /**
-     * 【路线三 记录进度】大文件分片上传进度记录
+     * 【大文件分片上传进度记录
      */
     public UploadChunkView uploadChunk(UploadChunkArgs args, Long userId) {
         List<UploadChunkView.View> viewList = new ArrayList<>();
@@ -216,7 +259,7 @@ public class UploadService {
     }
 
     /**
-     * 【路线三 收尾】大文件合并分片
+     * 大文件合并分片
      */
     public MergeChunksView mergeChunks(String sha256, Long userId) {
         String taskKey = getTaskKey(userId, sha256);
@@ -287,7 +330,23 @@ public class UploadService {
                     .sha256(sha256).bucketName(minioConfig.getBucketName()).objectKey(objectName)
                     .mimeType(mimeType).enabled(1).refCount(0).build();
 
-            fileRepository.saveEntryAndBlobWithUpdateDriveQuota(entry, storage);
+            int blobCount = storageMapper.insert(storage);
+            if (blobCount != 1) {
+                throw new BusinessException("Blob插入失败，受影响行数：" + blobCount);
+            }
+            Long storageId = storage.getId();
+            if (storageId == null) {
+                throw new BusinessException("Blob插入后主键未回填");
+            }
+            entry.setStorageId(storageId);
+            int entryCount = entryMapper.insert(entry);
+            if (entryCount != 1) {
+                throw new BusinessException("Entry插入失败，受影响行数：" + entryCount);
+            }
+            int driveCount = driveMapper.increaseUsedQuotaById(entry.getDriveId(), entry.getFileSize());
+            if (driveCount != 1) {
+                throw new BusinessException("空间配额更新失败，driveId："+ entry.getDriveId() + "，受影响行数：" + driveCount);
+            }
 
             // 成功后删除 Redis 任务
             redisTemplate.delete(taskKey);
