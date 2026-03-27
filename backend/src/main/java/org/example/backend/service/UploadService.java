@@ -37,6 +37,8 @@ public class UploadService {
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private MinioAsyncClient minioAsyncClient;
+    @Autowired
+    private MinioClient minioClient;
 
     private static final String TASK_KEY_PREFIX = "upload:task:";
     private static final String CHUNKS_KEY_PREFIX = "upload:chunks:";

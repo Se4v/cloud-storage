@@ -152,7 +152,7 @@
           <el-table-column label="大小" width="120">
             <template #default="{ row }">
               <span class="text-sm text-slate-600 font-medium tabular-nums">
-                {{ row.type === 'folder' ? '-' : formatSize(row.size) }}
+                {{ row.type === 2 ? '-' : formatSize(row.size) }}
               </span>
             </template>
           </el-table-column>
@@ -495,7 +495,7 @@ const fileList = ref([
   {
     id: '123',
     name: '3',
-    type: 'file',
+    type: 1,
     size: '123',
     createTime: '123123'
   }
@@ -530,7 +530,7 @@ const filteredFiles = computed(() => {
 // 获取文件图标
 const getFileIcon = (file) => {
   const iconMap = {
-    folder: FolderOpened,
+    2: FolderOpened,
     default: Document
   }
   return iconMap[file.type] || iconMap.default
@@ -587,7 +587,7 @@ const loadFileList = async (parentId = null) => {
 
 // 打开文件/文件夹
 const handleOpenFile = (file) => {
-  if (file.type === 'folder') {
+  if (file.type === 2) {
     // 进入文件夹：更新路径历史，重新加载文件列表
     pathHistory.value.push({ id: file.id, name: file.name })
     currentParentId.value = file.id
@@ -839,7 +839,7 @@ const handleCopy = () => {
   }
 
   const selectedFile = selectedFiles.value[0]
-  if (selectedFile.type === 'folder') {
+  if (selectedFile.type === 2) {
     ElMessage.warning('不能复制文件夹，请选择文件')
     return
   }

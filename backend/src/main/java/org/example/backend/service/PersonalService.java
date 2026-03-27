@@ -29,7 +29,6 @@ public class PersonalService {
     private static final int EXPIRE_DAYS = 15;
 
     public List<Entry> listEntries(Long driveId, Long parentId) {
-        // 查询文件列表
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         if (parentId == null) parentId = 0L;
         entryQuery.eq(Entry::getParentId, parentId)

@@ -70,19 +70,19 @@ public class PersonalController {
 
     @GetMapping
     public Result<List<EntryView>> listEntries(@RequestParam Long driveId, @RequestParam(required = false) Long parentId) {
-        List<Entry> entryList = personalService.listEntries(driveId, parentId);
-        List<EntryView> viewList = entryList.stream().map(entry -> EntryView.builder()
-                .id(String.valueOf(entry.getId()))
+        List<Entry> entries = personalService.listEntries(driveId, parentId);
+        List<EntryView> views = entries.stream().map(entry -> EntryView.builder()
+                .id(entry.getId())
                 .name(entry.getEntryName())
-                .type(entry.getEntryType() == 1 ? "file" : "folder")
-                .size(String.valueOf(entry.getFileSize()))
-                .createTime(entry.getCreatedAt().format(formatter))
+                .type(entry.getEntryType())
+                .size(entry.getFileSize())
+                .createTime(entry.getCreatedAt())
                 .build()).toList();
-        return Result.success("", viewList);
+        return Result.success("", views);
     }
 
     @GetMapping("/folder")
-    public Result<?> listFolders() {
+    public Result<?> listFolders(@RequestParam Long driveId) {
         return Result.success();
     }
 
