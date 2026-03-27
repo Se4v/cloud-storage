@@ -2,7 +2,6 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import org.apache.ibatis.annotations.Delete;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -11,8 +10,6 @@ import org.example.backend.model.args.DeleteEntryArgs;
 import org.example.backend.model.args.RestoreEntryArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
-import org.example.backend.model.entity.Storage;
-import org.example.backend.model.result.RecycleDetailResult;
 import org.example.backend.model.view.RecycleView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -148,7 +145,7 @@ public class RecycleService {
         // 分类为文件和文件夹，同时收集所有文件的storageId
         List<Long> fileIds = new ArrayList<>();
         List<Long> folderIds = new ArrayList<>();
-        Set<Long> storageIds = new HashSet<>();
+        List<Long> storageIds = new ArrayList<>();
         entries.forEach(entry -> {
             if (entry.getEntryType() == FILE) {
                 fileIds.add(entry.getId());
@@ -166,7 +163,7 @@ public class RecycleService {
             children.forEach(entry -> {
                 if (entry.getEntryType() == FILE) {
                     allChildFileIds.add(entry.getId());
-                    allChildFolderIds.add(entry.getStorageId());
+                    storageIds.add(entry.getStorageId());
                 } else {
                     allChildFolderIds.add(entry.getId());
                 }
@@ -195,10 +192,10 @@ public class RecycleService {
 
         // 物理文件的引用计数减1
         if (!storageIds.isEmpty()) {
-            LambdaUpdateWrapper<Storage> storageUpdate = new LambdaUpdateWrapper<>();
-            storageUpdate.setDecrBy(Storage::getRefCount, 1).in(Storage::getId, storageIds);
-            int count = storageMapper.update(storageUpdate);
-            if (count != storageIds.size()) throw new BusinessException("Update storage ref count failed");
+            Map<Long, Integer> countMap = storageIds.stream().collect(Collectors.toMap(
+                    id -> id, id -> 1, Integer::sum));
+            int count = storageMapper.batchUpdateRefCount(countMap);
+            if (count != countMap.size()) throw new BusinessException("Update storage ref count failed");
         }
     }
 
@@ -216,11 +213,11 @@ public class RecycleService {
         // 2. 分类为文件和文件夹，同时收集所有文件的storageId
         List<Long> fileIds = new ArrayList<>();
         List<Long> folderIds = new ArrayList<>();
-        Set<Long> fileStorageIds = new HashSet<>();
+        List<Long> storageIds = new ArrayList<>();
         entries.forEach(entry -> {
             if (entry.getEntryType() == FILE) {
                 fileIds.add(entry.getId());
-                fileStorageIds.add(entry.getStorageId());
+                storageIds.add(entry.getStorageId());
             } else {
                 folderIds.add(entry.getId());
             }
@@ -234,7 +231,7 @@ public class RecycleService {
             children.forEach(entry -> {
                 if (entry.getEntryType() == FILE) {
                     allChildFileIds.add(entry.getId());
-                    allChildFolderIds.add(entry.getStorageId());
+                    storageIds.add(entry.getStorageId());
                 } else {
                     allChildFolderIds.add(entry.getId());
                 }
@@ -262,12 +259,11 @@ public class RecycleService {
         }
 
         // 物理文件的引用计数减1
-        if (!fileStorageIds.isEmpty()) {
-            List<Long> storageIdList = new ArrayList<>(fileStorageIds);
-            LambdaUpdateWrapper<Storage> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.setDecrBy(Storage::getRefCount, 1).in(Storage::getId, fileStorageIds);
-            int count = storageMapper.update(updateWrapper);
-            if (count != storageIdList.size()) throw new BusinessException("Update storage ref count failed");
+        if (!storageIds.isEmpty()) {
+            Map<Long, Integer> countMap = storageIds.stream().collect(Collectors.toMap(
+                    id -> id, id -> 1, Integer::sum));
+            int count = storageMapper.batchUpdateRefCount(countMap);
+            if (count != countMap.size()) throw new BusinessException("Update storage ref count failed");
         }
     }
 }
