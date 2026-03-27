@@ -495,7 +495,7 @@ const fileList = ref([
   {
     id: '123',
     name: '3',
-    type: 'folder',
+    type: 'file',
     size: '123',
     createTime: '123123'
   }
