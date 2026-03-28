@@ -124,4 +124,10 @@ public class PersonalController {
     public Result<?> getPersonalDriveUsage() {
         return null;
     }
+
+    @GetMapping("/id")
+    public Result<?> getPersonalDriveId() {
+        Long personalDriveId = personalService.getPersonalDriveId(userId);
+        return Result.success(personalDriveId);
+    }
 }

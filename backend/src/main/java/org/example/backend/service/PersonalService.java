@@ -8,6 +8,7 @@ import org.example.backend.mapper.EntryMapper;
 import org.example.backend.model.args.CreateFolderArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
+import org.example.backend.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ public class PersonalService {
                 .eq(Entry::getDriveId, driveId)
                 .eq(Entry::getStatus, UNDELETED);
         List<Entry> entries = entryMapper.selectList(entryQuery);
-        if (entries == null || entries.isEmpty()) throw new BusinessException("<UNK>");
+        if (entries == null || entries.isEmpty()) return List.of();
 
         return entries;
     }
@@ -169,6 +170,16 @@ public class PersonalService {
         int count = entryMapper.update(updateWrapper);
         if (count != allIds.size()) throw new BusinessException("delete entries failed");
     }
+
+    public Long getPersonalDriveId(Long userId) {
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getUserId, userId)
+                .eq(Drive::getDriveType, 1);
+        Drive drive = driveMapper.selectOne(driveQuery);
+        if (drive == null) throw new BusinessException("Drive does not exist");
+        return drive.getId();
+    }
+
 
     private boolean validateFileName(String fileName) {
         if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;

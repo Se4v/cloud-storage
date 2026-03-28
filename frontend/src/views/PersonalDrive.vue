@@ -449,10 +449,6 @@ import {
   Folder,
   FolderOpened,
   Document,
-  Picture,
-  VideoCamera,
-  Headset,
-  Box,
   Upload,
   Plus,
   Download,
@@ -467,6 +463,23 @@ import {
   Check
 } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useUserStore } from '@/stores/user.js'
+
+const userStore = useUserStore()
+
+// API 基础配置
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取请求配置（包含认证头）
+const getAuthConfig = () => {
+  const token = userStore.token
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 const route = useRoute()
 
@@ -564,17 +577,19 @@ const loadFileList = async (parentId = null) => {
 
   loading.value = true
   try {
-    let url = `/api/personal/list?driveId=${driveId.value}`
-    if (parentId !== null) {
-      url += `&parentId=${parentId}`
-    }
-    const response = await axios.get(url)
-    if (response.data.code === 200) {
-      fileList.value = response.data.data || []
+    const res = await axios.get(`${API_BASE_URL}/api/personal`, {
+      ...getAuthConfig(),
+      params: {
+        driveId: driveId.value,
+        parentId: parentId
+      }
+    })
+    if (res.data.code === 200) {
+      fileList.value = res.data.data || []
       total.value = fileList.value.length
       selectedFiles.value = []
     } else {
-      ElMessage.error(response.data.message || '加载失败')
+      ElMessage.error(res.data.msg || '加载失败')
     }
   } catch (error) {
     console.error('加载文件列表失败:', error)

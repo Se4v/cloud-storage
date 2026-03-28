@@ -223,9 +223,25 @@ import {
   User
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user.js'
+import axios from "axios";
+
+const userStore = useUserStore()
+
+// API 基础配置
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取请求配置（包含认证头）
+const getAuthConfig = () => {
+  const token = userStore.token
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
 
 const router = useRouter()
-const userStore = useUserStore()
 const route = useRoute()
 const currentMenu = ref('personal')
 const currentNodeId = ref('dept_2_2')
@@ -344,18 +360,8 @@ const toggleEnterprise = () => {
   }
 }
 
-// 获取个人空间ID
-const fetchPersonalDriveId = async () => {
-  // TODO: 从后端获取个人空间ID
-  // const response = await axios.get('/api/drive/personal-id')
-  // userStore.personalDriveId = response.data.data
-}
-
 // 页面加载时获取个人空间ID
 onMounted(() => {
-  if (!userStore.personalDriveId) {
-    fetchPersonalDriveId()
-  }
 })
 
 // 处理个人空间点击
@@ -364,7 +370,8 @@ const handlePersonalSpaceClick = async () => {
   
   // 如果 Pinia 中没有 personalDriveId，先获取
   if (!userStore.personalDriveId) {
-    await fetchPersonalDriveId()
+    const response = await axios.get(`${API_BASE_URL}/api/personal/id`, getAuthConfig())
+    userStore.personalDriveId = response.data.data
   }
   
   // 使用 router.push 跳转到个人空间
