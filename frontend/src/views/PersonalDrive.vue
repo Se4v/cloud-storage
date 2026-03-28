@@ -650,7 +650,7 @@ const handleUpload = () => {
 
 // 处理文件选择
 const handleFileChange = async (event) => {
-  const files = event.target.files
+  const files = Array.from(event.target.files)
   if (files.length === 0) return
 
   // 检查是否选择了文件夹
@@ -662,12 +662,10 @@ const handleFileChange = async (event) => {
     }
   }
 
-  // 清空input，允许再次选择相同的文件
-  event.target.value = ''
-
   // 检查driveId
   if (!driveId.value) {
     ElMessage.error('未获取到 driveId')
+    event.target.value = ''
     return
   }
 
@@ -697,6 +695,9 @@ const handleFileChange = async (event) => {
       ElMessage.error(`文件 "${file.name}" 处理失败`)
     }
   }
+
+  // 清空input，允许再次选择相同的文件
+  event.target.value = ''
 
   if (uploadArgs.length === 0) {
     ElMessage.warning('没有可上传的文件')
