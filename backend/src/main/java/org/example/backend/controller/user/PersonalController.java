@@ -92,21 +92,25 @@ public class PersonalController {
 
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
+        personalService.createFolder(args, userId);
         return Result.success();
     }
 
     @PostMapping("/move")
-    public Result<?> moveEntries() {
+    public Result<?> moveEntries(@RequestBody MoveEntryArgs args) {
+        personalService.moveEntries(args, userId);
         return Result.success();
     }
 
     @PostMapping("/copy")
-    public Result<?> copyEntries() {
+    public Result<?> copyEntries(@RequestBody CopyEntryArgs args) {
+        personalService.copyEntries(args, userId);
         return Result.success();
     }
 
     @PostMapping("/rename")
-    public Result<?> renameEntry() {
+    public Result<?> renameEntry(@RequestBody RenameEntryArgs args) {
+        personalService.renameEntry(args, userId);
         return Result.success();
     }
 
@@ -116,7 +120,8 @@ public class PersonalController {
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteEntries() {
+    public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
+        personalService.deleteEntries(args, userId);
         return Result.success();
     }
 

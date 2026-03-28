@@ -514,15 +514,7 @@ const pathHistory = ref([])
 const currentParentId = ref(0)
 
 // 文件列表
-const fileList = ref([
-  {
-    id: '123',
-    name: '3',
-    type: 1,
-    size: '123',
-    createTime: '123123'
-  }
-])
+const fileList = ref([])
 
 // 存储空间（单位：字节）
 const usedStorage = ref(49 * 1024 * 1024) // 49MB

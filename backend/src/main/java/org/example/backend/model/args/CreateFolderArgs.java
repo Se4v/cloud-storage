@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class CreateFolderArgs {
-    private Long nodeId;
+    private Long driveId;
     private Long parentId;
     private String folderName;
 }
