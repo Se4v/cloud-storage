@@ -31,7 +31,6 @@ public class PersonalService {
 
     public List<Entry> listEntries(Long driveId, Long parentId) {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        if (parentId == null) parentId = 0L;
         entryQuery.eq(Entry::getParentId, parentId)
                 .eq(Entry::getDriveId, driveId)
                 .eq(Entry::getStatus, UNDELETED);

@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.minio.CreateMultipartUploadResponse;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
@@ -17,6 +18,7 @@ import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.args.MergeChunksArgs;
 import org.example.backend.model.args.SimpleUploadArgs;
 import org.example.backend.model.args.UploadChunkArgs;
+import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.view.InitUploadView;
@@ -420,9 +422,13 @@ public class UploadService {
         String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
         String fileExt = getFileSuffix(entryName);
 
-        Storage storage = storageMapper.selectBySha256(sha256);
+        LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
+        storageQuery.eq(Storage::getSha256, sha256);
+        Storage storage = storageMapper.selectOne(storageQuery);
         Long storageId;
         if (storage != null && Objects.equals(storage.getEnabled(), 1)) {
+            LambdaUpdateWrapper<Storage> storageUpdate = new LambdaUpdateWrapper<>();
+            storageUpdate.setDecrBy(Storage::getRefCount, 1).eq(Storage::getId, storage.getId());
             int refCount = storageMapper.increaseRefCountBySha256(sha256);
             if (refCount != 1) {
                 throw new BusinessException("增加引用计数失败");
@@ -464,7 +470,9 @@ public class UploadService {
             throw new BusinessException("文件条目写入失败");
         }
 
-        int driveCount = driveMapper.increaseUsedQuotaById(driveId, fileSize);
+        LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
+        driveUpdate.setDecrBy(Drive::getUsedQuota, fileSize).eq(Drive::getId, driveId);
+        int driveCount = driveMapper.update(driveUpdate);
         if (driveCount != 1) {
             throw new BusinessException("空间配额更新失败");
         }

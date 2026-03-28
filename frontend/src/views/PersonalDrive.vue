@@ -510,8 +510,8 @@ const driveId = computed(() => route.params.driveId)
 // 面包屑路径历史（前端维护）
 const pathHistory = ref([])
 
-// 当前所在目录的 parentId（根目录为 null）
-const currentParentId = ref(null)
+// 当前所在目录的 parentId（根目录为 0）
+const currentParentId = ref(0)
 
 // 文件列表
 const fileList = ref([
@@ -579,7 +579,7 @@ const handleRowClick = (row) => {
 }
 
 // 加载文件列表
-const loadFileList = async (parentId = null) => {
+const loadFileList = async (parentId = 0) => {
   if (!driveId.value) {
     ElMessage.error('未获取到 driveId')
     return
@@ -625,15 +625,15 @@ const handleOpenFile = (file) => {
 // 面包屑导航 - 返回根目录
 const goToRoot = () => {
   pathHistory.value = []
-  currentParentId.value = null
-  loadFileList(null)
+  currentParentId.value = 0
+  loadFileList(0)
 }
 
 // 面包屑导航 - 点击某个路径层级
 const goToPath = (index) => {
   // 保留从0到index的路径，删除后面的
   pathHistory.value = pathHistory.value.slice(0, index + 1)
-  const targetId = pathHistory.value.length > 0 ? pathHistory.value[pathHistory.value.length - 1].id : null
+  const targetId = pathHistory.value.length > 0 ? pathHistory.value[pathHistory.value.length - 1].id : 0
   currentParentId.value = targetId
   loadFileList(targetId)
 }

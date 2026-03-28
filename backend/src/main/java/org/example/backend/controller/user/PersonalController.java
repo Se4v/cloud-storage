@@ -73,7 +73,7 @@ public class PersonalController {
     }
 
     @GetMapping
-    public Result<List<EntryView>> listEntries(@RequestParam Long driveId, @RequestParam(required = false) Long parentId) {
+    public Result<List<EntryView>> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
         List<Entry> entries = personalService.listEntries(driveId, parentId);
         List<EntryView> views = entries.stream().map(entry -> EntryView.builder()
                 .id(entry.getId())
