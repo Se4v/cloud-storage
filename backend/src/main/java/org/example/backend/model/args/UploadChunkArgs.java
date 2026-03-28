@@ -18,8 +18,6 @@ public class UploadChunkArgs {
         private String sha256;
         @NotBlank
         private String chunkNumber;
-        @NotBlank
         private String etag;
-        private Integer chunkSize;
     }
 }

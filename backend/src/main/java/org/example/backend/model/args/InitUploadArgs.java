@@ -27,7 +27,6 @@ public class InitUploadArgs {
         private String sha256;
         @PositiveOrZero
         private Long fileSize;
-        private Integer chunkSize;
         private Integer totalChunks;
         private String mimeType;
     }

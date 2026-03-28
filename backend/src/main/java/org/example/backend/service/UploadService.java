@@ -169,6 +169,8 @@ public class UploadService {
                     throw new BusinessException("当前任务不是分片上传任务");
                 }
 
+                if (arg.getEtag() == null || arg.getEtag().isBlank()) throw new BusinessException("<UNK>");
+
                 String chunksKey = getChunksKey(userId, arg.getSha256());
                 Object existingEtag = redisTemplate.opsForHash().get(chunksKey, arg.getChunkNumber());
                 if (existingEtag == null) {
@@ -314,9 +316,9 @@ public class UploadService {
             List<String> chunkUrls = generateChunkUrls(uploadId, objectName, arg.getTotalChunks());
 
             // 初始化分片记录表
-            String chunksKey = getChunksKey(args.getUserId(), arg.getSha256());
-            redisTemplate.opsForHash().putAll(chunksKey, new HashMap<>());
-            redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
+            // String chunksKey = getChunksKey(args.getUserId(), arg.getSha256());
+            // redisTemplate.opsForHash().putAll(chunksKey, new HashMap<>());
+            // redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
             return InitUploadView.View.builder()
                     .entryName(arg.getEntryName())
