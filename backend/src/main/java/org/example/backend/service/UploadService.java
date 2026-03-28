@@ -400,12 +400,16 @@ public class UploadService {
             throw new BusinessException("秒传写入文件条目失败");
         }
 
-        int refCount = storageMapper.increaseRefCountBySha256(arg.getSha256());
+        LambdaUpdateWrapper<Storage> storageUpdate = new LambdaUpdateWrapper<>();
+        storageUpdate.setIncrBy(Storage::getRefCount, 1).eq(Storage::getId, storage.getId());
+        int refCount = storageMapper.update(storageUpdate);
         if (refCount != 1) {
             throw new BusinessException("秒传增加引用计数失败");
         }
 
-        int driveCount = driveMapper.increaseUsedQuotaById(args.getDriveId(), arg.getFileSize());
+        LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
+        driveUpdate.setIncrBy(Drive::getUsedQuota, arg.getFileSize()).eq(Drive::getId, args.getDriveId());
+        int driveCount = driveMapper.update(driveUpdate);
         if (driveCount != 1) {
             throw new BusinessException("秒传更新空间配额失败");
         }
@@ -428,8 +432,8 @@ public class UploadService {
         Long storageId;
         if (storage != null && Objects.equals(storage.getEnabled(), 1)) {
             LambdaUpdateWrapper<Storage> storageUpdate = new LambdaUpdateWrapper<>();
-            storageUpdate.setDecrBy(Storage::getRefCount, 1).eq(Storage::getId, storage.getId());
-            int refCount = storageMapper.increaseRefCountBySha256(sha256);
+            storageUpdate.setIncrBy(Storage::getRefCount, 1).eq(Storage::getId, storage.getId());
+            int refCount = storageMapper.update(storageUpdate);
             if (refCount != 1) {
                 throw new BusinessException("增加引用计数失败");
             }
@@ -471,7 +475,7 @@ public class UploadService {
         }
 
         LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
-        driveUpdate.setDecrBy(Drive::getUsedQuota, fileSize).eq(Drive::getId, driveId);
+        driveUpdate.setIncrBy(Drive::getUsedQuota, fileSize).eq(Drive::getId, driveId);
         int driveCount = driveMapper.update(driveUpdate);
         if (driveCount != 1) {
             throw new BusinessException("空间配额更新失败");
