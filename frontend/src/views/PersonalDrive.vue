@@ -649,14 +649,12 @@ const handleUpload = () => {
 }
 
 // 处理文件选择
-const handleFileChange = (event) => {
+const handleFileChange = async (event) => {
   const files = event.target.files
   if (files.length === 0) return
 
   // 检查是否选择了文件夹
   for (const file of files) {
-    // 通过 webkitRelativePath 判断是否选择了文件夹
-    // 或者当文件类型为空且文件名为常见文件夹名称时
     if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
       ElMessage.warning('暂不支持上传文件夹，请选择文件')
       event.target.value = ''
@@ -664,12 +662,84 @@ const handleFileChange = (event) => {
     }
   }
 
-  // 正常上传逻辑（后续可扩展）
-  ElMessage.success(`已选择 ${files.length} 个文件，准备上传`)
-  console.log('选择的文件:', files)
-
   // 清空input，允许再次选择相同的文件
   event.target.value = ''
+
+  // 检查driveId
+  if (!driveId.value) {
+    ElMessage.error('未获取到 driveId')
+    return
+  }
+
+  // 计算每个文件的SHA256和分片信息
+  ElMessage.info('正在准备上传，计算文件校验值...')
+
+  const uploadArgs = []
+  const fileMap = new Map() // 用于存储文件对象
+
+  for (const file of files) {
+    try {
+      const sha256 = await calculateSHA256(file)
+      const totalChunks = calculateTotalChunks(file.size)
+
+      uploadArgs.push({
+        entryName: file.name,
+        sha256: sha256,
+        fileSize: file.size,
+        totalChunks: totalChunks,
+        mimeType: file.type || 'application/octet-stream'
+      })
+
+      // 保存文件对象用于后续上传
+      fileMap.set(sha256, file)
+    } catch (error) {
+      console.error(`计算文件 "${file.name}" SHA256失败:`, error)
+      ElMessage.error(`文件 "${file.name}" 处理失败`)
+    }
+  }
+
+  if (uploadArgs.length === 0) {
+    ElMessage.warning('没有可上传的文件')
+    return
+  }
+
+  // 调用initUpload接口
+  try {
+    const initResponse = await axios.post(`${API_BASE_URL}/api/personal/init-upload`, {
+      driveId: driveId.value,
+      parentId: currentParentId.value,
+      argList: uploadArgs
+    }, getAuthConfig())
+
+    if (initResponse.data.code !== 200) {
+      ElMessage.error(initResponse.data.msg || '初始化上传失败')
+      return
+    }
+
+    const initResult = initResponse.data.data
+    const viewList = initResult.viewList || []
+
+    // 处理每个文件的上传
+    for (const view of viewList) {
+      const file = fileMap.get(view.sha256)
+      if (!file) {
+        console.error(`找不到文件: ${view.entryName}`)
+        continue
+      }
+
+      if (!view.success) {
+        ElMessage.error(`文件 "${view.entryName}" 初始化失败: ${view.message}`)
+        continue
+      }
+
+      // 根据返回的上传类型执行相应的上传逻辑
+      await uploadSingleFile(file, view)
+    }
+
+  } catch (error) {
+    console.error('初始化上传失败:', error)
+    ElMessage.error('上传初始化失败，请重试')
+  }
 }
 
 // 新建文件夹
@@ -936,6 +1006,190 @@ const confirmCopy = async () => {
 const handleRename = () => {
   if (selectedFiles.value.length === 1) {
     handleRenameSingle(selectedFiles.value[0])
+  }
+}
+
+// 上传相关常量
+const CHUNK_SIZE = 10 * 1024 * 1024 // 10MB 分片大小
+
+// 计算文件的SHA256值
+const calculateSHA256 = async (file) => {
+  const arrayBuffer = await file.arrayBuffer()
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  return hashHex
+}
+
+// 计算分片数量
+const calculateTotalChunks = (fileSize) => {
+  return Math.ceil(fileSize / CHUNK_SIZE)
+}
+
+// 获取文件分片
+const getFileChunk = (file, start, end) => {
+  return file.slice(start, end)
+}
+
+// 上传单个文件
+const uploadSingleFile = async (file, initView) => {
+  // 1. 秒传成功 (isSkip = true)
+  if (initView.isSkip) {
+    ElMessage.success(`文件 "${file.name}" 秒传成功`)
+    return
+  }
+
+  // 2. 小文件直传 (uploadUrl 不为 null)
+  if (initView.uploadUrl) {
+    await uploadSmallFile(file, initView)
+    return
+  }
+
+  // 3. 大文件分片上传 (isMultipart = true)
+  if (initView.isMultipart) {
+    await uploadLargeFile(file, initView)
+    return
+  }
+}
+
+// 上传小文件（直接上传到MinIO）
+const uploadSmallFile = async (file, initView) => {
+  try {
+    ElMessage.info(`开始上传文件 "${file.name}"...`)
+
+    // 使用预签名URL直接上传到MinIO
+    const response = await axios.put(initView.uploadUrl, file, {
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream'
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        console.log(`上传进度: ${percentCompleted}%`)
+      }
+    })
+
+    // 上传完成后通知后端
+    const simpleUploadRes = await axios.post(`${API_BASE_URL}/api/personal/simple-upload`, {
+      sha256: initView.sha256
+    }, getAuthConfig())
+
+    if (simpleUploadRes.data.code === 200) {
+      ElMessage.success(`文件 "${file.name}" 上传成功`)
+      // 刷新文件列表
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(simpleUploadRes.data.msg || '上传记录失败')
+    }
+  } catch (error) {
+    console.error('小文件上传失败:', error)
+    ElMessage.error(`文件 "${file.name}" 上传失败`)
+  }
+}
+
+// 上传大文件（分片上传）
+const uploadLargeFile = async (file, initView) => {
+  try {
+    const totalChunks = calculateTotalChunks(file.size)
+    const chunkUrls = initView.chunkUrls || []
+    const uploadedChunks = initView.uploadedChunks || []
+
+    ElMessage.info(`开始分片上传文件 "${file.name}"，共 ${totalChunks} 个分片`)
+
+    // 记录需要上报的分片
+    const chunksToReport = []
+
+    // 上传每个分片
+    for (let i = 1; i <= totalChunks; i++) {
+      // 如果已经上传过了，跳过
+      if (uploadedChunks.includes(i)) {
+        console.log(`分片 ${i} 已上传，跳过`)
+        continue
+      }
+
+      const start = (i - 1) * CHUNK_SIZE
+      const end = Math.min(i * CHUNK_SIZE, file.size)
+      const chunk = getFileChunk(file, start, end)
+
+      // 获取分片上传URL (chunkUrls从1开始，所以使用i)
+      const chunkUrl = chunkUrls[i]
+      if (!chunkUrl) {
+        console.error(`分片 ${i} 的上传URL不存在`)
+        continue
+      }
+
+      // 上传分片到MinIO
+      const response = await axios.put(chunkUrl, chunk, {
+        headers: {
+          'Content-Type': 'application/octet-stream'
+        }
+      })
+
+      // 获取ETag
+      const etag = response.headers.etag || response.headers.ETag
+
+      // 添加到待上报列表
+      chunksToReport.push({
+        sha256: initView.sha256,
+        chunkNumber: String(i),
+        etag: etag ? etag.replace(/"/g, '') : ''
+      })
+
+      console.log(`分片 ${i}/${totalChunks} 上传完成`)
+
+      // 每上传5个分片上报一次，或者最后一个分片
+      if (chunksToReport.length >= 5 || i === totalChunks) {
+        await reportUploadedChunks(chunksToReport)
+        chunksToReport.length = 0 // 清空数组
+      }
+    }
+
+    // 所有分片上传完成，调用合并接口
+    await mergeChunks(initView.sha256, file.name)
+
+  } catch (error) {
+    console.error('大文件上传失败:', error)
+    ElMessage.error(`文件 "${file.name}" 上传失败`)
+  }
+}
+
+// 上报已上传的分片
+const reportUploadedChunks = async (chunks) => {
+  if (chunks.length === 0) return
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/personal/upload-chunk`, {
+      argList: chunks
+    }, getAuthConfig())
+
+    if (response.data.code === 200) {
+      console.log(`成功上报 ${chunks.length} 个分片`)
+    } else {
+      console.error('上报分片失败:', response.data.msg)
+    }
+  } catch (error) {
+    console.error('上报分片失败:', error)
+  }
+}
+
+// 合并分片
+const mergeChunks = async (sha256, fileName) => {
+  try {
+    ElMessage.info(`正在合并文件 "${fileName}"...`)
+
+    const response = await axios.post(`${API_BASE_URL}/api/personal/merge-chunks`, {
+      sha256: sha256
+    }, getAuthConfig())
+
+    if (response.data.code === 200) {
+      ElMessage.success(`文件 "${fileName}" 上传成功`)
+      // 刷新文件列表
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.msg || '合并分片失败')
+    }
+  } catch (error) {
+    console.error('合并分片失败:', error)
+    ElMessage.error(`文件 "${fileName}" 合并失败`)
   }
 }
 
