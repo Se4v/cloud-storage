@@ -7,8 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class SimpleUploadArgs {
-    @NotNull
-    private Long userId;
     @NotBlank
     private String sha256;
 }

@@ -11,8 +11,6 @@ import java.util.List;
 @Data
 public class InitUploadArgs {
     @NotNull
-    private Long userId;
-    @NotNull
     private Long driveId;
     @NotNull
     private Long parentId;

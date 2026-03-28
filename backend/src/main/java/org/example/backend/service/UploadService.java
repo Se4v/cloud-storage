@@ -106,7 +106,7 @@ public class UploadService {
 
         for (InitUploadArgs.Arg arg : args.getArgList()) {
             try {
-                InitUploadView.View view = initSingleUpload(arg, args);
+                InitUploadView.View view = initSingleUpload(arg, args, userId);
                 if (Boolean.TRUE.equals(view.getSuccess())) {
                     successCount++;
                 }
@@ -169,7 +169,7 @@ public class UploadService {
                     throw new BusinessException("当前任务不是分片上传任务");
                 }
 
-                if (arg.getEtag() == null || arg.getEtag().isBlank()) throw new BusinessException("<UNK>");
+                if (arg.getEtag() == null || arg.getEtag().isBlank()) throw new BusinessException("");
 
                 String chunksKey = getChunksKey(userId, arg.getSha256());
                 Object existingEtag = redisTemplate.opsForHash().get(chunksKey, arg.getChunkNumber());
@@ -257,8 +257,8 @@ public class UploadService {
         }
     }
 
-    private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg, InitUploadArgs args) throws Exception {
-        String lockKey = getLockKey(args.getUserId(), arg.getSha256());
+    private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg, InitUploadArgs args, Long userId) throws Exception {
+        String lockKey = getLockKey(userId, arg.getSha256());
         RLock lock = redissonClient.getLock(lockKey);
         boolean locked = false;
         try {
@@ -271,7 +271,7 @@ public class UploadService {
             storageQuery.eq(Storage::getSha256, arg.getSha256());
             Storage existedStorage = storageMapper.selectOne(storageQuery);
             if (existedStorage != null && Objects.equals(existedStorage.getEnabled(), 1)) {
-                self.createEntryForInstantUpload(existedStorage, arg, args);
+                self.createEntryForInstantUpload(existedStorage, arg, args, userId);
                 return InitUploadView.View.builder()
                         .entryName(arg.getEntryName())
                         .success(true)
@@ -282,15 +282,15 @@ public class UploadService {
                         .build();
             }
 
-            String taskKey = getTaskKey(args.getUserId(), arg.getSha256());
+            String taskKey = getTaskKey(userId, arg.getSha256());
             Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
             if (!taskMap.isEmpty()) {
-                return buildResumeView(taskMap, args.getUserId(), arg);
+                return buildResumeView(taskMap, userId, arg);
             }
 
             String objectName = generateObjectName(arg.getSha256(), arg.getEntryName());
             if (arg.getFileSize() <= UPLOAD_THRESHOLD) {
-                saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args);
+                saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args, userId);
                 String uploadUrl = generateSinglePresignedUrl(minioConfig.getBucketName(), objectName);
                 return InitUploadView.View.builder()
                         .entryName(arg.getEntryName())
@@ -312,7 +312,7 @@ public class UploadService {
             );
             String uploadId = future.get().result().uploadId();
 
-            saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, arg, args);
+            saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, arg, args, userId);
             List<String> chunkUrls = generateChunkUrls(uploadId, objectName, arg.getTotalChunks());
 
             // 初始化分片记录表
@@ -380,11 +380,11 @@ public class UploadService {
     }
 
     @Transactional
-    public void createEntryForInstantUpload(Storage storage, InitUploadArgs.Arg arg, InitUploadArgs args) {
+    public void createEntryForInstantUpload(Storage storage, InitUploadArgs.Arg arg, InitUploadArgs args, Long userId) {
         Entry entry = Entry.builder()
                 .driveId(args.getDriveId())
                 .parentId(args.getParentId())
-                .userId(args.getUserId())
+                .userId(userId)
                 .storageId(storage.getId())
                 .entryName(arg.getEntryName())
                 .entryType(1)
@@ -471,7 +471,7 @@ public class UploadService {
     }
 
     private void saveTaskToRedis(String taskKey, String uploadType, String uploadId,
-                                 String objectName, InitUploadArgs.Arg arg, InitUploadArgs args) {
+                                 String objectName, InitUploadArgs.Arg arg, InitUploadArgs args, Long userId) {
         int totalChunks = (arg.getTotalChunks() == null || arg.getTotalChunks() <= 0) ? 1 : arg.getTotalChunks();
         Map<String, String> task = new HashMap<>();
         task.put(FIELD_UPLOAD_TYPE, uploadType);
@@ -483,7 +483,7 @@ public class UploadService {
         task.put(FIELD_MIME_TYPE, arg.getMimeType() == null ? "application/octet-stream" : arg.getMimeType());
         task.put(FIELD_UPLOADED_CHUNKS, "0");
         task.put(FIELD_TOTAL_CHUNKS, String.valueOf(totalChunks));
-        task.put(FIELD_USER_ID, String.valueOf(args.getUserId()));
+        task.put(FIELD_USER_ID, String.valueOf(userId));
         task.put(FIELD_DRIVE_ID, String.valueOf(args.getDriveId()));
         task.put(FIELD_PARENT_ID, String.valueOf(args.getParentId()));
         task.put(FIELD_BUCKET_NAME, minioConfig.getBucketName());
