@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.example.backend.common.Result;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -203,6 +204,15 @@ public class PersonalService {
             int count = entryMapper.update(folderUpdate);
             if (count != allFolderIds.size()) throw new BusinessException("delete entries failed");
         }
+    }
+
+    public Drive getPersonalDriveUsage(Long driveId) {
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getId, driveId);
+        Drive drive = driveMapper.selectOne(driveQuery);
+        if (drive == null) throw new BusinessException("Drive does not exist");
+
+        return drive;
     }
 
     public Long getPersonalDriveId(Long userId) {

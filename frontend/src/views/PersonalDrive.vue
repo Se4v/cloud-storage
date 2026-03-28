@@ -5,7 +5,7 @@
       <div class="flex flex-col gap-2">
         <!-- 存储空间信息 -->
         <div class="text-xs text-slate-500">
-          已使用 {{ formatSize(usedStorage) }} | 总容量 {{ formatSize(totalStorage) }}
+          已使用 {{ formatSize(usedQuota) }} | 总容量 {{ formatSize(totalQuota) }}
         </div>
         <!-- 主要操作按钮 -->
         <div class="flex items-center gap-2">
@@ -517,8 +517,8 @@ const currentParentId = ref(0)
 const fileList = ref([])
 
 // 存储空间（单位：字节）
-const usedStorage = ref(49 * 1024 * 1024) // 49MB
-const totalStorage = ref(1024 * 1024 * 1024) // 1GB
+const usedQuota = ref(49 * 1024 * 1024) // 49MB
+const totalQuota = ref(1024 * 1024 * 1024) // 1GB
 
 // 对话框状态
 const createFolderVisible = ref(false)

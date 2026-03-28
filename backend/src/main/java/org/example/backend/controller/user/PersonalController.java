@@ -3,6 +3,7 @@ package org.example.backend.controller.user;
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.*;
+import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.view.*;
 import org.example.backend.service.DownloadService;
@@ -134,8 +135,13 @@ public class PersonalController {
     }
 
     @GetMapping("/usage")
-    public Result<?> getPersonalDriveUsage() {
-        return null;
+    public Result<?> getPersonalDriveUsage(@RequestParam Long driveId) {
+        Drive drive = personalService.getPersonalDriveUsage(driveId);
+        PersonalDriveUsageView view = PersonalDriveUsageView.builder()
+                .usedQuota(drive.getUsedQuota())
+                .totalQuota(drive.getTotalQuota())
+                .build();
+        return Result.success();
     }
 
     @GetMapping("/id")
