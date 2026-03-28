@@ -383,6 +383,15 @@
       </template>
     </el-dialog>
 
+    <!-- 隐藏的文件选择输入框 -->
+    <input
+        ref="fileInputRef"
+        type="file"
+        multiple
+        style="display: none"
+        @change="handleFileChange"
+    />
+
     <!-- 复制到对话框 -->
     <el-dialog
         v-model="copyVisible"
@@ -493,6 +502,7 @@ const selectedFiles = ref([])
 const tableRef = ref(null)
 const moveTreeRef = ref(null)
 const copyTreeRef = ref(null)
+const fileInputRef = ref(null)
 
 // driveId 从路由参数获取
 const driveId = computed(() => route.params.driveId)
@@ -635,7 +645,31 @@ onMounted(() => {
 
 // 上传
 const handleUpload = () => {
-  ElMessage.info('打开上传对话框')
+  fileInputRef.value?.click()
+}
+
+// 处理文件选择
+const handleFileChange = (event) => {
+  const files = event.target.files
+  if (files.length === 0) return
+
+  // 检查是否选择了文件夹
+  for (const file of files) {
+    // 通过 webkitRelativePath 判断是否选择了文件夹
+    // 或者当文件类型为空且文件名为常见文件夹名称时
+    if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
+      ElMessage.warning('暂不支持上传文件夹，请选择文件')
+      event.target.value = ''
+      return
+    }
+  }
+
+  // 正常上传逻辑（后续可扩展）
+  ElMessage.success(`已选择 ${files.length} 个文件，准备上传`)
+  console.log('选择的文件:', files)
+
+  // 清空input，允许再次选择相同的文件
+  event.target.value = ''
 }
 
 // 新建文件夹
