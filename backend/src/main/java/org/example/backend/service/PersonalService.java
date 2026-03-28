@@ -145,13 +145,14 @@ public class PersonalService {
         if (count != 1) throw new BusinessException("Rename entry failed");
     }
 
-    public List<Entry> searchEntry(String targetName, Long userId) {
+    public List<Entry> searchEntry(String targetName, Long driveId, Long userId) {
         // 文件名校验
         if (!validateFileName(targetName)) throw new BusinessException("Invalid file name");
 
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.like(Entry::getEntryName, targetName);
-        List<Entry> entries = entryMapper.selectList(queryWrapper);
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getDriveId, driveId)
+                .like(Entry::getEntryName, targetName);
+        List<Entry> entries = entryMapper.selectList(entryQuery);
 
         if (entries == null || entries.isEmpty()) throw new BusinessException("Search entry failed");
 

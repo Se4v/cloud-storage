@@ -114,9 +114,17 @@ public class PersonalController {
         return Result.success();
     }
 
-    @PostMapping("/search")
-    public Result<?> searchEntry() {
-        return Result.success();
+    @GetMapping("/search")
+    public Result<?> searchEntry(@RequestParam String targetName, @RequestParam Long driveId) {
+        List<Entry> entries = personalService.searchEntry(targetName, driveId, userId);
+        List<EntryView> views = entries.stream().map(entry -> EntryView.builder()
+                .id(entry.getId())
+                .name(entry.getEntryName())
+                .type(entry.getEntryType())
+                .size(entry.getFileSize())
+                .createTime(entry.getCreatedAt())
+                .build()).toList();
+        return Result.success("", views);
     }
 
     @PostMapping("/delete")
