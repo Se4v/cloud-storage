@@ -1,5 +1,6 @@
 package org.example.backend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.minio.CreateMultipartUploadResponse;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
@@ -13,6 +14,7 @@ import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.model.args.InitUploadArgs;
+import org.example.backend.model.args.MergeChunksArgs;
 import org.example.backend.model.args.SimpleUploadArgs;
 import org.example.backend.model.args.UploadChunkArgs;
 import org.example.backend.model.entity.Entry;
@@ -45,7 +47,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class UploadService {
-
     @Autowired
     private RedissonClient redissonClient;
     @Autowired
@@ -85,14 +86,13 @@ public class UploadService {
     private static final String UPLOAD_TYPE_DIRECT = "direct";
     private static final String UPLOAD_TYPE_MULTIPART = "multipart";
 
+    private static final long UPLOAD_THRESHOLD = 10 * 1024 * 1024L;
     private static final long TASK_EXPIRE_HOURS = 24;
     private static final long LOCK_WAIT_SECONDS = 10;
     private static final long LOCK_LEASE_SECONDS = 30;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
     public InitUploadView initUpload(InitUploadArgs args, Long userId) {
-        validateInitRequest(args, userId);
-
         List<InitUploadView.View> viewList = new ArrayList<>();
         int successCount = 0;
 
@@ -132,61 +132,42 @@ public class UploadService {
     }
 
     public SimpleUploadView simpleUpload(SimpleUploadArgs args, Long userId) {
-        if (args == null || args.getSha256() == null || args.getSha256().isBlank()) {
-            throw new BusinessException("sha256不能为空");
-        }
-        if (args.getUserId() != null && !Objects.equals(args.getUserId(), userId)) {
-            throw new BusinessException("非法的用户ID");
-        }
-
         String taskKey = getTaskKey(userId, args.getSha256());
         Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
-        if (taskMap.isEmpty() || !UPLOAD_TYPE_DIRECT.equals(getString(taskMap, FIELD_UPLOAD_TYPE))) {
+        String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
+        if (taskMap.isEmpty() || !UPLOAD_TYPE_DIRECT.equals(uploadType)) {
             throw new BusinessException("直传任务不存在或已过期");
         }
-        validateTaskOwner(taskMap, userId);
 
-        String bucketName = getString(taskMap, FIELD_BUCKET_NAME);
-        String objectName = getString(taskMap, FIELD_OBJECT_NAME);
+        String bucketName = taskMap.get(FIELD_BUCKET_NAME).toString();
+        String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
         ensureObjectExists(bucketName, objectName);
 
         self.persistUploadedFile(taskMap, args.getSha256(), userId);
-        cleanUploadCache(taskKey, null);
+        redisTemplate.delete(taskKey);
 
+        String entryName = taskMap.get(FIELD_ENTRY_NAME).toString();
         return SimpleUploadView.builder()
-                .entryName(getString(taskMap, FIELD_ENTRY_NAME))
+                .entryName(entryName)
                 .sha256(args.getSha256())
                 .success(true)
                 .build();
     }
 
     public UploadChunkView uploadChunk(UploadChunkArgs args, Long userId) {
-        if (args == null || args.getArgList() == null || args.getArgList().isEmpty()) {
-            return UploadChunkView.builder().viewList(List.of()).build();
-        }
-
         List<UploadChunkView.View> viewList = new ArrayList<>();
         for (UploadChunkArgs.Arg arg : args.getArgList()) {
             try {
-                if (arg == null || arg.getSha256() == null || arg.getSha256().isBlank()) {
-                    throw new BusinessException("sha256不能为空");
-                }
-                if (arg.getChunkNumber() == null || arg.getChunkNumber().isBlank()) {
-                    throw new BusinessException("chunkNumber不能为空");
-                }
-                if (arg.getEtag() == null || arg.getEtag().isBlank()) {
-                    throw new BusinessException("etag不能为空");
-                }
-
                 String taskKey = getTaskKey(userId, arg.getSha256());
                 Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
                 if (taskMap.isEmpty()) {
                     throw new BusinessException("任务不存在或已过期");
                 }
-                if (!UPLOAD_TYPE_MULTIPART.equals(getString(taskMap, FIELD_UPLOAD_TYPE))) {
+
+                String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
+                if (!UPLOAD_TYPE_MULTIPART.equals(uploadType)) {
                     throw new BusinessException("当前任务不是分片上传任务");
                 }
-                validateTaskOwner(taskMap, userId);
 
                 String chunksKey = getChunksKey(userId, arg.getSha256());
                 Object existingEtag = redisTemplate.opsForHash().get(chunksKey, arg.getChunkNumber());
@@ -200,8 +181,9 @@ public class UploadService {
                 redisTemplate.expire(taskKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
                 redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
+                String uploadId = taskMap.get(FIELD_UPLOAD_ID).toString();
                 viewList.add(UploadChunkView.View.builder()
-                        .uploadId(getString(taskMap, FIELD_UPLOAD_ID))
+                        .uploadId(uploadId)
                         .chunkNumber(arg.getChunkNumber())
                         .success(true)
                         .build());
@@ -220,32 +202,30 @@ public class UploadService {
         return UploadChunkView.builder().viewList(viewList).build();
     }
 
-    public MergeChunksView mergeChunks(String sha256, Long userId) {
-        if (sha256 == null || sha256.isBlank()) {
-            throw new BusinessException("sha256不能为空");
-        }
-
-        String taskKey = getTaskKey(userId, sha256);
-        String chunksKey = getChunksKey(userId, sha256);
+    public MergeChunksView mergeChunks(MergeChunksArgs args, Long userId) {
+        String taskKey = getTaskKey(userId, args.getSha256());
+        String chunksKey = getChunksKey(userId, args.getSha256());
 
         try {
             Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
-            if (taskMap.isEmpty() || !UPLOAD_TYPE_MULTIPART.equals(getString(taskMap, FIELD_UPLOAD_TYPE))) {
+            String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
+            if (taskMap.isEmpty() || !UPLOAD_TYPE_MULTIPART.equals(uploadType)) {
                 throw new BusinessException("分片上传任务不存在或已过期");
             }
-            validateTaskOwner(taskMap, userId);
 
-            int totalChunks = getInteger(taskMap, FIELD_TOTAL_CHUNKS);
+            int totalChunks = Integer.parseInt(taskMap.get(FIELD_TOTAL_CHUNKS).toString());
             Map<Object, Object> chunksMap = redisTemplate.opsForHash().entries(chunksKey);
-            List<Integer> missing = getMissingChunkNumbers(totalChunks, chunksMap);
-            if (!missing.isEmpty()) {
-                throw new BusinessException("分片未上传完整，缺失分片: " + missing);
+            if (chunksMap.size() < totalChunks) {
+                throw new BusinessException("分片未上传完整，无法合并");
             }
 
-            String bucketName = getString(taskMap, FIELD_BUCKET_NAME);
-            String objectName = getString(taskMap, FIELD_OBJECT_NAME);
-            String uploadId = getString(taskMap, FIELD_UPLOAD_ID);
-            List<Part> parts = buildSortedParts(chunksMap);
+            String bucketName = taskMap.get(FIELD_BUCKET_NAME).toString();
+            String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
+            String uploadId = taskMap.get(FIELD_UPLOAD_ID).toString();
+            List<Part> parts = chunksMap.entrySet().stream()
+                    .map(e -> new Part(Integer.parseInt(String.valueOf(e.getKey())), String.valueOf(e.getValue())))
+                    .sorted(Comparator.comparingInt(Part::partNumber))
+                    .toList();
 
             minioAsyncClient.completeMultipartUploadAsync(
                     bucketName,
@@ -258,25 +238,24 @@ public class UploadService {
             ).get();
 
             ensureObjectExists(bucketName, objectName);
-            self.persistUploadedFile(taskMap, sha256, userId);
-            cleanUploadCache(taskKey, chunksKey);
+            self.persistUploadedFile(taskMap, args.getSha256(), userId);
+            redisTemplate.delete(taskKey);
+            redisTemplate.delete(chunksKey);
 
             return MergeChunksView.builder()
-                    .sha256(sha256)
+                    .sha256(args.getSha256())
                     .success(true)
                     .build();
         } catch (Exception e) {
-            log.error("合并分片失败: sha256={}", sha256, e);
+            log.error("合并分片失败: sha256={}", args.getSha256(), e);
             return MergeChunksView.builder()
-                    .sha256(sha256)
+                    .sha256(args.getSha256())
                     .success(false)
                     .build();
         }
     }
 
     private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg, InitUploadArgs args) throws Exception {
-        validateSingleArg(arg);
-
         String lockKey = getLockKey(args.getUserId(), arg.getSha256());
         RLock lock = redissonClient.getLock(lockKey);
         boolean locked = false;
@@ -286,7 +265,9 @@ public class UploadService {
                 throw new BusinessException("系统繁忙，请稍后重试");
             }
 
-            Storage existedStorage = storageMapper.selectBySha256(arg.getSha256());
+            LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
+            storageQuery.eq(Storage::getSha256, arg.getSha256());
+            Storage existedStorage = storageMapper.selectOne(storageQuery);
             if (existedStorage != null && Objects.equals(existedStorage.getEnabled(), 1)) {
                 self.createEntryForInstantUpload(existedStorage, arg, args);
                 return InitUploadView.View.builder()
@@ -306,7 +287,7 @@ public class UploadService {
             }
 
             String objectName = generateObjectName(arg.getSha256(), arg.getEntryName());
-            if (isDirectUpload(arg.getFileSize())) {
+            if (arg.getFileSize() <= UPLOAD_THRESHOLD) {
                 saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args);
                 String uploadUrl = generateSinglePresignedUrl(minioConfig.getBucketName(), objectName);
                 return InitUploadView.View.builder()
@@ -332,6 +313,11 @@ public class UploadService {
             saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, arg, args);
             List<String> chunkUrls = generateChunkUrls(uploadId, objectName, arg.getTotalChunks());
 
+            // 初始化分片记录表
+            String chunksKey = getChunksKey(args.getUserId(), arg.getSha256());
+            redisTemplate.opsForHash().putAll(chunksKey, new HashMap<>());
+            redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
+
             return InitUploadView.View.builder()
                     .entryName(arg.getEntryName())
                     .success(true)
@@ -353,15 +339,14 @@ public class UploadService {
     }
 
     private InitUploadView.View buildResumeView(Map<Object, Object> taskMap, Long userId, InitUploadArgs.Arg arg) throws Exception {
-        validateTaskOwner(taskMap, userId);
+        String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
+        String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
+        String bucketName = taskMap.get(FIELD_BUCKET_NAME).toString();
 
-        String uploadType = getString(taskMap, FIELD_UPLOAD_TYPE);
-        String objectName = getString(taskMap, FIELD_OBJECT_NAME);
-        String entryName = getStringOrDefault(taskMap, FIELD_ENTRY_NAME, arg.getEntryName());
         if (UPLOAD_TYPE_DIRECT.equals(uploadType)) {
-            String uploadUrl = generateSinglePresignedUrl(getString(taskMap, FIELD_BUCKET_NAME), objectName);
+            String uploadUrl = generateSinglePresignedUrl(bucketName, objectName);
             return InitUploadView.View.builder()
-                    .entryName(entryName)
+                    .entryName(arg.getEntryName())
                     .success(true)
                     .message("小文件断点续传")
                     .isSkip(false)
@@ -375,13 +360,13 @@ public class UploadService {
             throw new BusinessException("未知上传类型: " + uploadType);
         }
 
-        String uploadId = getString(taskMap, FIELD_UPLOAD_ID);
-        int totalChunks = getInteger(taskMap, FIELD_TOTAL_CHUNKS);
+        String uploadId = taskMap.get(FIELD_UPLOAD_ID).toString();
+        int totalChunks = Integer.parseInt(taskMap.get(FIELD_TOTAL_CHUNKS).toString());
         List<Integer> uploadedChunks = getUploadedChunkNumbers(userId, arg.getSha256());
         List<String> chunkUrls = regenerateChunkUrls(uploadId, objectName, totalChunks, uploadedChunks);
 
         return InitUploadView.View.builder()
-                .entryName(entryName)
+                .entryName(arg.getEntryName())
                 .success(true)
                 .message("大文件分片断点续传")
                 .isSkip(false)
@@ -392,7 +377,7 @@ public class UploadService {
                 .build();
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional
     public void createEntryForInstantUpload(Storage storage, InitUploadArgs.Arg arg, InitUploadArgs args) {
         Entry entry = Entry.builder()
                 .driveId(args.getDriveId())
@@ -422,15 +407,15 @@ public class UploadService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional
     public void persistUploadedFile(Map<Object, Object> taskMap, String sha256, Long userId) {
-        String entryName = getString(taskMap, FIELD_ENTRY_NAME);
-        Long fileSize = getLong(taskMap, FIELD_FILE_SIZE);
-        String mimeType = getString(taskMap, FIELD_MIME_TYPE);
-        Long driveId = getLong(taskMap, FIELD_DRIVE_ID);
-        Long parentId = getLong(taskMap, FIELD_PARENT_ID);
-        String bucketName = getString(taskMap, FIELD_BUCKET_NAME);
-        String objectName = getString(taskMap, FIELD_OBJECT_NAME);
+        String entryName = taskMap.get(FIELD_ENTRY_NAME).toString();
+        Long fileSize = Long.parseLong(taskMap.get(FIELD_FILE_SIZE).toString());
+        String mimeType = taskMap.get(FIELD_MIME_TYPE).toString();
+        Long driveId = Long.parseLong(taskMap.get(FIELD_DRIVE_ID).toString());
+        Long parentId = Long.parseLong(taskMap.get(FIELD_PARENT_ID).toString());
+        String bucketName = taskMap.get(FIELD_BUCKET_NAME).toString();
+        String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
         String fileExt = getFileSuffix(entryName);
 
         Storage storage = storageMapper.selectBySha256(sha256);
@@ -560,37 +545,9 @@ public class UploadService {
         String chunksKey = getChunksKey(userId, sha256);
         Map<Object, Object> chunks = redisTemplate.opsForHash().entries(chunksKey);
         return chunks.keySet().stream()
-                .map(String::valueOf)
-                .filter(this::isInteger)
-                .map(Integer::parseInt)
+                .map(k -> Integer.parseInt(k.toString()))
                 .sorted()
                 .toList();
-    }
-
-    private List<Part> buildSortedParts(Map<Object, Object> chunksMap) {
-        return chunksMap.entrySet().stream()
-                .map(e -> new Part(Integer.parseInt(String.valueOf(e.getKey())), String.valueOf(e.getValue())))
-                .sorted(Comparator.comparingInt(Part::partNumber))
-                .toList();
-    }
-
-    private List<Integer> getMissingChunkNumbers(int totalChunks, Map<Object, Object> chunksMap) {
-        Set<Integer> uploaded = new HashSet<>();
-        for (Object key : chunksMap.keySet()) {
-            String keyStr = String.valueOf(key);
-            if (!isInteger(keyStr)) {
-                continue;
-            }
-            uploaded.add(Integer.parseInt(keyStr));
-        }
-
-        List<Integer> missing = new ArrayList<>();
-        for (int i = 1; i <= totalChunks; i++) {
-            if (!uploaded.contains(i)) {
-                missing.add(i);
-            }
-        }
-        return missing;
     }
 
     private void ensureObjectExists(String bucketName, String objectName) {
@@ -606,64 +563,6 @@ public class UploadService {
         }
     }
 
-    private void cleanUploadCache(String taskKey, String chunksKey) {
-        redisTemplate.delete(taskKey);
-        if (chunksKey != null) {
-            redisTemplate.delete(chunksKey);
-        }
-    }
-
-    private boolean isDirectUpload(Long fileSize) {
-        if (fileSize == null || fileSize <= 0) {
-            throw new BusinessException("fileSize不合法");
-        }
-        long threshold = minioConfig.getDirectUploadThreshold() == null ? 10 * 1024 * 1024L : minioConfig.getDirectUploadThreshold();
-        return fileSize <= threshold;
-    }
-
-    private void validateInitRequest(InitUploadArgs args, Long userId) {
-        if (args == null) {
-            throw new BusinessException("请求参数不能为空");
-        }
-        if (args.getUserId() == null || !Objects.equals(args.getUserId(), userId)) {
-            throw new BusinessException("非法的用户ID");
-        }
-        if (args.getDriveId() == null) {
-            throw new BusinessException("driveId不能为空");
-        }
-        if (args.getParentId() == null) {
-            throw new BusinessException("parentId不能为空");
-        }
-    }
-
-    private void validateSingleArg(InitUploadArgs.Arg arg) {
-        if (arg == null) {
-            throw new BusinessException("上传文件参数不能为空");
-        }
-        if (arg.getEntryName() == null || arg.getEntryName().isBlank()) {
-            throw new BusinessException("entryName不能为空");
-        }
-        if (arg.getSha256() == null || arg.getSha256().isBlank()) {
-            throw new BusinessException("sha256不能为空");
-        }
-        if (arg.getFileSize() == null || arg.getFileSize() <= 0) {
-            throw new BusinessException("fileSize不合法");
-        }
-
-        if (!isDirectUpload(arg.getFileSize())) {
-            if (arg.getTotalChunks() == null || arg.getTotalChunks() <= 0) {
-                throw new BusinessException("分片上传必须提供totalChunks");
-            }
-        }
-    }
-
-    private void validateTaskOwner(Map<Object, Object> taskMap, Long userId) {
-        String taskUserId = getString(taskMap, FIELD_USER_ID);
-        if (!Objects.equals(String.valueOf(userId), taskUserId)) {
-            throw new BusinessException("任务不属于当前用户");
-        }
-    }
-
     private String getTaskKey(Long userId, String sha256) {
         return TASK_KEY_PREFIX + userId + ":" + sha256;
     }
@@ -674,48 +573,6 @@ public class UploadService {
 
     private String getLockKey(Long userId, String sha256) {
         return LOCK_KEY_PREFIX + userId + ":" + sha256;
-    }
-
-    private String getString(Map<Object, Object> map, String key) {
-        Object value = map.get(key);
-        if (value == null) {
-            throw new BusinessException("任务字段缺失: " + key);
-        }
-        return String.valueOf(value);
-    }
-
-    private String getStringOrDefault(Map<Object, Object> map, String key, String defaultValue) {
-        Object value = map.get(key);
-        return value == null ? defaultValue : String.valueOf(value);
-    }
-
-    private int getInteger(Map<Object, Object> map, String key) {
-        String value = getString(map, key);
-        if (!isInteger(value)) {
-            throw new BusinessException("任务字段格式错误: " + key);
-        }
-        return Integer.parseInt(value);
-    }
-
-    private Long getLong(Map<Object, Object> map, String key) {
-        String value = getString(map, key);
-        try {
-            return Long.valueOf(value);
-        } catch (Exception e) {
-            throw new BusinessException("任务字段格式错误: " + key);
-        }
-    }
-
-    private boolean isInteger(String value) {
-        if (value == null || value.isBlank()) {
-            return false;
-        }
-        for (int i = 0; i < value.length(); i++) {
-            if (!Character.isDigit(value.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private String generateObjectName(String sha256, String entryName) {

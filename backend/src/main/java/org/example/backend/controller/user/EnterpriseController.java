@@ -63,7 +63,7 @@ public class EnterpriseController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
 
-        return Result.success(uploadService.mergeChunks(args.getUploadId(), userDetails.getUserId()));
+        return Result.success(uploadService.mergeChunks(args, userDetails.getUserId()));
     }
 
     @PostMapping("/download")

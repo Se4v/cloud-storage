@@ -29,38 +29,42 @@ public class PersonalController {
     @Autowired
     private DriveService driveService;
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    Long userId = 2034965772877197313L;
 
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
+        // return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
+        return Result.success(uploadService.initUpload(args, userId));
     }
 
     @PostMapping("/simple-upload")
     public Result<SimpleUploadView> simpleUpload(@RequestBody SimpleUploadArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
 
-        return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
+        return Result.success(uploadService.simpleUpload(args, userId));
     }
 
     @PostMapping("/upload-chunk")
     public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
 
-        return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
+        return Result.success(uploadService.uploadChunk(args, userId));
     }
 
     @PostMapping("/merge-chunks")
     public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // return Result.success(uploadService.mergeChunks(args, userDetails.getUserId()));
 
-        return Result.success(uploadService.mergeChunks(args.getUploadId(), userDetails.getUserId()));
+        return Result.success(uploadService.mergeChunks(args, userId));
     }
 
     @PostMapping("/download")

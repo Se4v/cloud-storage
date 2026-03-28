@@ -192,6 +192,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from "axios";
+import { useUserStore } from '@/stores/user.js'
 
 const loginFormRef = ref(null)
 const loading = ref(false)
@@ -214,6 +215,8 @@ const loginRules = {
   ]
 }
 
+const userStore = useUserStore()
+
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
@@ -232,8 +235,8 @@ const handleLogin = async () => {
     const { code, data: token, msg } = response.data
 
     if (code === 200 && token) {
-      // 保存 token
-      localStorage.setItem('token', token)
+      // 保存 token 到 Pinia
+      userStore.token = token
 
       // 根据登录类型跳转到不同页面
       if (loginType.value === 'admin') {

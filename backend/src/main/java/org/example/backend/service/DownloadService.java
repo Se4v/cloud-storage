@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.config.MinioConfig;
 import org.example.backend.model.result.EntryWithBlobResult;
-import org.example.backend.repository.FileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -26,8 +25,6 @@ public class DownloadService {
     private MinioConfig minioConfig;
     @Autowired
     private MinioClient minioClient;
-    @Autowired
-    private FileRepository fileRepository;
 
     private static final int TYPE_FILE = 1;
     private static final int TYPE_FOLDER = 2;
@@ -55,7 +52,7 @@ public class DownloadService {
         List<DownloadTask> tasks = new ArrayList<>();
 
         // 批量查询根节点（1次查询）
-        List<EntryWithBlobResult> roots = fileRepository.findEntriesWithBlob(rootIds);
+        List<EntryWithBlobResult> roots = new ArrayList<>();
         Map<Long, EntryWithBlobResult> rootMap = roots.stream()
                 .collect(Collectors.toMap(EntryWithBlobResult::getEntryId, f -> f));
 
@@ -66,7 +63,7 @@ public class DownloadService {
 
             if (root.getEntryType() == TYPE_FOLDER) {
                 // 一次性查询该文件夹下所有后代（1次查询/文件夹）
-                List<EntryWithBlobResult> descendants = fileRepository.findDescendantsWithBlob(rootId);
+                List<EntryWithBlobResult> descendants = new ArrayList<>();
 
                 // 构建 parentId -> children 映射（内存中组装树）
                 Map<Long, List<EntryWithBlobResult>> childrenMap = descendants.stream()

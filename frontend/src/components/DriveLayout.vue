@@ -104,7 +104,7 @@
 
             <!-- 个人空间 -->
             <button
-                @click="handleMenuClick(storageMenu[0])"
+                @click="handlePersonalSpaceClick"
                 :class="[
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200',
                 currentMenu === 'personal'
@@ -206,7 +206,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   Folder,
@@ -222,8 +222,10 @@ import {
   Notification,
   User
 } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user.js'
 
 const router = useRouter()
+const userStore = useUserStore()
 const route = useRoute()
 const currentMenu = ref('personal')
 const currentNodeId = ref('dept_2_2')
@@ -340,6 +342,38 @@ const toggleEnterprise = () => {
     currentMenu.value = 'enterprise'
     router.push('/drive/enterprise')
   }
+}
+
+// 获取个人空间ID
+const fetchPersonalDriveId = async () => {
+  // TODO: 从后端获取个人空间ID
+  // const response = await axios.get('/api/drive/personal-id')
+  // userStore.personalDriveId = response.data.data
+}
+
+// 页面加载时获取个人空间ID
+onMounted(() => {
+  if (!userStore.personalDriveId) {
+    fetchPersonalDriveId()
+  }
+})
+
+// 处理个人空间点击
+const handlePersonalSpaceClick = async () => {
+  currentMenu.value = 'personal'
+  
+  // 如果 Pinia 中没有 personalDriveId，先获取
+  if (!userStore.personalDriveId) {
+    await fetchPersonalDriveId()
+  }
+  
+  // 使用 router.push 跳转到个人空间
+  await router.push({
+    name: 'PersonalDrive',
+    params: {
+      driveId: userStore.personalDriveId
+    }
+  })
 }
 
 // 处理菜单点击

@@ -1,8 +1,10 @@
 package org.example.backend.model.args;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class MergeChunksArgs {
-    private String uploadId;
+    @NotBlank
+    private String sha256;
 }
