@@ -12,14 +12,21 @@ public class DriveService {
     @Autowired
     private DriveMapper driveMapper;
 
-    public Drive getPersonalDriveUsage(Long userId) {
-        LambdaQueryWrapper<Drive> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Drive::getUserId, userId);
-        Drive drive = driveMapper.selectOne(queryWrapper);
-        if (drive == null) {
-            throw new BusinessException("<UNK>");
-        }
+    public Drive getPersonalDriveUsage(Long driveId) {
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getId, driveId);
+        Drive drive = driveMapper.selectOne(driveQuery);
+        if (drive == null) throw new BusinessException("Drive does not exist");
 
         return drive;
+    }
+
+    public Long getPersonalDriveId(Long userId) {
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getUserId, userId)
+                .eq(Drive::getDriveType, 1);
+        Drive drive = driveMapper.selectOne(driveQuery);
+        if (drive == null) throw new BusinessException("Drive does not exist");
+        return drive.getId();
     }
 }

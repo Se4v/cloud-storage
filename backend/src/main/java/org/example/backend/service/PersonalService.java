@@ -56,8 +56,7 @@ public class PersonalService {
         
         Map<Long, FolderTreeView> nodeMap = new HashMap<>();
         List<FolderTreeView> roots = new ArrayList<>();
-        
-        // First pass: create all nodes
+
         for (Entry entry : entries) {
             FolderTreeView node = new FolderTreeView();
             node.setId(entry.getId());
@@ -65,8 +64,7 @@ public class PersonalService {
             node.setChildren(new ArrayList<>());
             nodeMap.put(entry.getId(), node);
         }
-        
-        // Second pass: build tree structure
+
         for (Entry entry : entries) {
             FolderTreeView node = nodeMap.get(entry.getId());
             Long parentId = entry.getParentId();
@@ -122,7 +120,7 @@ public class PersonalService {
     }
 
     @Transactional
-    public void copyEntries(CopyEntryArgs args, Long userId) {
+    public void copyEntry(CopyEntryArgs args, Long userId) {
         Entry dir = entryMapper.selectById(args.getTargetId());
         if (dir == null) throw new BusinessException("Entry does not exist");
         Entry entry = entryMapper.selectById(args.getId());
@@ -240,23 +238,7 @@ public class PersonalService {
         }
     }
 
-    public Drive getPersonalDriveUsage(Long driveId) {
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getId, driveId);
-        Drive drive = driveMapper.selectOne(driveQuery);
-        if (drive == null) throw new BusinessException("Drive does not exist");
 
-        return drive;
-    }
-
-    public Long getPersonalDriveId(Long userId) {
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getUserId, userId)
-                .eq(Drive::getDriveType, 1);
-        Drive drive = driveMapper.selectOne(driveQuery);
-        if (drive == null) throw new BusinessException("Drive does not exist");
-        return drive.getId();
-    }
 
     private boolean validateFileName(String fileName) {
         if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;

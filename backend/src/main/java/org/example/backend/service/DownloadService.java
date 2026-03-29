@@ -6,9 +6,9 @@ import io.minio.MinioClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.config.MinioConfig;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
+import org.example.backend.model.args.DownloadArgs;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,10 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -36,18 +39,43 @@ public class DownloadService {
     private static final int TYPE_FOLDER = 2;
     private static final int STATUS_UNDELETED = 1;
 
-    public StreamingResponseBody download(List<Long> entryIds) {
+    public StreamingResponseBody download(DownloadArgs args, Consumer<String> setFileName) {
         return outputStream -> {
-            try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream, StandardCharsets.UTF_8)) {
-                Set<String> entryNames = new HashSet<>();
+            try {
+                LambdaQueryWrapper<Entry> rootQueryWrapper = new LambdaQueryWrapper<>();
+                rootQueryWrapper.in(Entry::getId, args.getIds())
+                        .eq(Entry::getStatus, STATUS_UNDELETED);
+                List<Entry> roots = entryMapper.selectList(rootQueryWrapper);
 
-                List<DownloadTask> tasks = collectDownloadTasks(entryIds);
-
-                for (DownloadTask task : tasks) {
-                    writeToZip(zipOutputStream, task, entryNames);
+                if (roots == null || roots.isEmpty()) {
+                    throw new BusinessException("File not found");
                 }
 
-                zipOutputStream.finish();
+                if (roots.size() == 1 && roots.get(0).getEntryType() == TYPE_FILE) {
+                    Entry file = roots.get(0);
+                    Storage storage = storageMapper.selectById(file.getStorageId());
+
+                    setFileName.accept(file.getEntryName());
+
+                    try (InputStream is = minioClient.getObject(
+                            GetObjectArgs.builder()
+                                    .bucket(storage.getBucketName())
+                                    .object(storage.getObjectKey())
+                                    .build())) {
+                        is.transferTo(outputStream);
+                    }
+                } else {
+                    String zipFileName = "文件-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+                    setFileName.accept(zipFileName + ".zip");
+                    try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream, StandardCharsets.UTF_8)) {
+                        Set<String> entryNames = new HashSet<>();
+                        List<DownloadTask> tasks = collectDownloadTasks(args.getIds());
+                        for (DownloadTask task : tasks) {
+                            writeToZip(zipOutputStream, task, entryNames);
+                        }
+                        zipOutputStream.finish();
+                    }
+                }
             } catch (Exception e) {
                 log.error("Download error: {}", e.getMessage());
                 throw new BusinessException("Download failed");

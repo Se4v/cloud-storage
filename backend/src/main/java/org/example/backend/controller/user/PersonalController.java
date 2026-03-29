@@ -15,6 +15,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -69,8 +74,18 @@ public class PersonalController {
     }
 
     @PostMapping("/download")
-    public Result<?> download(@RequestBody List<Long> entryIds) {
-        return null;
+    public ResponseEntity<StreamingResponseBody> download(@RequestBody DownloadArgs args) {
+        final String[] fileName = {null};
+
+        StreamingResponseBody stream = downloadService.download(args, name ->{
+            fileName[0] = name;
+        });
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", fileName[0]);
+        
+        return ResponseEntity.ok().headers(headers).body(stream);
     }
 
     @GetMapping
@@ -105,8 +120,8 @@ public class PersonalController {
     }
 
     @PostMapping("/copy")
-    public Result<?> copyEntries(@RequestBody CopyEntryArgs args) {
-        personalService.copyEntries(args, userId);
+    public Result<?> copyEntry(@RequestBody CopyEntryArgs args) {
+        personalService.copyEntry(args, userId);
         return Result.success();
     }
 
@@ -137,17 +152,17 @@ public class PersonalController {
 
     @GetMapping("/usage")
     public Result<?> getPersonalDriveUsage(@RequestParam Long driveId) {
-        Drive drive = personalService.getPersonalDriveUsage(driveId);
+        Drive drive = driveService.getPersonalDriveUsage(driveId);
         PersonalDriveUsageView view = PersonalDriveUsageView.builder()
                 .usedQuota(drive.getUsedQuota())
                 .totalQuota(drive.getTotalQuota())
                 .build();
-        return Result.success();
+        return Result.success(view);
     }
 
     @GetMapping("/id")
     public Result<?> getPersonalDriveId() {
-        Long personalDriveId = personalService.getPersonalDriveId(userId);
+        Long personalDriveId = driveService.getPersonalDriveId(userId);
         return Result.success(personalDriveId);
     }
 }
