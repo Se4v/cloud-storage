@@ -52,6 +52,33 @@ public class PersonalService {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId);
         List<Entry> entries = entryMapper.selectList(entryQuery);
+        if (entries == null || entries.isEmpty()) return List.of();
+        
+        Map<Long, FolderTreeView> nodeMap = new HashMap<>();
+        List<FolderTreeView> roots = new ArrayList<>();
+        
+        // First pass: create all nodes
+        for (Entry entry : entries) {
+            FolderTreeView node = new FolderTreeView();
+            node.setId(entry.getId());
+            node.setName(entry.getEntryName());
+            node.setChildren(new ArrayList<>());
+            nodeMap.put(entry.getId(), node);
+        }
+        
+        // Second pass: build tree structure
+        for (Entry entry : entries) {
+            FolderTreeView node = nodeMap.get(entry.getId());
+            Long parentId = entry.getParentId();
+            if (parentId == null || parentId == 0 || !nodeMap.containsKey(parentId)) {
+                roots.add(node);
+            } else {
+                FolderTreeView parent = nodeMap.get(parentId);
+                parent.getChildren().add(node);
+            }
+        }
+        
+        return roots;
     }
 
     @Transactional

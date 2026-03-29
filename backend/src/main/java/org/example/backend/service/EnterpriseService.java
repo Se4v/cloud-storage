@@ -57,7 +57,7 @@ public class EnterpriseService {
         if (sameEntry != null) throw new BusinessException("Folder already exists");
 
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getNodeId, args.getNodeId());
+        driveQuery.eq(Drive::getId, args.getDriveId());
         Drive drive = driveMapper.selectOne(driveQuery);
 
         // 创建记录
