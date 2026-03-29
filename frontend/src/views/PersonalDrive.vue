@@ -643,9 +643,30 @@ const goToPath = (index) => {
   loadFileList(targetId)
 }
 
+// 加载个人空间使用情况
+const loadDriveUsage = async () => {
+  if (!driveId.value) return
+
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/personal/usage`, {
+      ...getAuthConfig(),
+      params: {
+        driveId: driveId.value
+      }
+    })
+    if (res.data.code === 200) {
+      usedQuota.value = res.data.data?.usedQuota || 0
+      totalQuota.value = res.data.data?.totalQuota || 0
+    }
+  } catch (error) {
+    console.error('加载存储空间使用情况失败:', error)
+  }
+}
+
 // 初始化加载
 onMounted(() => {
   loadFileList()
+  loadDriveUsage()
 })
 
 // 上传
@@ -767,18 +788,20 @@ const confirmCreateFolder = async () => {
   }
 
   try {
-    const response = await axios.post('/api/personal/create', {
+    const response = await axios.post(`${API_BASE_URL}/api/personal/create`, {
+      driveId: driveId.value,
       parentId: currentParentId.value,
       folderName: newFolderName.value.trim()
-    })
+    }, getAuthConfig())
 
     if (response.data.code === 200) {
       createFolderVisible.value = false
+      newFolderName.value = ''
       ElMessage.success('创建成功')
       // 重新加载文件列表
       loadFileList(currentParentId.value)
     } else {
-      ElMessage.error(response.data.message || '创建失败')
+      ElMessage.error(response.data.msg || '创建失败')
     }
   } catch (error) {
     console.error('创建文件夹失败:', error)
@@ -787,9 +810,44 @@ const confirmCreateFolder = async () => {
 }
 
 // 批量下载
-const handleBatchDownload = () => {
+const handleBatchDownload = async () => {
   if (selectedFiles.value.length === 0) return
-  ElMessage.success(`开始下载 ${selectedFiles.value.length} 个文件`)
+
+  try {
+    const ids = selectedFiles.value.map(f => f.id)
+    const response = await axios.post(`${API_BASE_URL}/api/personal/download`, {
+      ids: ids
+    }, {
+      ...getAuthConfig(),
+      responseType: 'blob'
+    })
+
+    // 从响应头中获取文件名
+    const contentDisposition = response.headers['content-disposition']
+    let filename = 'download'
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (filenameMatch) {
+        filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''))
+      }
+    }
+
+    // 创建下载链接
+    const blob = new Blob([response.data])
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+
+    ElMessage.success('下载成功')
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('下载失败')
+  }
 }
 
 // 分享
@@ -855,10 +913,43 @@ const copyShareLink = () => {
 }
 
 // 更多操作命令
-const handleCommand = (command, row) => {
+const handleCommand = async (command, row) => {
   switch (command) {
     case 'download':
-      ElMessage.success(`下载: ${row.name}`)
+      try {
+        const response = await axios.post(`${API_BASE_URL}/api/personal/download`, {
+          ids: [row.id]
+        }, {
+          ...getAuthConfig(),
+          responseType: 'blob'
+        })
+
+        // 从响应头中获取文件名
+        const contentDisposition = response.headers['content-disposition']
+        let filename = row.name || 'download'
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+          if (filenameMatch) {
+            filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''))
+          }
+        }
+
+        // 创建下载链接
+        const blob = new Blob([response.data])
+        const downloadUrl = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(downloadUrl)
+
+        ElMessage.success('下载成功')
+      } catch (error) {
+        console.error('下载失败:', error)
+        ElMessage.error('下载失败')
+      }
       break
     case 'share':
       selectedFiles.value = [row]
@@ -887,16 +978,16 @@ const handleRenameSingle = async (row) => {
       inputErrorMessage: '名称不能为空'
     })
 
-    const response = await axios.post('/api/personal/rename', {
-      entryId: row.id,
-      newName: value
-    })
+    const response = await axios.post(`${API_BASE_URL}/api/personal/rename`, {
+      id: row.id,
+      newEntryName: value
+    }, getAuthConfig())
 
     if (response.data.code === 200) {
       ElMessage.success('重命名成功')
       loadFileList(currentParentId.value)
     } else {
-      ElMessage.error(response.data.message || '重命名失败')
+      ElMessage.error(response.data.msg || '重命名失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -915,12 +1006,14 @@ const handleDeleteSingle = (row) => {
     confirmButtonClass: 'el-button--danger'
   }).then(async () => {
     try {
-      const response = await axios.post('/api/personal/delete', [row.id])
+      const response = await axios.post(`${API_BASE_URL}/api/personal/delete`, {
+        ids: [row.id]
+      }, getAuthConfig())
       if (response.data.code === 200) {
         ElMessage.success('删除成功')
         loadFileList(currentParentId.value)
       } else {
-        ElMessage.error(response.data.message || '删除失败')
+        ElMessage.error(response.data.msg || '删除失败')
       }
     } catch (error) {
       console.error('删除失败:', error)
@@ -934,17 +1027,22 @@ const loadFolderTree = async () => {
   if (!driveId.value) return
 
   try {
-    // TODO: 后端接口 /api/personal/folder 实现后取消注释
-    // const response = await axios.get(`/api/personal/folder?driveId=${driveId.value}`)
-    // if (response.data.code === 200) {
-    //   folderTreeData.value = response.data.data || []
-    // }
-
-    // 暂时使用空数据
-    folderTreeData.value = []
+    const res = await axios.get(`${API_BASE_URL}/api/personal/folder`, {
+      ...getAuthConfig(),
+      params: {
+        driveId: driveId.value
+      }
+    })
+    if (res.data.code === 200) {
+      folderTreeData.value = res.data.data || []
+    } else {
+      folderTreeData.value = []
+      ElMessage.error(res.data.msg || '加载文件夹列表失败')
+    }
   } catch (error) {
     console.error('加载文件夹树失败:', error)
     folderTreeData.value = []
+    ElMessage.error('加载文件夹列表失败')
   }
 }
 
@@ -976,10 +1074,10 @@ const confirmMove = async () => {
 
   try {
     const ids = selectedFiles.value.map(f => f.id)
-    const response = await axios.post('/api/personal/move', {
-      entryIds: ids,
+    const response = await axios.post(`${API_BASE_URL}/api/personal/move`, {
+      ids: ids,
       targetId: selectedTargetFolder.value.id
-    })
+    }, getAuthConfig())
 
     if (response.data.code === 200) {
       ElMessage.success(`已将 ${selectedFiles.value.length} 个文件移动到 "${selectedTargetFolder.value.name}"`)
@@ -988,7 +1086,7 @@ const confirmMove = async () => {
       selectedFiles.value = []
       loadFileList(currentParentId.value)
     } else {
-      ElMessage.error(response.data.message || '移动失败')
+      ElMessage.error(response.data.msg || '移动失败')
     }
   } catch (error) {
     console.error('移动失败:', error)
@@ -1031,10 +1129,10 @@ const confirmCopy = async () => {
 
   const selectedFile = selectedFiles.value[0]
   try {
-    const response = await axios.post('/api/personal/copy', {
-      entryId: selectedFile.id,
+    const response = await axios.post(`${API_BASE_URL}/api/personal/copy`, {
+      id: selectedFile.id,
       targetId: selectedTargetFolder.value.id
-    })
+    }, getAuthConfig())
 
     if (response.data.code === 200) {
       ElMessage.success(`已将 "${selectedFile.name}" 复制到 "${selectedTargetFolder.value.name}"`)
@@ -1043,7 +1141,7 @@ const confirmCopy = async () => {
       selectedFiles.value = []
       loadFileList(currentParentId.value)
     } else {
-      ElMessage.error(response.data.message || '复制失败')
+      ElMessage.error(response.data.msg || '复制失败')
     }
   } catch (error) {
     console.error('复制失败:', error)
@@ -1254,13 +1352,15 @@ const handleBatchDelete = () => {
   }).then(async () => {
     try {
       const ids = selectedFiles.value.map(f => f.id)
-      const response = await axios.post('/api/personal/delete', ids)
+      const response = await axios.post(`${API_BASE_URL}/api/personal/delete`, {
+        ids: ids
+      }, getAuthConfig())
       if (response.data.code === 200) {
         ElMessage.success('删除成功')
         selectedFiles.value = []
         loadFileList(currentParentId.value)
       } else {
-        ElMessage.error(response.data.message || '删除失败')
+        ElMessage.error(response.data.msg || '删除失败')
       }
     } catch (error) {
       console.error('删除失败:', error)
