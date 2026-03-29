@@ -271,6 +271,7 @@
         title="分享文件"
         width="500px"
         class="rounded-lg"
+        :close-on-click-modal="false"
     >
       <div class="py-4 space-y-4">
         <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -289,15 +290,29 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">分享有效期</label>
-          <el-radio-group v-model="shareExpire">
-            <el-radio-button label="1">1天</el-radio-button>
-            <el-radio-button label="7">7天</el-radio-button>
-            <el-radio-button label="30">30天</el-radio-button>
-            <el-radio-button label="0">永久有效</el-radio-button>
-          </el-radio-group>
-        </div>
+        <el-form :model="shareForm" label-width="100px">
+          <el-form-item label="链接名称">
+            <el-input v-model="shareForm.linkName" placeholder="请输入链接名称" />
+          </el-form-item>
+          <el-form-item label="分享类型">
+            <el-radio-group v-model="shareForm.linkType">
+              <el-radio :label="1">公开链接</el-radio>
+              <el-radio :label="2">加密链接</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="提取码" v-if="shareForm.linkType === 2">
+            <el-input v-model="shareForm.accessCode" placeholder="请输入提取码" maxlength="6" show-word-limit />
+          </el-form-item>
+          <el-form-item label="过期时间">
+            <el-date-picker
+                v-model="shareForm.expireTime"
+                type="datetime"
+                placeholder="选择过期时间"
+                value-format="YYYY-MM-DD HH:mm:ss"
+                style="width: 100%"
+            />
+          </el-form-item>
+        </el-form>
 
         <div v-if="shareLink" class="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
           <code class="text-sm text-blue-900 font-mono truncate flex-1 mr-3">{{ shareLink }}</code>
@@ -533,9 +548,16 @@ const shareVisible = ref(false)
 const moveVisible = ref(false)
 const copyVisible = ref(false)
 const newFolderName = ref('')
-const shareExpire = ref('7')
 const shareLink = ref('')
 const selectedTargetFolder = ref(null)
+
+// 分享表单
+const shareForm = ref({
+  linkName: '',
+  linkType: 1,
+  accessCode: '',
+  expireTime: null
+})
 
 // 文件夹树形数据（移动/复制对话框用）
 const folderTreeData = ref([
@@ -802,13 +824,53 @@ const handleBatchDownload = () => {
 const handleShare = () => {
   if (selectedFiles.value.length === 0) return
   shareLink.value = ''
+  // 初始化分享表单
+  shareForm.value = {
+    linkName: selectedFiles.value.length === 1 ? selectedFiles.value[0].name : `共${selectedFiles.value.length}个文件`,
+    linkType: 1,
+    accessCode: '',
+    expireTime: null
+  }
   shareVisible.value = true
 }
 
 // 生成分享链接
-const generateShareLink = () => {
-  shareLink.value = `https://drive.company.com/s/${Math.random().toString(36).substring(2, 15)}`
-  ElMessage.success('分享链接已生成')
+const generateShareLink = async () => {
+  if (!shareForm.value.linkName.trim()) {
+    ElMessage.warning('请输入链接名称')
+    return
+  }
+  if (!shareForm.value.expireTime) {
+    ElMessage.warning('请选择过期时间')
+    return
+  }
+  if (shareForm.value.linkType === 2 && !shareForm.value.accessCode.trim()) {
+    ElMessage.warning('请输入提取码')
+    return
+  }
+
+  try {
+    // 构造创建分享链接的请求数据
+    const createData = {
+      linkName: shareForm.value.linkName,
+      linkType: shareForm.value.linkType,
+      accessCode: shareForm.value.linkType === 2 ? shareForm.value.accessCode : null,
+      expireTime: shareForm.value.expireTime,
+      entryIds: selectedFiles.value.map(f => f.id)
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/api/link/create`, createData, getAuthConfig())
+
+    if (response.data.code === 200) {
+      shareLink.value = `${API_BASE_URL}/links/${response.data.data.linkKey}`
+      ElMessage.success('分享链接已生成')
+    } else {
+      ElMessage.error(response.data.msg || '生成分享链接失败')
+    }
+  } catch (error) {
+    console.error('生成分享链接失败:', error)
+    ElMessage.error('生成分享链接失败')
+  }
 }
 
 // 复制分享链接
