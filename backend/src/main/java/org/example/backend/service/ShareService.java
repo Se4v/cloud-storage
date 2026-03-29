@@ -30,7 +30,7 @@ public class ShareService {
     public List<Share> listLinks(Long userId) {
         // 查询分享链接列表
         LambdaQueryWrapper<Share> shareQuery = new LambdaQueryWrapper<>();
-        shareQuery.eq(Share::getUserId, userId).eq(Share::getDeleted, UNDELETED);
+        shareQuery.eq(Share::getUserId, userId).eq(Share::getIsDeleted, UNDELETED);
         List<Share> shareList = shareMapper.selectList(shareQuery);
 
         if (shareList == null || shareList.isEmpty()) return List.of();
@@ -40,23 +40,27 @@ public class ShareService {
 
     @Transactional
     public void createLink(CreateLinkArgs args, Long userId) {
-        // 判断文件条目是否存在
-        Entry entry = entryMapper.selectById(args.getId());
-        if (entry == null) throw new BusinessException("文件条目不存在");
+        Entry existedEntry = entryMapper.selectById(args.getId());
+        if (existedEntry == null) throw new BusinessException("文件条目不存在");
 
-        int count = shareMapper.insert(Share.builder()
-                        .driveId(args.getDriveId())
-                        .entryId(entry.getId())
-                        .entryType(entry.getEntryType())
-                        .userId(userId)
-                        .linkName(args.getLinkName())
-                        .linkKey(generateLinkKey())
-                        .linkType(args.getLinkType())
-                        .accessCode(args.getAccessCode())
-                        .deleted(UNDELETED)
-                        .expiredAt(args.getExpireTime())
-                        .build());
+        if (args.getLinkType() == 2 && args.getAccessCode().isBlank()) {
+            throw new BusinessException("<UNK>");
+        }
 
+        Share link = Share.builder()
+                .driveId(args.getDriveId())
+                .entryId(existedEntry.getId())
+                .entryType(existedEntry.getEntryType())
+                .userId(userId)
+                .linkName(args.getLinkName())
+                .linkType(args.getLinkType())
+                .linkKey(generateLinkKey())
+                .accessCode(args.getAccessCode())
+                .expiredAt(args.getExpireTime())
+                .isDeleted(UNDELETED)
+                .build();
+
+        int count = shareMapper.insert(link);
         if (count != 1) throw new BusinessException("Create share link failed");
     }
 
@@ -64,7 +68,7 @@ public class ShareService {
     public void updateLink(UpdateLinkArgs args) {
         // 判断分享链接是否存在
         Share link = shareMapper.selectById(args.getId());
-        if (link == null || link.getDeleted() == DELETED) throw new BusinessException("分享链接不存在");
+        if (link == null || link.getIsDeleted() == DELETED) throw new BusinessException("分享链接不存在");
 
         // 更新链接信息
         LambdaUpdateWrapper<Share> shareUpdate = new LambdaUpdateWrapper<>();
@@ -86,7 +90,7 @@ public class ShareService {
         List<Long> linkIds = args.getLinkIds();
 
         LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.set(Share::getDeleted, DELETED)
+        wrapper.set(Share::getIsDeleted, DELETED)
                 .in(Share::getId, linkIds);
 
         int count = shareMapper.update(wrapper);

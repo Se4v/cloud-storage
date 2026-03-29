@@ -297,16 +297,6 @@
             />
           </el-form-item>
         </el-form>
-
-        <div v-if="shareLink" class="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-          <code class="text-sm text-blue-900 font-mono truncate flex-1 mr-3">{{ shareLink }}</code>
-          <button
-              @click="copyShareLink"
-              class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded transition-colors"
-          >
-            复制链接
-          </button>
-        </div>
       </div>
       <template #footer>
         <div class="flex justify-end gap-3">
@@ -532,7 +522,6 @@ const shareVisible = ref(false)
 const moveVisible = ref(false)
 const copyVisible = ref(false)
 const newFolderName = ref('')
-const shareLink = ref('')
 const selectedTargetFolder = ref(null)
 
 // 分享表单
@@ -856,7 +845,6 @@ const handleShare = () => {
     ElMessage.warning('只能选择一条记录进行分享')
     return
   }
-  shareLink.value = ''
   // 初始化分享表单
   shareForm.value = {
     linkName: selectedFiles.value[0].name,
@@ -885,17 +873,17 @@ const generateShareLink = async () => {
   try {
     // 构造创建分享链接的请求数据
     const createData = {
+      id: selectedFiles.value[0].id,
+      driveId: driveId.value,
       linkName: shareForm.value.linkName,
       linkType: shareForm.value.linkType,
       accessCode: shareForm.value.linkType === 2 ? shareForm.value.accessCode : null,
-      expireTime: shareForm.value.expireTime,
-      entryIds: selectedFiles.value.map(f => f.id)
+      expireTime: shareForm.value.expireTime
     }
 
     const response = await axios.post(`${API_BASE_URL}/api/link/create`, createData, getAuthConfig())
 
     if (response.data.code === 200) {
-      shareLink.value = `${API_BASE_URL}/links/${response.data.data.linkKey}`
       ElMessage.success('分享链接已生成')
     } else {
       ElMessage.error(response.data.msg || '生成分享链接失败')
@@ -904,12 +892,6 @@ const generateShareLink = async () => {
     console.error('生成分享链接失败:', error)
     ElMessage.error('生成分享链接失败')
   }
-}
-
-// 复制分享链接
-const copyShareLink = () => {
-  navigator.clipboard.writeText(shareLink.value)
-  ElMessage.success('链接已复制到剪贴板')
 }
 
 // 更多操作命令
