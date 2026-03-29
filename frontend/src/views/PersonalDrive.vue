@@ -36,7 +36,7 @@
 
         <button
             @click="handleShare"
-            :disabled="selectedFiles.length === 0"
+            :disabled="selectedFiles.length !== 1"
             class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <el-icon><Share /></el-icon>
@@ -274,22 +274,6 @@
         :close-on-click-modal="false"
     >
       <div class="py-4 space-y-4">
-        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <p class="text-sm text-slate-600 mb-2">已选择 {{ selectedFiles.length }} 个文件</p>
-          <div class="flex flex-wrap gap-2">
-            <span
-                v-for="file in selectedFiles.slice(0, 3)"
-                :key="file.id"
-                class="px-2 py-1 bg-white text-xs text-slate-700 rounded border border-slate-200 truncate max-w-[120px]"
-            >
-              {{ file.name }}
-            </span>
-            <span v-if="selectedFiles.length > 3" class="px-2 py-1 text-xs text-slate-500">
-              +{{ selectedFiles.length - 3 }}
-            </span>
-          </div>
-        </div>
-
         <el-form :model="shareForm" label-width="100px">
           <el-form-item label="链接名称">
             <el-input v-model="shareForm.linkName" placeholder="请输入链接名称" />
@@ -822,11 +806,14 @@ const handleBatchDownload = () => {
 
 // 分享
 const handleShare = () => {
-  if (selectedFiles.value.length === 0) return
+  if (selectedFiles.value.length !== 1) {
+    ElMessage.warning('只能选择一条记录进行分享')
+    return
+  }
   shareLink.value = ''
   // 初始化分享表单
   shareForm.value = {
-    linkName: selectedFiles.value.length === 1 ? selectedFiles.value[0].name : `共${selectedFiles.value.length}个文件`,
+    linkName: selectedFiles.value[0].name,
     linkType: 1,
     accessCode: '',
     expireTime: null
