@@ -108,7 +108,7 @@ public class DownloadService {
         Map<Long, List<Entry>> childrenMap = new HashMap<>();
         if (!folderIds.isEmpty()) {
             // 递归查询子节点，构建 parentId -> children 映射
-            List<Entry> descendants = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            List<Entry> descendants = entryMapper.selectDescendantsByFolderId(folderIds);
             childrenMap = descendants.stream().collect(Collectors.groupingBy(Entry::getParentId));
         }
 

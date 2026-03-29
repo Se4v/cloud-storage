@@ -112,7 +112,7 @@ public class RecycleService {
 
         // 恢复文件夹及其所有子项
         if (!folderIds.isEmpty()) {
-            List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             List<Long> allFolderIds = new ArrayList<>(folderIds);
             allFolderIds.addAll(
                     children.stream()
@@ -159,7 +159,7 @@ public class RecycleService {
         List<Long> allChildFileIds = new ArrayList<>();
         List<Long> allChildFolderIds = new ArrayList<>();
         if (!folderIds.isEmpty()) {
-            List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             children.forEach(entry -> {
                 if (entry.getEntryType() == FILE) {
                     allChildFileIds.add(entry.getId());
@@ -227,7 +227,7 @@ public class RecycleService {
         List<Long> allChildFileIds = new ArrayList<>();
         List<Long> allChildFolderIds = new ArrayList<>();
         if (!folderIds.isEmpty()) {
-            List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             children.forEach(entry -> {
                 if (entry.getEntryType() == FILE) {
                     allChildFileIds.add(entry.getId());

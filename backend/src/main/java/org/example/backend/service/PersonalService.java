@@ -2,7 +2,6 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import org.example.backend.common.Result;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -223,7 +222,7 @@ public class PersonalService {
 
         // 删除文件夹及其所有子项
         if (!folderIds.isEmpty()) {
-            List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             List<Long> allFolderIds = new ArrayList<>(folderIds);
             allFolderIds.addAll(children.stream().map(Entry::getId).toList());
 

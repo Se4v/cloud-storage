@@ -6,5 +6,5 @@ import org.example.backend.model.entity.Entry;
 import java.util.List;
 
 public interface EntryMapper extends BaseMapper<Entry> {
-    List<Entry> selectRecursiveChildEntryIdsBatch(List<Long> folderIds);
+    List<Entry> selectDescendantsByFolderId(List<Long> folderIds);
 }

@@ -159,7 +159,7 @@ public class EnterpriseService {
         entries.forEach(e -> allIds.add(e.getId()));
 
         if (!folderIds.isEmpty()) {
-            List<Entry> children = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
+            List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             children.forEach(c -> allIds.add(c.getId()));
         }
 
