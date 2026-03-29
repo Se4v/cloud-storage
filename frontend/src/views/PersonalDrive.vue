@@ -514,7 +514,14 @@ const pathHistory = ref([])
 const currentParentId = ref(0)
 
 // 文件列表
-const fileList = ref([])
+const fileList = ref([
+  {
+    id: 123,
+    name: 'asda',
+    size: 1234,
+    createTime: '2312'
+  }
+])
 
 // 存储空间（单位：字节）
 const usedQuota = ref(49 * 1024 * 1024) // 49MB
@@ -531,7 +538,19 @@ const shareLink = ref('')
 const selectedTargetFolder = ref(null)
 
 // 文件夹树形数据（移动/复制对话框用）
-const folderTreeData = ref([])
+const folderTreeData = ref([
+  {
+    id: 123,
+    name: 'sda',
+    children: [
+      {
+        id: 123,
+        name: 'sda'
+      }
+
+    ]
+  }
+])
 
 // 过滤后的文件列表
 const filteredFiles = computed(() => {

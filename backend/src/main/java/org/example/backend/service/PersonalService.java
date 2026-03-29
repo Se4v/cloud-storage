@@ -11,6 +11,7 @@ import org.example.backend.model.args.*;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
+import org.example.backend.model.view.FolderTreeView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,12 @@ public class PersonalService {
         if (entries == null || entries.isEmpty()) return List.of();
 
         return entries;
+    }
+
+    public List<FolderTreeView> listFolder(Long driveId) {
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId);
+        List<Entry> entries = entryMapper.selectList(entryQuery);
     }
 
     @Transactional
