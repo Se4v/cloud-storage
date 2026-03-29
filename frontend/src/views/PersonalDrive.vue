@@ -544,19 +544,7 @@ const shareForm = ref({
 })
 
 // 文件夹树形数据（移动/复制对话框用）
-const folderTreeData = ref([
-  {
-    id: 123,
-    name: 'sda',
-    children: [
-      {
-        id: 123,
-        name: 'sda'
-      }
-
-    ]
-  }
-])
+const folderTreeData = ref([])
 
 // 过滤后的文件列表
 const filteredFiles = computed(() => {
