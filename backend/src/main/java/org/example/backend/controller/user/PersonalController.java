@@ -88,8 +88,8 @@ public class PersonalController {
 
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
-
-        return Result.success();
+        List<FolderTreeView> views = personalService.listFolders(driveId);
+        return Result.success(views);
     }
 
     @PostMapping("/create")

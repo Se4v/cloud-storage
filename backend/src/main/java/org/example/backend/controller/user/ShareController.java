@@ -50,6 +50,7 @@ public class ShareController {
         // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
         // shareService.createLink(args, userDetails.getUserId());
+        shareService.createLink(args, userId);
         return Result.success();
     }
 

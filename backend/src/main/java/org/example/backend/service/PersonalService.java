@@ -48,7 +48,7 @@ public class PersonalService {
         return entries;
     }
 
-    public List<FolderTreeView> listFolder(Long driveId) {
+    public List<FolderTreeView> listFolders(Long driveId) {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId);
         List<Entry> entries = entryMapper.selectList(entryQuery);
