@@ -26,8 +26,6 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class DownloadService {
     @Autowired
-    private MinioConfig minioConfig;
-    @Autowired
     private MinioClient minioClient;
     @Autowired
     private EntryMapper entryMapper;
@@ -59,10 +57,6 @@ public class DownloadService {
 
     /**
      * 收集所有需要下载的文件和文件夹，构建下载任务列表
-     * 1. 批量查询根节点
-     * 2. 如果包含文件夹，递归查询所有后代节点
-     * 3. 批量查询 Storage 获取 objectKey
-     * 4. 遍历节点构建下载任务（区分文件和文件夹）
      */
     private List<DownloadTask> collectDownloadTasks(List<Long> entryIds) {
         List<DownloadTask> tasks = new ArrayList<>();
@@ -81,14 +75,13 @@ public class DownloadService {
         List<Long> folderIds = roots.stream()
                 .filter(e -> e.getEntryType() == TYPE_FOLDER)
                 .map(Entry::getId)
-                .collect(Collectors.toList());
+                .toList();
 
         Map<Long, List<Entry>> childrenMap = new HashMap<>();
         if (!folderIds.isEmpty()) {
             // 递归查询子节点，构建 parentId -> children 映射
             List<Entry> descendants = entryMapper.selectRecursiveChildEntryIdsBatch(folderIds);
-            childrenMap = descendants.stream()
-                    .collect(Collectors.groupingBy(Entry::getParentId));
+            childrenMap = descendants.stream().collect(Collectors.groupingBy(Entry::getParentId));
         }
 
         // 3. 构建 storageId -> Storage 映射
@@ -144,8 +137,7 @@ public class DownloadService {
         storageQueryWrapper.in(Storage::getId, storageIds);
         List<Storage> storages = storageMapper.selectList(storageQueryWrapper);
 
-        return storages.stream()
-                .collect(Collectors.toMap(Storage::getId, s -> s));
+        return storages.stream().collect(Collectors.toMap(Storage::getId, s -> s));
     }
 
     /**
