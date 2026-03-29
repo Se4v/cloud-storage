@@ -41,7 +41,7 @@ public class ShareService {
     @Transactional
     public void createLink(CreateLinkArgs args, Long userId) {
         // 判断文件条目是否存在
-        Entry entry = entryMapper.selectById(args.getEntryId());
+        Entry entry = entryMapper.selectById(args.getId());
         if (entry == null) throw new BusinessException("文件条目不存在");
 
         int count = shareMapper.insert(Share.builder()

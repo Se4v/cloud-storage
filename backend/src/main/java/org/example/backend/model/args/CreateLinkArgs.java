@@ -1,15 +1,22 @@
 package org.example.backend.model.args;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
 public class CreateLinkArgs {
-    private Long entryId;
+    @NotNull
+    private Long id;
+    @NotNull
     private Long driveId;
+    @NotBlank
     private String linkName;
-    private String accessCode;
+    @NotNull
     private Integer linkType;
+    private String accessCode;
+    @NotNull
     private LocalDateTime expireTime;
 }
