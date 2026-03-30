@@ -1,21 +1,17 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.common.security.OrgUserDetails;
 import org.example.backend.model.args.SimpleUploadArgs;
 import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.args.MergeChunksArgs;
 import org.example.backend.model.args.UploadChunkArgs;
-import org.example.backend.model.view.SimpleUploadView;
-import org.example.backend.model.view.InitUploadView;
-import org.example.backend.model.view.MergeChunksView;
-import org.example.backend.model.view.UploadChunkView;
+import org.example.backend.model.view.*;
 import org.example.backend.service.DownloadService;
+import org.example.backend.service.OrgService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,11 +23,16 @@ public class EnterpriseController {
     @Autowired
     private UploadService uploadService;
     @Autowired
-    private DownloadService downloadService;;
+    private DownloadService downloadService;
+    @Autowired
+    private OrgService orgService;
+
+    Long userId = 2034965772877197313L;
 
     @PostMapping("/org")
-    public Result<?> getUserOwnedOrgTree() {
-        return null;
+    public Result<?> getOrgTree() {
+        List<OrgTreeView> views = orgService.getOrgTree(userId);
+        return Result.success(views);
     }
 
     @PostMapping("/init-upload")
