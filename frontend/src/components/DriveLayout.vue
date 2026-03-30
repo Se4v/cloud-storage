@@ -70,30 +70,37 @@
                     <template #default="{ node, data }">
                       <div
                           class="flex items-center gap-3 py-2.5 px-1 w-full min-w-0"
-                          :title="node.label"
+                          :title="data.name"
                       >
                         <el-icon
-                            v-if="data.type === 'company'"
+                            v-if="data.type === 1"
                             class="text-blue-600 flex-shrink-0"
                             :size="18"
                         >
                           <OfficeBuilding />
                         </el-icon>
                         <el-icon
-                            v-else-if="data.type === 'dept'"
+                            v-else-if="data.type === 2"
                             class="text-slate-400 flex-shrink-0"
                             :size="16"
                         >
                           <Folder />
                         </el-icon>
+                        <el-icon
+                            v-else-if="data.type === 3"
+                            class="text-green-500 flex-shrink-0"
+                            :size="16"
+                        >
+                          <User />
+                        </el-icon>
                         <span
                             class="text-sm flex-1 select-none whitespace-nowrap"
                             :class="[
                             node.isCurrent ? 'text-blue-600 font-semibold' : 'text-slate-700',
-                            data.type === 'company' && 'font-semibold text-slate-900'
+                            data.type === 1 && 'font-semibold text-slate-900'
                           ]"
                         >
-                          {{ node.label }}
+                          {{ data.name }}
                         </span>
                       </div>
                     </template>
@@ -250,61 +257,26 @@ const expandedKeys = ref(['root', 'dept_2']) // 默认展开的节点
 const treeRef = ref(null)
 
 // 组织架构树数据
-const orgTree = [
-  {
-    id: 'root',
-    label: '小明电器有限公司111111111111111111111',
-    type: 'company',
-    children: [
-      {
-        id: 'dept_1',
-        label: '总办',
-        type: 'dept',
-        children: []
-      },
-      {
-        id: 'dept_2',
-        label: '家电产品部',
-        type: 'dept',
-        children: [
-          {
-            id: 'dept_2_1',
-            label: '家电产品一部',
-            type: 'dept',
-            children: []
-          },
-          {
-            id: 'dept_2_2',
-            label: '家电产品二部',
-            type: 'dept',
-            children: []
-          },
-          {
-            id: 'dept_2_3',
-            label: '家电产品三部',
-            type: 'dept',
-            children: []
-          }
-        ]
-      },
-      {
-        id: 'dept_3',
-        label: '财务部',
-        type: 'dept',
-        children: []
-      },
-      {
-        id: 'dept_4',
-        label: '人力资源部',
-        type: 'dept',
-        children: []
-      }
-    ]
+const orgTree = ref([])
+
+// 从后端获取组织架构树
+const loadOrgTree = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/enterprise/org`, getAuthConfig())
+    if (res.data.code === 200) {
+      orgTree.value = res.data.data || []
+    } else {
+      console.error('加载组织架构树失败:', res.data.msg)
+      orgTree.value = []
+    }
+  } catch (error) {
+    console.error('加载组织架构树失败:', error)
+    orgTree.value = []
   }
-]
+}
 
 const treeProps = {
-  label: 'label',
+  label: 'name',
   children: 'children'
 }
 
@@ -331,10 +303,10 @@ const isEnterpriseActive = computed(() => {
 const findNodePath = (tree, id, path = []) => {
   for (let node of tree) {
     if (node.id === id) {
-      return [...path, node.label]
+      return [...path, node.name]
     }
     if (node.children && node.children.length > 0) {
-      const result = findNodePath(node.children, id, [...path, node.label])
+      const result = findNodePath(node.children, id, [...path, node.name])
       if (result) return result
     }
   }
@@ -344,7 +316,7 @@ const findNodePath = (tree, id, path = []) => {
 // 当前页面标题
 const currentTitle = computed(() => {
   if (isEnterpriseActive.value) {
-    const path = findNodePath(orgTree, currentNodeId.value)
+    const path = findNodePath(orgTree.value, currentNodeId.value)
     return path ? path[path.length - 1] : '企业空间'
   }
   const item = [...storageMenu, ...fileMenu, ...accountMenu].find(m => m.key === currentMenu.value)
@@ -360,8 +332,9 @@ const toggleEnterprise = () => {
   }
 }
 
-// 页面加载时获取个人空间ID
+// 页面加载时获取组织架构树
 onMounted(() => {
+  loadOrgTree()
 })
 
 // 处理个人空间点击
@@ -400,7 +373,7 @@ const handleNodeClick = (data, node) => {
   router.push({
     name: 'EnterpriseDrive',
     params: {
-      driveId: data.id
+      driveId: data.driveId
     }
   })
 }

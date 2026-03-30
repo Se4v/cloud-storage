@@ -29,7 +29,7 @@ public class EnterpriseController {
 
     Long userId = 2034965772877197313L;
 
-    @PostMapping("/org")
+    @GetMapping("/org")
     public Result<?> getOrgTree() {
         List<OrgTreeView> views = orgService.getOrgTree(userId);
         return Result.success(views);
