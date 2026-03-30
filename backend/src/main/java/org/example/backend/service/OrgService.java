@@ -15,7 +15,7 @@ import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.User;
 import org.example.backend.model.view.NodeView;
-import org.example.backend.model.view.TreeView;
+import org.example.backend.model.view.OrgTreeView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,63 +36,54 @@ public class OrgService {
 
     private static final int DELETED = 1;
 
-    public List<TreeView> getOrgTree(Long userId) {
+    public List<OrgTreeView> getOrgTree(Long userId) {
         LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Member::getUserId, userId);
         List<Member> members = memberMapper.selectList(queryWrapper);
 
-        List<Long> nodeIds = members.stream().map(Member::getNodeId).toList();
+        List<Long> childNodeIds = members.stream().map(Member::getNodeId).toList();
+        List<Node> nodeList = nodeMapper.selectNodeWithParents(childNodeIds);
+        List<Long> allNodeIds = nodeList.stream().map(Node::getId).toList();
 
-        List<Node> nodeList = nodeMapper.selectNodeWithParents(nodeIds);
+        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
+        driveQuery.eq(Drive::getDriveType, 2).in(Drive::getNodeId, allNodeIds);
+        List<Drive> driveList = driveMapper.selectList(driveQuery);
+        Map<Long, Long> driveMap = driveList.stream().collect(Collectors.toMap(Drive::getNodeId, Drive::getId));
 
-        List<TreeView> viewList = nodeList.stream()
-                .map(node -> {
-                    TreeView view = new TreeView();
-
-                    view.setId(String.valueOf(node.getId()));
-                    view.setLabel(node.getNodeName());
-                    view.setParentId(node.getParentId());
-
-                    switch (node.getNodeType()) {
-                        case 1: view.setType("company"); break;
-                        case 2: view.setType("dept"); break;
-                        case 3: view.setType("team"); break;
-                        default: view.setType("unknown"); break;
-                    }
-
-                    return view;
-                })
+        // 构建节点ID到节点的映射
+        Map<Long, Node> nodeMap = nodeList.stream().collect(Collectors.toMap(Node::getId, node -> node));
+        
+        // 找出根节点（parentId为0或父节点不在nodeList中的节点）
+        List<Node> rootNodes = nodeList.stream()
+                .filter(node -> node.getParentId() == 0 || !nodeMap.containsKey(node.getParentId()))
                 .toList();
-
-        return buildTree(viewList);
+        
+        // 递归构建树形结构
+        List<OrgTreeView> orgTree = rootNodes.stream()
+                .map(node -> buildOrgTree(node, nodeMap, driveMap))
+                .toList();
+        
+        return orgTree;
     }
 
-    private List<TreeView> buildTree(List<TreeView> flatList) {
-        if (flatList == null || flatList.isEmpty()) {
-            return List.of();
-        }
-
-        // 建立 ID -> 节点的映射表，用于快速查找
-        Map<String, TreeView> nodeMap = flatList.stream()
-                .collect(Collectors.toMap(TreeView::getId, node -> node));
-
-        // 2. 组装父子关系
-        List<TreeView> roots = new ArrayList<>();
-
-        for (TreeView node : flatList) {
-            if (node.getParentId() == null || node.getParentId() == 0L) {
-                // 根节点（parent_id = 0）
-                roots.add(node);
-            } else {
-                // 挂载到父节点下
-                TreeView parent = nodeMap.get(String.valueOf(node.getParentId()));
-                if (parent != null) parent.getChildren().add(node);
-                    // 父节点不存在（数据异常），作为根节点处理
-                else roots.add(node);
-            }
-        }
-
-        return roots;
+    private OrgTreeView buildOrgTree(Node node, Map<Long, Node> nodeMap, Map<Long, Long> driveMap) {
+        // 获取子节点
+        List<Node> children = nodeMap.values().stream()
+                .filter(n -> node.getId().equals(n.getParentId()))
+                .toList();
+        
+        // 递归构建子节点树
+        List<OrgTreeView> childViews = children.stream()
+                .map(child -> buildOrgTree(child, nodeMap, driveMap))
+                .toList();
+        
+        return OrgTreeView.builder()
+                .id(node.getId())
+                .driveId(driveMap.get(node.getId()))
+                .name(node.getNodeName())
+                .type(node.getNodeType())
+                .children(childViews)
+                .build();
     }
 
     @Transactional
