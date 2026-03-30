@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.example.backend.mapper.EntryMapper">
-    <select id="selectDescendantsByFolderId" resultType="org.example.backend.entity.Entry">
+    <select id="selectDescendantsByFolderId" resultType="org.example.backend.model.entity.Entry">
         <!-- 使用 MySQL 8.0 的 CTE (公用表表达式) 实现递归 -->
         WITH RECURSIVE FolderTree AS (
         <!-- 锚点成员：查询传入 ID 列表中的所有直接子项 -->
@@ -12,7 +12,7 @@
         id, drive_id, user_id, parent_id, storage_id,
         entry_name, entry_type, file_size, file_ext,
         status, deleter_id, deleted_at, expired_at, created_at
-        FROM entry
+        FROM file_entry
         WHERE parent_id IN
         <foreach collection="folderIds" item="id" open="(" separator="," close=")">
             #{id}
@@ -25,7 +25,7 @@
         e.id, e.drive_id, e.user_id, e.parent_id, e.storage_id,
         e.entry_name, e.entry_type, e.file_size, e.file_ext,
         e.status, e.deleter_id, e.deleted_at, e.expired_at, e.created_at
-        FROM entry e
+        FROM file_entry e
         INNER JOIN FolderTree ft ON e.parent_id = ft.id
         WHERE e.status = 1 -- 确保只查询未删除的文件
         )

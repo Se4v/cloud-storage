@@ -37,34 +37,38 @@ public class EnterpriseController {
 
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-
-        return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+        //
+        // return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
+        return null;
     }
 
     @PostMapping("/simple-upload")
     public Result<SimpleUploadView> simpleUpload(SimpleUploadArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-
-        return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+        //
+        // return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
+        return null;
     }
 
     @PostMapping("/upload-chunk")
     public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-
-        return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+        //
+        // return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
+        return null;
     }
 
     @PostMapping("/merge-chunks")
     public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-
-        return Result.success(uploadService.mergeChunks(args, userDetails.getUserId()));
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
+        //
+        // return Result.success(uploadService.mergeChunks(args, userDetails.getUserId()));
+        return null;
     }
 
     @PostMapping("/download")

@@ -1,10 +1,12 @@
 package org.example.backend.common.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.Result;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -92,6 +95,17 @@ public class GlobalExceptionHandler {
     public Result<Void> handleNullPointerException(NullPointerException e, HttpServletRequest request) {
         log.error("空指针异常 - URI: [{}]", request.getRequestURI(), e);
         return Result.fail(500, "系统内部错误");
+    }
+
+    @ExceptionHandler(HttpMessageNotWritableException.class)
+    public void handleDownloadException(HttpMessageNotWritableException ex, HttpServletResponse response) {
+        // 如果是下载接口出错，直接写入简单的文本，避免 JSON 转换
+        try {
+            response.setContentType("text/plain;charset=UTF-8");
+            response.getWriter().write("Download Error: " + ex.getMessage());
+        } catch (IOException e) {
+            // 记录日志
+        }
     }
 
     /**

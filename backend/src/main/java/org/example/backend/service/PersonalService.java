@@ -211,7 +211,7 @@ public class PersonalService {
         // 删除文件
         if (!fileIds.isEmpty()) {
             LambdaUpdateWrapper<Entry> fileUpdate = new LambdaUpdateWrapper<>();
-            fileUpdate.set(Entry::getStatus, UNDELETED)
+            fileUpdate.set(Entry::getStatus, DELETED)
                     .set(Entry::getDeleterId, userId)
                     .set(Entry::getDeletedAt, LocalDateTime.now())
                     .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))

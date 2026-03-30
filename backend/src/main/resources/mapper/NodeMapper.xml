@@ -7,7 +7,7 @@
         WITH RECURSIVE node_hierarchy AS (
             -- 锚定节点
             SELECT
-                id, node_name, node_type, parent_id, is_enabled, is_deleted
+                id, node_name, node_type, parent_id, is_enabled, is_deleted, created_at, creator_id
             FROM org_node
             WHERE id IN
             <foreach collection="list" item="id" open="(" separator="," close=")">
@@ -21,7 +21,7 @@
             -- 递归向上查父节点
             SELECT
                 parent.id, parent.node_name, parent.node_type, parent.parent_id,
-                parent.is_enabled, parent.is_deleted
+                parent.is_enabled, parent.is_deleted, parent.created_at, parent.creator_id
             FROM org_node parent
             INNER JOIN node_hierarchy child ON parent.id = child.parent_id
             WHERE parent.id != 0
