@@ -1,6 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
+import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.*;
 import org.example.backend.model.entity.Drive;
@@ -11,6 +12,7 @@ import org.example.backend.service.DriveService;
 import org.example.backend.service.PersonalService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -75,16 +78,14 @@ public class PersonalController {
 
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody DownloadArgs args) {
-        final String[] fileName = {null};
+        String fileName = downloadService.getDownloadFileName(args);
 
-        StreamingResponseBody stream = downloadService.download(args, name ->{
-            fileName[0] = name;
-        });
-        
+        StreamingResponseBody stream = downloadService.download(args);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", fileName[0]);
-        
+        headers.setContentDispositionFormData("attachment", fileName);
+
         return ResponseEntity.ok().headers(headers).body(stream);
     }
 

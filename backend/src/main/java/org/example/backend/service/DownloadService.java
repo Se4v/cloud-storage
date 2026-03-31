@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -39,37 +38,26 @@ public class DownloadService {
     private static final int TYPE_FOLDER = 2;
     private static final int STATUS_UNDELETED = 1;
 
-    public StreamingResponseBody download(DownloadArgs args, Consumer<String> setFileName) {
+    public StreamingResponseBody download(DownloadArgs args) {
         return outputStream -> {
             try {
-                LambdaQueryWrapper<Entry> rootQueryWrapper = new LambdaQueryWrapper<>();
-                rootQueryWrapper.in(Entry::getId, args.getIds())
-                        .eq(Entry::getStatus, STATUS_UNDELETED);
-                List<Entry> roots = entryMapper.selectList(rootQueryWrapper);
-
-                if (roots == null || roots.isEmpty()) {
+                List<DownloadTask> tasks = collectDownloadTasks(args.getIds());
+                if (tasks.isEmpty()) {
                     throw new BusinessException("File not found");
                 }
 
-                if (roots.size() == 1 && roots.get(0).getEntryType() == TYPE_FILE) {
-                    Entry file = roots.get(0);
-                    Storage storage = storageMapper.selectById(file.getStorageId());
-
-                    setFileName.accept(file.getEntryName());
-
+                if (tasks.size() == 1 && !tasks.get(0).isEmptyDir()) {
+                    DownloadTask task = tasks.get(0);
                     try (InputStream is = minioClient.getObject(
                             GetObjectArgs.builder()
-                                    .bucket(storage.getBucketName())
-                                    .object(storage.getObjectKey())
+                                    .bucket(task.bucketName)
+                                    .object(task.objectKey)
                                     .build())) {
                         is.transferTo(outputStream);
                     }
                 } else {
-                    String zipFileName = "文件-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-                    setFileName.accept(zipFileName + ".zip");
                     try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream, StandardCharsets.UTF_8)) {
                         Set<String> entryNames = new HashSet<>();
-                        List<DownloadTask> tasks = collectDownloadTasks(args.getIds());
                         for (DownloadTask task : tasks) {
                             writeToZip(zipOutputStream, task, entryNames);
                         }
@@ -84,6 +72,27 @@ public class DownloadService {
     }
 
     /**
+     * 获取下载文件名（在流式传输前调用）
+     */
+    public String getDownloadFileName(DownloadArgs args) {
+        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Entry::getId, args.getIds()).eq(Entry::getStatus, STATUS_UNDELETED);
+        List<Entry> entries = entryMapper.selectList(queryWrapper);
+
+        if (entries == null || entries.isEmpty()) {
+            throw new BusinessException("File not found");
+        }
+
+        // 单文件下载：直接返回文件名
+        if (entries.size() == 1 && entries.get(0).getEntryType() == TYPE_FILE) {
+            return entries.get(0).getEntryName();
+        }
+
+        // 多文件/文件夹下载：返回zip文件名
+        return "file-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".zip";
+    }
+
+    /**
      * 收集所有需要下载的文件和文件夹，构建下载任务列表
      */
     private List<DownloadTask> collectDownloadTasks(List<Long> entryIds) {
@@ -91,11 +100,20 @@ public class DownloadService {
 
         // 1. 批量查询根节点（状态为未删除）
         LambdaQueryWrapper<Entry> rootQueryWrapper = new LambdaQueryWrapper<>();
-        rootQueryWrapper.in(Entry::getId, entryIds)
-                .eq(Entry::getStatus, STATUS_UNDELETED);
+        rootQueryWrapper.in(Entry::getId, entryIds).eq(Entry::getStatus, STATUS_UNDELETED);
         List<Entry> roots = entryMapper.selectList(rootQueryWrapper);
 
         if (roots == null || roots.isEmpty()) {
+            return tasks;
+        }
+
+        // 单文件直接返回，无需查子节点
+        if (roots.size() == 1 && roots.get(0).getEntryType() == TYPE_FILE) {
+            Entry file = roots.get(0);
+            Storage storage = storageMapper.selectById(file.getStorageId());
+            if (storage != null) {
+                tasks.add(new DownloadTask(file.getEntryName(), storage.getBucketName(), storage.getObjectKey(), false));
+            }
             return tasks;
         }
 
@@ -115,7 +133,7 @@ public class DownloadService {
         // 3. 构建 storageId -> Storage 映射
         Map<Long, Storage> storageMap = buildStorageMap(roots, childrenMap);
 
-        // 4. 遍历根节点，构建下载任务
+        // 4. 遍历根节点，构建下载任务tre
         for (Entry root : roots) {
             String rootPath = root.getEntryName();
             if (root.getEntryType() == TYPE_FOLDER) {

@@ -51,7 +51,14 @@ public class PersonalService {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId);
         List<Entry> entries = entryMapper.selectList(entryQuery);
-        if (entries == null || entries.isEmpty()) return List.of();
+        if (entries == null || entries.isEmpty()) {
+            // 返回只有个人空间根节点的列表
+            FolderTreeView personalRoot = new FolderTreeView();
+            personalRoot.setId(0L);
+            personalRoot.setName("个人空间");
+            personalRoot.setChildren(new ArrayList<>());
+            return List.of(personalRoot);
+        }
         
         Map<Long, FolderTreeView> nodeMap = new HashMap<>();
         List<FolderTreeView> roots = new ArrayList<>();
@@ -75,7 +82,13 @@ public class PersonalService {
             }
         }
         
-        return roots;
+        // 创建个人空间根节点
+        FolderTreeView personalRoot = new FolderTreeView();
+        personalRoot.setId(0L);
+        personalRoot.setName("个人空间");
+        personalRoot.setChildren(roots);
+        
+        return List.of(personalRoot);
     }
 
     @Transactional
@@ -107,8 +120,10 @@ public class PersonalService {
 
     @Transactional
     public void moveEntries(MoveEntryArgs args, Long userId) {
-        Entry entry = entryMapper.selectById(args.getTargetId());
-        if (entry == null) throw new BusinessException("Entry does not exist");
+        if (args.getTargetId() > 0) {
+            Entry entry = entryMapper.selectById(args.getTargetId());
+            if (entry == null) throw new BusinessException("Entry does not exist");
+        }
 
         LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(Entry::getId, args.getIds())
@@ -120,8 +135,10 @@ public class PersonalService {
 
     @Transactional
     public void copyEntry(CopyEntryArgs args, Long userId) {
-        Entry dir = entryMapper.selectById(args.getTargetId());
-        if (dir == null) throw new BusinessException("Entry does not exist");
+        if (args.getTargetId() > 0) {
+            Entry dir = entryMapper.selectById(args.getTargetId());
+            if (dir == null) throw new BusinessException("Entry does not exist");
+        }
         Entry entry = entryMapper.selectById(args.getId());
         if (entry == null) throw new BusinessException("Entry does not exist");
 

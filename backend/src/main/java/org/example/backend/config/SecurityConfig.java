@@ -87,6 +87,7 @@ public class SecurityConfig {
         config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
+        config.addExposedHeader("Content-Disposition");
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

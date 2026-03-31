@@ -99,7 +99,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotWritableException.class)
     public void handleDownloadException(HttpMessageNotWritableException ex, HttpServletResponse response) {
-        // 如果是下载接口出错，直接写入简单的文本，避免 JSON 转换
         try {
             response.setContentType("text/plain;charset=UTF-8");
             response.getWriter().write("Download Error: " + ex.getMessage());
