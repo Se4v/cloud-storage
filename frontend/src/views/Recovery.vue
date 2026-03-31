@@ -291,7 +291,7 @@ const handleRestore = async (row) => {
 
     loading.value = true
     const restoreData = {
-      ids: [parseInt(row.id)]
+      ids: [row.id]
     }
     const response = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
     const { code, msg } = response.data
@@ -328,7 +328,7 @@ const handleDelete = async (row) => {
 
     loading.value = true
     const deleteData = {
-      ids: [parseInt(row.id)]
+      ids: [row.id]
     }
     const response = await axios.post(`${API_BASE_URL}/api/recycle/delete`, deleteData, getAuthConfig())
     const { code, msg } = response.data
@@ -371,7 +371,7 @@ const handleBatchRestore = async () => {
     )
 
     loading.value = true
-    const ids = selectedRows.value.map(row => parseInt(row.id))
+    const ids = selectedRows.value.map(row => row.id)
     const restoreData = {
       ids: ids
     }
@@ -417,7 +417,7 @@ const handleBatchDelete = async () => {
     )
 
     loading.value = true
-    const ids = selectedRows.value.map(row => parseInt(row.id))
+    const ids = selectedRows.value.map(row => row.id)
     const deleteData = {
       ids: ids
     }
