@@ -462,8 +462,10 @@ import {
 } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { useUserStore } from '@/stores/user.js'
+import { useUploadStore } from '@/stores/upload.js'
 
 const userStore = useUserStore()
+const uploadStore = useUploadStore()
 
 // API 基础配置
 const API_BASE_URL = 'http://localhost:8080'
@@ -684,13 +686,25 @@ const handleFileChange = async (event) => {
     return
   }
 
+  // 为每个文件创建上传任务
+  const fileTaskMap = new Map()
+  for (const file of files) {
+    const taskId = uploadStore.addTask(file)
+    fileTaskMap.set(file, taskId)
+  }
+
+  // 显示上传面板
+  uploadStore.showUploadPanel()
+
   // 计算每个文件的SHA256和分片信息
   ElMessage.info('正在准备上传，计算文件校验值...')
 
   const uploadArgs = []
-  const fileMap = new Map() // 用于存储文件对象
 
   for (const file of files) {
+    const taskId = fileTaskMap.get(file)
+    uploadStore.startTask(taskId)
+    
     try {
       const sha256 = await calculateSHA256(file)
       const totalChunks = calculateTotalChunks(file.size)
@@ -703,11 +717,14 @@ const handleFileChange = async (event) => {
         mimeType: file.type || 'application/octet-stream'
       })
 
-      // 保存文件对象用于后续上传
-      fileMap.set(sha256, file)
+      // 将taskId和sha256关联
+      const task = uploadStore.uploadTasks.find(t => t.id === taskId)
+      if (task) {
+        task.sha256 = sha256
+      }
     } catch (error) {
       console.error(`计算文件 "${file.name}" SHA256失败:`, error)
-      ElMessage.error(`文件 "${file.name}" 处理失败`)
+      uploadStore.failTask(taskId, '文件处理失败')
     }
   }
 
@@ -729,6 +746,13 @@ const handleFileChange = async (event) => {
 
     if (initResponse.data.code !== 200) {
       ElMessage.error(initResponse.data.msg || '初始化上传失败')
+      // 将所有任务标记为失败
+      uploadArgs.forEach(arg => {
+        const task = uploadStore.uploadTasks.find(t => t.sha256 === arg.sha256)
+        if (task) {
+          uploadStore.failTask(task.id, '初始化上传失败')
+        }
+      })
       return
     }
 
@@ -737,24 +761,33 @@ const handleFileChange = async (event) => {
 
     // 处理每个文件的上传
     for (const view of viewList) {
-      const file = fileMap.get(view.sha256)
-      if (!file) {
+      const file = files.find(f => {
+        const task = uploadStore.uploadTasks.find(t => t.sha256 === view.sha256)
+        return task !== undefined
+      })
+      
+      const task = uploadStore.uploadTasks.find(t => t.sha256 === view.sha256)
+      if (!file || !task) {
         console.error(`找不到文件: ${view.entryName}`)
         continue
       }
 
       if (!view.success) {
-        ElMessage.error(`文件 "${view.entryName}" 初始化失败: ${view.message}`)
+        uploadStore.failTask(task.id, view.message || '初始化失败')
         continue
       }
 
       // 根据返回的上传类型执行相应的上传逻辑
-      await uploadSingleFile(file, view)
+      await uploadSingleFile(file, view, task.id)
     }
 
   } catch (error) {
     console.error('初始化上传失败:', error)
     ElMessage.error('上传初始化失败，请重试')
+    // 将所有未完成的任务标记为失败
+    uploadStore.uploadTasks
+      .filter(t => t.status === 'uploading' || t.status === 'waiting')
+      .forEach(task => uploadStore.failTask(task.id, '上传初始化失败'))
   }
 }
 
@@ -1173,39 +1206,40 @@ const getFileChunk = (file, start, end) => {
 }
 
 // 上传单个文件
-const uploadSingleFile = async (file, initView) => {
+const uploadSingleFile = async (file, initView, taskId) => {
   // 1. 秒传成功 (isSkip = true)
   if (initView.isSkip) {
+    uploadStore.markAsSkipped(taskId)
     ElMessage.success(`文件 "${file.name}" 秒传成功`)
+    // 刷新文件列表
+    loadFileList(currentParentId.value)
     return
   }
 
   // 2. 小文件直传 (uploadUrl 不为 null)
   if (initView.uploadUrl) {
-    await uploadSmallFile(file, initView)
+    await uploadSmallFile(file, initView, taskId)
     return
   }
 
   // 3. 大文件分片上传 (isMultipart = true)
   if (initView.isMultipart) {
-    await uploadLargeFile(file, initView)
+    await uploadLargeFile(file, initView, taskId)
     return
   }
 }
 
 // 上传小文件（直接上传到MinIO）
-const uploadSmallFile = async (file, initView) => {
+const uploadSmallFile = async (file, initView, taskId) => {
   try {
-    ElMessage.info(`开始上传文件 "${file.name}"...`)
-
     // 使用预签名URL直接上传到MinIO
     const response = await axios.put(initView.uploadUrl, file, {
       headers: {
         'Content-Type': file.type || 'application/octet-stream'
       },
       onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        console.log(`上传进度: ${percentCompleted}%`)
+        // 更新上传进度
+        uploadStore.updateProgress(taskId, progressEvent.loaded, progressEvent.total)
       }
     })
 
@@ -1215,35 +1249,36 @@ const uploadSmallFile = async (file, initView) => {
     }, getAuthConfig())
 
     if (simpleUploadRes.data.code === 200) {
+      uploadStore.completeTask(taskId)
       ElMessage.success(`文件 "${file.name}" 上传成功`)
       // 刷新文件列表
       loadFileList(currentParentId.value)
     } else {
-      ElMessage.error(simpleUploadRes.data.msg || '上传记录失败')
+      uploadStore.failTask(taskId, simpleUploadRes.data.msg || '上传记录失败')
     }
   } catch (error) {
     console.error('小文件上传失败:', error)
-    ElMessage.error(`文件 "${file.name}" 上传失败`)
+    uploadStore.failTask(taskId, '上传失败')
   }
 }
 
 // 上传大文件（分片上传）
-const uploadLargeFile = async (file, initView) => {
+const uploadLargeFile = async (file, initView, taskId) => {
   try {
     const totalChunks = calculateTotalChunks(file.size)
     const chunkUrls = initView.chunkUrls || []
-    const uploadedChunks = initView.uploadedChunks || []
+    const uploadedChunksSet = new Set(initView.uploadedChunks || [])
 
-    ElMessage.info(`开始分片上传文件 "${file.name}"，共 ${totalChunks} 个分片`)
-
-    // 记录需要上报的分片
-    const chunksToReport = []
+    // 设置总分片数
+    const task = uploadStore.uploadTasks.find(t => t.id === taskId)
+    if (task) {
+      task.totalChunks = totalChunks
+    }
 
     // 上传每个分片
     for (let i = 1; i <= totalChunks; i++) {
       // 如果已经上传过了，跳过
-      if (uploadedChunks.includes(i)) {
-        console.log(`分片 ${i} 已上传，跳过`)
+      if (uploadedChunksSet.has(i)) {
         continue
       }
 
@@ -1268,43 +1303,35 @@ const uploadLargeFile = async (file, initView) => {
       // 获取ETag
       const etag = response.headers.etag || response.headers.ETag
 
-      // 添加到待上报列表
-      chunksToReport.push({
-        sha256: initView.sha256,
-        chunkNumber: String(i),
-        etag: etag ? etag.replace(/"/g, '') : ''
-      })
-
-      console.log(`分片 ${i}/${totalChunks} 上传完成`)
-
-      // 每上传5个分片上报一次，或者最后一个分片
-      if (chunksToReport.length >= 5 || i === totalChunks) {
-        await reportUploadedChunks(chunksToReport)
-        chunksToReport.length = 0 // 清空数组
-      }
+      // 上报已上传的分片
+      await reportUploadedChunk(initView.sha256, i, etag ? etag.replace(/"/g, '') : '')
+      
+      // 更新进度
+      uploadedChunksSet.add(i)
+      uploadStore.updateChunkProgress(taskId, uploadedChunksSet.size, totalChunks)
     }
 
     // 所有分片上传完成，调用合并接口
-    await mergeChunks(initView.sha256, file.name)
+    await mergeChunks(initView.sha256, file.name, taskId)
 
   } catch (error) {
     console.error('大文件上传失败:', error)
-    ElMessage.error(`文件 "${file.name}" 上传失败`)
+    uploadStore.failTask(taskId, '上传失败')
   }
 }
 
-// 上报已上传的分片
-const reportUploadedChunks = async (chunks) => {
-  if (chunks.length === 0) return
-
+// 上报单个已上传的分片
+const reportUploadedChunk = async (sha256, chunkNumber, etag) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/api/personal/upload-chunk`, {
-      argList: chunks
+      argList: [{
+        sha256: sha256,
+        chunkNumber: String(chunkNumber),
+        etag: etag
+      }]
     }, getAuthConfig())
 
-    if (response.data.code === 200) {
-      console.log(`成功上报 ${chunks.length} 个分片`)
-    } else {
+    if (response.data.code !== 200) {
       console.error('上报分片失败:', response.data.msg)
     }
   } catch (error) {
@@ -1313,24 +1340,23 @@ const reportUploadedChunks = async (chunks) => {
 }
 
 // 合并分片
-const mergeChunks = async (sha256, fileName) => {
+const mergeChunks = async (sha256, fileName, taskId) => {
   try {
-    ElMessage.info(`正在合并文件 "${fileName}"...`)
-
     const response = await axios.post(`${API_BASE_URL}/api/personal/merge-chunks`, {
       sha256: sha256
     }, getAuthConfig())
 
     if (response.data.code === 200) {
+      uploadStore.completeTask(taskId)
       ElMessage.success(`文件 "${fileName}" 上传成功`)
       // 刷新文件列表
       loadFileList(currentParentId.value)
     } else {
-      ElMessage.error(response.data.msg || '合并分片失败')
+      uploadStore.failTask(taskId, response.data.msg || '合并分片失败')
     }
   } catch (error) {
     console.error('合并分片失败:', error)
-    ElMessage.error(`文件 "${fileName}" 合并失败`)
+    uploadStore.failTask(taskId, '合并分片失败')
   }
 }
 

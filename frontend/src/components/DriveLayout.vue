@@ -184,8 +184,18 @@
 
         <div class="flex items-center gap-2">
           <div class="w-px h-5 bg-slate-200 mx-1"></div>
-          <button class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all" title="上传">
+          <button 
+              class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all relative" 
+              title="上传"
+              @click="uploadStore.toggleUploadPanel"
+          >
             <el-icon :size="20"><Upload /></el-icon>
+            <span 
+              v-if="uploadStore.activeTaskCount > 0" 
+              class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center border-2 border-white"
+            >
+              {{ uploadStore.activeTaskCount }}
+            </span>
           </button>
           <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="消息">
             <el-icon :size="20"><Message /></el-icon>
@@ -198,12 +208,130 @@
       </header>
 
       <!-- 内容区域 -->
-      <div class="flex-1 overflow-auto bg-slate-50/50">
+      <div class="flex-1 overflow-auto bg-slate-50/50 relative">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
           </transition>
         </router-view>
+        
+        <!-- 上传进度面板 -->
+        <div 
+          v-show="uploadStore.isUploadPanelVisible"
+          class="absolute bottom-4 right-4 w-[480px] max-h-[600px] bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col z-50 overflow-hidden"
+        >
+          <!-- 面板头部 -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50/80">
+            <div class="flex items-center gap-2">
+              <el-icon class="text-blue-600" :size="18"><Upload /></el-icon>
+              <span class="font-semibold text-slate-800">上传任务</span>
+              <span v-if="uploadStore.activeTaskCount > 0" class="text-sm text-blue-600 font-medium">
+                ({{ uploadStore.activeTaskCount }} 个进行中)
+              </span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button 
+                v-if="uploadStore.completedTaskCount > 0"
+                @click="uploadStore.clearCompletedTasks"
+                class="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-md transition-colors"
+              >
+                清除已完成
+              </button>
+              <button 
+                @click="uploadStore.hideUploadPanel"
+                class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-md transition-colors"
+              >
+                <el-icon :size="16"><Close /></el-icon>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 任务列表 -->
+          <div class="flex-1 overflow-y-auto max-h-[400px] p-2">
+            <div v-if="uploadStore.uploadTasks.length === 0" class="py-12 text-center text-slate-400">
+              <el-icon :size="48" class="mb-3 opacity-30"><Upload /></el-icon>
+              <p class="text-sm">暂无上传任务</p>
+            </div>
+            
+            <div 
+              v-for="task in uploadStore.uploadTasks" 
+              :key="task.id"
+              class="flex flex-col gap-2 p-3 mb-2 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 transition-all"
+              :class="{ 'bg-blue-50/30 border-blue-100': task.status === 'uploading' }"
+            >
+              <!-- 文件信息 -->
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <el-icon class="text-blue-600" :size="18"><Document /></el-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-slate-800 truncate" :title="task.name">
+                    {{ task.name }}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    <span v-if="task.isSkip" class="text-green-600 font-medium">秒传成功</span>
+                    <span v-else-if="task.status === 'completed'" class="text-green-600 font-medium">上传完成</span>
+                    <span v-else-if="task.status === 'error'" class="text-red-600">{{ task.errorMessage || '上传失败' }}</span>
+                    <span v-else-if="task.status === 'waiting'">等待中</span>
+                    <span v-else-if="task.status === 'paused'">已暂停</span>
+                    <span v-else-if="task.status === 'uploading' && task.totalChunks > 0">
+                      分片 {{ task.uploadedChunks }}/{{ task.totalChunks }}
+                    </span>
+                    <span v-else-if="task.status === 'uploading'">
+                      {{ uploadStore.formatFileSize(task.loaded) }} / {{ uploadStore.formatFileSize(task.size) }}
+                    </span>
+                    <span v-else>{{ uploadStore.formatFileSize(task.size) }}</span>
+                  </p>
+                </div>
+                <!-- 状态图标 -->
+                <div class="flex-shrink-0">
+                  <el-icon v-if="task.status === 'completed'" class="text-green-500" :size="20"><CircleCheckFilled /></el-icon>
+                  <el-icon v-else-if="task.status === 'error'" class="text-red-500" :size="20"><CircleCloseFilled /></el-icon>
+                  <el-icon v-else-if="task.status === 'waiting'" class="text-slate-400" :size="20"><Timer /></el-icon>
+                  <button 
+                    v-else-if="task.status === 'paused'"
+                    @click="uploadStore.resumeTask(task.id)"
+                    class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
+                  >
+                    <el-icon :size="18"><VideoPlay /></el-icon>
+                  </button>
+                  <button 
+                    v-else-if="task.status === 'uploading'"
+                    @click="uploadStore.pauseTask(task.id)"
+                    class="p-1.5 text-slate-500 hover:bg-slate-200 rounded-md transition-colors"
+                  >
+                    <el-icon :size="18"><VideoPause /></el-icon>
+                  </button>
+                </div>
+                <!-- 删除按钮 -->
+                <button 
+                  @click="uploadStore.removeTask(task.id)"
+                  class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                >
+                  <el-icon :size="16"><Close /></el-icon>
+                </button>
+              </div>
+              
+              <!-- 进度条 -->
+              <div v-if="task.status !== 'waiting'" class="flex items-center gap-3">
+                <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-blue-600 rounded-full transition-all duration-300"
+                    :class="{ 'bg-green-500': task.status === 'completed', 'bg-red-500': task.status === 'error' }"
+                    :style="{ width: `${task.progress}%` }"
+                  ></div>
+                </div>
+                <span class="text-xs font-medium text-slate-600 w-10 text-right">{{ task.progress }}%</span>
+              </div>
+              
+              <!-- 速度信息 -->
+              <div v-if="task.status === 'uploading' && task.speed > 0 && !task.isSkip" class="flex items-center justify-between text-xs text-slate-500">
+                <span>{{ uploadStore.formatSpeed(task.speed) }}</span>
+                <span>剩余 {{ uploadStore.formatRemainingTime(task) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -224,12 +352,21 @@ import {
   OfficeBuilding,
   Message,
   Notification,
-  User
+  User,
+  Close,
+  Document,
+  CircleCheckFilled,
+  CircleCloseFilled,
+  Timer,
+  VideoPlay,
+  VideoPause
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user.js'
+import { useUploadStore } from '@/stores/upload.js'
 import axios from "axios";
 
 const userStore = useUserStore()
+const uploadStore = useUploadStore()
 
 // API 基础配置
 const API_BASE_URL = 'http://localhost:8080'
