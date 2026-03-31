@@ -1275,6 +1275,9 @@ const uploadLargeFile = async (file, initView, taskId) => {
       task.totalChunks = totalChunks
     }
 
+    // 批量上报的数组
+    const chunkReportBatch = []
+
     // 上传每个分片
     for (let i = 1; i <= totalChunks; i++) {
       // 如果已经上传过了，跳过
@@ -1303,12 +1306,22 @@ const uploadLargeFile = async (file, initView, taskId) => {
       // 获取ETag
       const etag = response.headers.etag || response.headers.ETag
 
-      // 上报已上传的分片
-      await reportUploadedChunk(initView.sha256, i, etag ? etag.replace(/"/g, '') : '')
-      
+      // 添加到批量上报数组
+      chunkReportBatch.push({
+        sha256: initView.sha256,
+        chunkNumber: String(i),
+        etag: etag ? etag.replace(/"/g, '') : ''
+      })
+
       // 更新进度
       uploadedChunksSet.add(i)
       uploadStore.updateChunkProgress(taskId, uploadedChunksSet.size, totalChunks)
+
+      // 每5个分片或最后一个分片时批量上报
+      if (chunkReportBatch.length >= 5 || i === totalChunks) {
+        await reportUploadedChunks(chunkReportBatch)
+        chunkReportBatch.length = 0 // 清空数组
+      }
     }
 
     // 所有分片上传完成，调用合并接口
@@ -1320,22 +1333,20 @@ const uploadLargeFile = async (file, initView, taskId) => {
   }
 }
 
-// 上报单个已上传的分片
-const reportUploadedChunk = async (sha256, chunkNumber, etag) => {
+// 批量上报已上传的分片
+const reportUploadedChunks = async (chunks) => {
+  if (chunks.length === 0) return
+  
   try {
     const response = await axios.post(`${API_BASE_URL}/api/personal/upload-chunk`, {
-      argList: [{
-        sha256: sha256,
-        chunkNumber: String(chunkNumber),
-        etag: etag
-      }]
+      argList: chunks
     }, getAuthConfig())
 
     if (response.data.code !== 200) {
-      console.error('上报分片失败:', response.data.msg)
+      console.error('批量上报分片失败:', response.data.msg)
     }
   } catch (error) {
-    console.error('上报分片失败:', error)
+    console.error('批量上报分片失败:', error)
   }
 }
 
