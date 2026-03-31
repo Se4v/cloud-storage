@@ -815,9 +815,15 @@ const handleBatchDownload = async () => {
     const contentDisposition = response.headers['content-disposition']
     let filename = 'download'
     if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
-      if (filenameMatch) {
-        filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''))
+      const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+      if (encodedMatch) {
+        filename = decodeURIComponent(encodedMatch[1])
+      } else {
+        // 回退到 filename="xxx"（英文文件名）
+        const plainMatch = contentDisposition.match(/filename="(.+?)"/)
+        if (plainMatch) {
+          filename = plainMatch[1]
+        }
       }
     }
 
@@ -910,9 +916,15 @@ const handleCommand = async (command, row) => {
         const contentDisposition = response.headers['content-disposition']
         let filename = row.name || 'download'
         if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
-          if (filenameMatch) {
-            filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''))
+          const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+          if (encodedMatch) {
+            filename = decodeURIComponent(encodedMatch[1])
+          } else {
+            // 回退到 filename="xxx"（英文文件名）
+            const plainMatch = contentDisposition.match(/filename="(.+?)"/)
+            if (plainMatch) {
+              filename = plainMatch[1]
+            }
           }
         }
 
