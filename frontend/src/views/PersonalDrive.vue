@@ -1317,11 +1317,16 @@ const uploadLargeFile = async (file, initView, taskId) => {
       uploadedChunksSet.add(i)
       uploadStore.updateChunkProgress(taskId, uploadedChunksSet.size, totalChunks)
 
-      // 每5个分片或最后一个分片时批量上报
-      if (chunkReportBatch.length >= 5 || i === totalChunks) {
+      // 每5个分片批量上报
+      if (chunkReportBatch.length >= 5) {
         await reportUploadedChunks(chunkReportBatch)
         chunkReportBatch.length = 0 // 清空数组
       }
+    }
+
+    // 循环结束后，上报剩余的分片（如果有）
+    if (chunkReportBatch.length > 0) {
+      await reportUploadedChunks(chunkReportBatch)
     }
 
     // 所有分片上传完成，调用合并接口
