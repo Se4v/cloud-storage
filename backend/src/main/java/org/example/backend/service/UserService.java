@@ -125,7 +125,7 @@ public class UserService {
 
         // 查询用户配额
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getDriveType, 2).in(Drive::getUserId, userIds);
+        driveQuery.eq(Drive::getDriveType, 1).in(Drive::getUserId, userIds);
         List<Drive> drives = driveMapper.selectList(driveQuery);
         Map<Long, Long> driveMap = drives.stream().collect(Collectors.toMap(Drive::getUserId, Drive::getTotalQuota));
 
