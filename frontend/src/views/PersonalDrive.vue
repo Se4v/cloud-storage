@@ -920,7 +920,7 @@ const generateShareLink = async () => {
       expireTime: shareForm.value.expireTime
     }
 
-    const response = await axios.post(`${API_BASE_URL}/api/link/create`, createData, getAuthConfig())
+    const response = await axios.post(`${API_BASE_URL}/api/personal/share`, createData, getAuthConfig())
 
     if (response.data.code === 200) {
       ElMessage.success('分享链接已生成')
@@ -1290,7 +1290,7 @@ const uploadLargeFile = async (file, initView, taskId) => {
       const chunk = getFileChunk(file, start, end)
 
       // 获取分片上传URL (chunkUrls从1开始，所以使用i)
-      const chunkUrl = chunkUrls[i]
+      const chunkUrl = chunkUrls[i - 1]
       if (!chunkUrl) {
         console.error(`分片 ${i} 的上传URL不存在`)
         continue

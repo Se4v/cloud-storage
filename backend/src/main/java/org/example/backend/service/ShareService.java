@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
-import org.example.backend.model.args.CreateLinkArgs;
+import org.example.backend.model.args.ShareEntryArgs;
 import org.example.backend.model.args.DeleteLinkArgs;
 import org.example.backend.model.args.UpdateLinkArgs;
 import org.example.backend.model.entity.Entry;
@@ -21,8 +21,6 @@ import java.util.UUID;
 public class ShareService {
     @Autowired
     private ShareMapper shareMapper;
-    @Autowired
-    private EntryMapper entryMapper;
 
     private static final int DELETED = 1;
     private static final int UNDELETED = 0;
@@ -36,32 +34,6 @@ public class ShareService {
         if (shareList == null || shareList.isEmpty()) return List.of();
 
         return shareList;
-    }
-
-    @Transactional
-    public void createLink(CreateLinkArgs args, Long userId) {
-        Entry existedEntry = entryMapper.selectById(args.getId());
-        if (existedEntry == null) throw new BusinessException("文件条目不存在");
-
-        if (args.getLinkType() == 2 && args.getAccessCode().isBlank()) {
-            throw new BusinessException("<UNK>");
-        }
-
-        Share link = Share.builder()
-                .driveId(args.getDriveId())
-                .entryId(existedEntry.getId())
-                .entryType(existedEntry.getEntryType())
-                .userId(userId)
-                .linkName(args.getLinkName())
-                .linkType(args.getLinkType())
-                .linkKey(generateLinkKey())
-                .accessCode(args.getAccessCode())
-                .expiredAt(args.getExpireTime())
-                .isDeleted(UNDELETED)
-                .build();
-
-        int count = shareMapper.insert(link);
-        if (count != 1) throw new BusinessException("Create share link failed");
     }
 
     @Transactional
@@ -95,10 +67,5 @@ public class ShareService {
 
         int count = shareMapper.update(wrapper);
         if (count != linkIds.size()) throw new BusinessException("删除分享链接失败");
-    }
-
-    private String generateLinkKey() {
-        UUID uuid = UUID.randomUUID();
-        return uuid.toString().replace("-", "");
     }
 }

@@ -8,7 +8,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class CreateLinkArgs {
+public class ShareEntryArgs {
     @NotNull
     private Long id;
     @NotNull

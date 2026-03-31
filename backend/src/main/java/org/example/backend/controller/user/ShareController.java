@@ -1,7 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.CreateLinkArgs;
+import org.example.backend.model.args.ShareEntryArgs;
 import org.example.backend.model.args.DeleteLinkArgs;
 import org.example.backend.model.args.UpdateLinkArgs;
 import org.example.backend.model.entity.Share;
@@ -43,15 +43,6 @@ public class ShareController {
                 .toList();
 
         return Result.success("", views);
-    }
-
-    @PostMapping("/create")
-    public Result<Void> createLink(@RequestBody CreateLinkArgs args) {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-        // shareService.createLink(args, userDetails.getUserId());
-        shareService.createLink(args, userId);
-        return Result.success();
     }
 
     @PostMapping("/update")

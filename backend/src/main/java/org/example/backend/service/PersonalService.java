@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
+import org.example.backend.mapper.ShareMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.model.args.*;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
+import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.view.FolderTreeView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ public class PersonalService {
     private DriveMapper driveMapper;
     @Autowired
     private StorageMapper storageMapper;
+    @Autowired
+    private ShareMapper shareMapper;
 
     private static final int PERSONAL_DRIVE = 1;
     private static final int UNDELETED = 1;
@@ -101,7 +105,7 @@ public class PersonalService {
         if (sameEntry != null) throw new BusinessException("Folder already exists");
 
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getUserId, userId)
+        driveQuery.eq(Drive::getId, args.getDriveId())
                 .eq(Drive::getDriveType, 1);
         Drive drive = driveMapper.selectOne(driveQuery);
 
@@ -254,12 +258,41 @@ public class PersonalService {
         }
     }
 
+    @Transactional
+    public void shareEntry(ShareEntryArgs args, Long userId) {
+        Entry existedEntry = entryMapper.selectById(args.getId());
+        if (existedEntry == null) throw new BusinessException("文件条目不存在");
 
+        if (args.getLinkType() == 2 && args.getAccessCode().isBlank()) {
+            throw new BusinessException("<UNK>");
+        }
+
+        Share link = Share.builder()
+                .driveId(args.getDriveId())
+                .entryId(existedEntry.getId())
+                .entryType(existedEntry.getEntryType())
+                .userId(userId)
+                .linkName(args.getLinkName())
+                .linkType(args.getLinkType())
+                .linkKey(generateLinkKey())
+                .accessCode(args.getAccessCode())
+                .expiredAt(args.getExpireTime())
+                .isDeleted(UNDELETED)
+                .build();
+
+        int count = shareMapper.insert(link);
+        if (count != 1) throw new BusinessException("Create share link failed");
+    }
 
     private boolean validateFileName(String fileName) {
         if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;
 
         // 检查非法字符 \ / : * ? " < > |
         return !fileName.matches(".*[\\\\/:*?\"<>|].*");
+    }
+
+    private String generateLinkKey() {
+        UUID uuid = UUID.randomUUID();
+        return uuid.toString().replace("-", "");
     }
 }

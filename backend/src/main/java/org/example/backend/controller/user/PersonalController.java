@@ -1,8 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.exception.BusinessException;
-import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.*;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
@@ -13,14 +11,11 @@ import org.example.backend.service.PersonalService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -148,6 +143,15 @@ public class PersonalController {
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
         personalService.deleteEntries(args, userId);
+        return Result.success();
+    }
+
+    @PostMapping("/share")
+    public Result<?> shareEntry(@RequestBody ShareEntryArgs args) {
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // shareService.createLink(args, userDetails.getUserId());
+        personalService.shareEntry(args, userId);
         return Result.success();
     }
 
