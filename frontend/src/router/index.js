@@ -14,8 +14,7 @@ import OrgManage from "@/views/admin/OrgManage.vue";
 import StorageManage from "@/views/admin/StorageManage.vue";
 import LogManage from "@/views/admin/LogManage.vue";
 import SystemManage from "@/views/admin/SystemManage.vue";
-import UserStat from "@/views/admin/UserStat.vue";
-import StorageStat from "@/views/admin/StorageStat.vue";
+import DriveStat from "@/views/admin/DriveStat.vue";
 import TrafficStat from "@/views/admin/TrafficStat.vue";
 import MemberManage from "@/views/admin/MemberManage.vue";
 import Notice from "@/views/Notice.vue";
@@ -109,14 +108,9 @@ const routes = [
                 component: SystemManage
             },
             {
-                path: 'user-stats',
-                name: 'UserStat',
-                component: UserStat
-            },
-            {
                 path: 'space-stats',
-                name: 'StorageStat',
-                component: StorageStat
+                name: 'DriveStat',
+                component: DriveStat
             },
             {
                 path: 'traffic-stats',

@@ -180,7 +180,6 @@ const currentMenu = ref('space-stats')
 // 数据报表菜单
 const reportMenu = [
   { key: 'space-stats', label: '空间统计', icon: DataLine, route: '/admin/space-stats' },
-  { key: 'user-stats', label: '用户统计', icon: DataAnalysis, route: '/admin/user-stats' },
   { key: 'traffic-stats', label: '流量统计', icon: Histogram, route: '/admin/traffic-stats' }
 ]
 

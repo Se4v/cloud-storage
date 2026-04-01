@@ -203,7 +203,7 @@
               title="消息"
             >
               <el-icon :size="20"><Message /></el-icon>
-              <span v-if="unreadMessageCount > 0" class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              <span v-if="messageList.length > 0" class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
             
             <!-- 消息列表面板 -->
@@ -466,11 +466,6 @@ const loadUnreadMessages = async () => {
     console.error('加载消息列表失败:', error)
   }
 }
-
-// 未读消息数量
-const unreadMessageCount = computed(() => {
-  return messageList.value.filter(msg => !msg.isRead).length
-})
 
 // 切换消息面板显示/隐藏
 const toggleMessagePanel = () => {

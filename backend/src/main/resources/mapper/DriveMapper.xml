@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.DriveMapper">
+    <!-- 获取配额总和统计 -->
+    <select id="selectQuotaSums" resultType="java.util.Map">
+        SELECT
+        <!-- 总配额求和，若无记录则返回 0 -->
+        COALESCE(SUM(total_quota), 0) AS sumTotalQuota,
+        <!-- 已用配额求和，若无记录则返回 0 -->
+        COALESCE(SUM(used_quota), 0) AS sumUsedQuota
+        FROM sys_drive
+    </select>
+
+    <select id="selectQuotaSumByType" resultType="java.util.Map">
+        SELECT
+            drive_type AS type,
+            SUM(total_quota) AS totalQuota
+        FROM
+            drive
+        GROUP BY
+            drive_type
+    </select>
+</mapper>
