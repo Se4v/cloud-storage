@@ -104,6 +104,12 @@ public class EnterpriseController {
         return Result.success("", views);
     }
 
+    @GetMapping("/folder")
+    public Result<?> listFolders(@RequestParam Long driveId) {
+        List<FolderTreeView> views = enterpriseService.listFolders(driveId);
+        return Result.success(views);
+    }
+
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
         enterpriseService.createFolder(args, userId);

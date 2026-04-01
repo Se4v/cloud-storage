@@ -2,65 +2,68 @@
   <div class="h-full flex flex-col bg-slate-50">
     <!-- 工具栏 -->
     <div class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <button
-            @click="handleUpload"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow"
-        >
-          <el-icon><Upload /></el-icon>
-          上传
-        </button>
-
-        <button
-            @click="handleCreateFolder"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
-        >
-          <el-icon><Plus /></el-icon>
-          新建
-        </button>
-
-        <button
-            @click="handleBatchDownload"
-            :disabled="selectedFiles.length === 0"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <el-icon><Download /></el-icon>
-          下载
-        </button>
-
-        <button
-            @click="handleShare"
-            :disabled="selectedFiles.length === 0"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <el-icon><Share /></el-icon>
-          分享
-        </button>
-
-        <el-dropdown trigger="click">
+      <div class="flex flex-col gap-2">
+        <!-- 主要操作按钮 -->
+        <div class="flex items-center gap-2">
           <button
+              @click="handleUpload"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow"
+          >
+            <el-icon><Upload /></el-icon>
+            上传
+          </button>
+
+          <button
+              @click="handleCreateFolder"
               class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
           >
-            <span>更多</span>
-            <el-icon><ArrowDown /></el-icon>
+            <el-icon><Plus /></el-icon>
+            新建
           </button>
-          <template #dropdown>
-            <el-dropdown-menu class="min-w-[160px]">
-              <el-dropdown-item @click="handleMove" :disabled="selectedFiles.length === 0">
-                <el-icon class="mr-2"><Folder /></el-icon>移动到
-              </el-dropdown-item>
-              <el-dropdown-item @click="handleCopy" :disabled="selectedFiles.length === 0">
-                <el-icon class="mr-2"><DocumentCopy /></el-icon>复制到
-              </el-dropdown-item>
-              <el-dropdown-item @click="handleRename" :disabled="selectedFiles.length !== 1">
-                <el-icon class="mr-2"><EditPen /></el-icon>重命名
-              </el-dropdown-item>
-              <el-dropdown-item divided @click="handleBatchDelete" :disabled="selectedFiles.length === 0" class="text-red-600">
-                <el-icon class="mr-2"><Delete /></el-icon>删除
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+
+          <button
+              @click="handleBatchDownload"
+              :disabled="selectedFiles.length === 0"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <el-icon><Download /></el-icon>
+            下载
+          </button>
+
+          <button
+              @click="handleShare"
+              :disabled="selectedFiles.length !== 1"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <el-icon><Share /></el-icon>
+            分享
+          </button>
+
+          <el-dropdown trigger="click">
+            <button
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
+            >
+              <span>更多</span>
+              <el-icon><ArrowDown /></el-icon>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu class="min-w-[160px]">
+                <el-dropdown-item @click="handleMove" :disabled="selectedFiles.length === 0">
+                  <el-icon class="mr-2"><Folder /></el-icon>移动到
+                </el-dropdown-item>
+                <el-dropdown-item @click="handleCopy" :disabled="selectedFiles.length === 0">
+                  <el-icon class="mr-2"><DocumentCopy /></el-icon>复制到
+                </el-dropdown-item>
+                <el-dropdown-item @click="handleRename" :disabled="selectedFiles.length !== 1">
+                  <el-icon class="mr-2"><EditPen /></el-icon>重命名
+                </el-dropdown-item>
+                <el-dropdown-item divided @click="handleBatchDelete" :disabled="selectedFiles.length === 0" class="text-red-600">
+                  <el-icon class="mr-2"><Delete /></el-icon>删除
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </div>
 
       <!-- 搜索框 -->
@@ -88,17 +91,17 @@
             class="font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
             @click="goToRoot"
         >
-          企业空间
+          个人空间
         </span>
-        <template v-if="currentPath.length > 0">
-          <span v-for="(item, index) in currentPath" :key="index" class="flex items-center gap-2">
+        <template v-if="pathHistory.length > 0">
+          <span v-for="(item, index) in pathHistory" :key="item.id" class="flex items-center gap-2">
             <span class="text-slate-300">/</span>
             <span
-                class="font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
-                :class="{ 'text-slate-900': index === currentPath.length - 1, 'text-slate-600 hover:text-blue-600': index !== currentPath.length - 1 }"
+                class="font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                :class="{ 'text-slate-900': index === pathHistory.length - 1, 'text-slate-600': index !== pathHistory.length - 1 }"
                 @click="goToPath(index)"
             >
-              {{ item }}
+              {{ item.name }}
             </span>
           </span>
         </template>
@@ -111,7 +114,7 @@
             style="width: 100%"
             @selection-change="handleSelectionChange"
             @row-click="handleRowClick"
-            :row-class-name="getRowClassName"
+            :row-class-name="() => 'group hover:bg-slate-50/80 transition-colors'"
             class="file-table"
         >
           <el-table-column type="selection" width="55" align="center" />
@@ -123,8 +126,7 @@
                   @dblclick="handleOpenFile(row)"
               >
                 <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105"
-                    :class="getFileIconClass(row)"
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105 bg-blue-500"
                 >
                   <el-icon :size="20">
                     <component :is="getFileIcon(row)" />
@@ -132,7 +134,6 @@
                 </div>
                 <div class="flex flex-col">
                   <span class="font-medium text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{{ row.name }}</span>
-                  <span v-if="row.type === 'folder'" class="text-xs text-slate-400 mt-0.5">{{ row.itemCount || 0 }} 项</span>
                 </div>
               </div>
             </template>
@@ -140,63 +141,48 @@
 
           <el-table-column label="创建时间" width="260">
             <template #default="{ row }">
-              <div class="flex items-center gap-2 text-sm text-slate-600">
-                <span>{{ formatDate(row.createTime) }}</span>
-              </div>
+              <span class="text-sm text-slate-600">{{ row.createTime }}</span>
             </template>
           </el-table-column>
 
           <el-table-column label="大小" width="120">
             <template #default="{ row }">
               <span class="text-sm text-slate-600 font-medium tabular-nums">
-                {{ row.type === 'folder' ? '-' : formatSize(row.size) }}
+                {{ row.type === 2 ? '-' : formatSize(row.size) }}
               </span>
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="150" align="center">
+          <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
               <!-- 操作按钮直接显示，不用隐藏 -->
-              <div class="flex items-center justify-center gap-1">
+              <el-dropdown trigger="click" @command="handleCommand($event, row)">
                 <button
-                    @click.stop="handleDownload(row)"
-                    class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                    title="下载"
+                    class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    @click.stop
                 >
-                  <el-icon><Download /></el-icon>
+                  <el-icon><MoreFilled /></el-icon>
                 </button>
-                <button
-                    @click.stop="handleShareSingle(row)"
-                    class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                    title="分享"
-                >
-                  <el-icon><Share /></el-icon>
-                </button>
-                <el-dropdown trigger="click" @command="handleCommand($event, row)">
-                  <button
-                      class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-                      @click.stop
-                  >
-                    <el-icon><MoreFilled /></el-icon>
-                  </button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="rename">
-                        <el-icon class="mr-2"><EditPen /></el-icon>重命名
-                      </el-dropdown-item>
-                      <el-dropdown-item command="move">
-                        <el-icon class="mr-2"><Folder /></el-icon>移动
-                      </el-dropdown-item>
-                      <el-dropdown-item command="copy">
-                        <el-icon class="mr-2"><DocumentCopy /></el-icon>复制
-                      </el-dropdown-item>
-                      <el-dropdown-item divided command="delete" class="text-red-600">
-                        <el-icon class="mr-2"><Delete /></el-icon>删除
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="download">
+                      <el-icon class="mr-2"><Download /></el-icon>下载
+                    </el-dropdown-item>
+                    <el-dropdown-item command="share">
+                      <el-icon class="mr-2"><Share /></el-icon>分享
+                    </el-dropdown-item>
+                    <el-dropdown-item command="rename">
+                      <el-icon class="mr-2"><EditPen /></el-icon>重命名
+                    </el-dropdown-item>
+                    <el-dropdown-item command="move">
+                      <el-icon class="mr-2"><Folder /></el-icon>移动
+                    </el-dropdown-item>
+                    <el-dropdown-item divided command="delete" class="text-red-600">
+                      <el-icon class="mr-2"><Delete /></el-icon>删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </template>
           </el-table-column>
         </el-table>
@@ -228,7 +214,7 @@
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
-          :total="fileList.length"
+          :total="total"
           layout="total, sizes, prev, pager, next"
           background
           class="custom-pagination"
@@ -281,43 +267,32 @@
         title="分享文件"
         width="500px"
         class="rounded-lg"
+        :close-on-click-modal="false"
     >
       <div class="py-4 space-y-4">
-        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <p class="text-sm text-slate-600 mb-2">已选择 {{ selectedFiles.length }} 个文件</p>
-          <div class="flex flex-wrap gap-2">
-            <span
-                v-for="file in selectedFiles.slice(0, 3)"
-                :key="file.id"
-                class="px-2 py-1 bg-white text-xs text-slate-700 rounded border border-slate-200 truncate max-w-[120px]"
-            >
-              {{ file.name }}
-            </span>
-            <span v-if="selectedFiles.length > 3" class="px-2 py-1 text-xs text-slate-500">
-              +{{ selectedFiles.length - 3 }}
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">分享有效期</label>
-          <el-radio-group v-model="shareExpire">
-            <el-radio-button label="1">1天</el-radio-button>
-            <el-radio-button label="7">7天</el-radio-button>
-            <el-radio-button label="30">30天</el-radio-button>
-            <el-radio-button label="0">永久有效</el-radio-button>
-          </el-radio-group>
-        </div>
-
-        <div v-if="shareLink" class="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-          <code class="text-sm text-blue-900 font-mono truncate flex-1 mr-3">{{ shareLink }}</code>
-          <button
-              @click="copyShareLink"
-              class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded transition-colors"
-          >
-            复制链接
-          </button>
-        </div>
+        <el-form :model="shareForm" label-width="100px">
+          <el-form-item label="链接名称">
+            <el-input v-model="shareForm.linkName" placeholder="请输入链接名称" />
+          </el-form-item>
+          <el-form-item label="分享类型">
+            <el-radio-group v-model="shareForm.linkType">
+              <el-radio :label="1">公开链接</el-radio>
+              <el-radio :label="2">加密链接</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="提取码" v-if="shareForm.linkType === 2">
+            <el-input v-model="shareForm.accessCode" placeholder="请输入提取码" maxlength="6" show-word-limit />
+          </el-form-item>
+          <el-form-item label="过期时间">
+            <el-date-picker
+                v-model="shareForm.expireTime"
+                type="datetime"
+                placeholder="选择过期时间"
+                value-format="YYYY-MM-DD HH:mm:ss"
+                style="width: 100%"
+            />
+          </el-form-item>
+        </el-form>
       </div>
       <template #footer>
         <div class="flex justify-end gap-3">
@@ -349,7 +324,7 @@
         <!-- 空间根目录提示 -->
         <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg mb-3">
           <el-icon class="text-blue-500"><Folder /></el-icon>
-          <span class="text-sm font-medium text-slate-700">企业空间</span>
+          <span class="text-sm font-medium text-slate-700">个人空间</span>
         </div>
 
         <!-- 文件夹树形结构 -->
@@ -393,6 +368,15 @@
       </template>
     </el-dialog>
 
+    <!-- 隐藏的文件选择输入框 -->
+    <input
+        ref="fileInputRef"
+        type="file"
+        multiple
+        style="display: none"
+        @change="handleFileChange"
+    />
+
     <!-- 复制到对话框 -->
     <el-dialog
         v-model="copyVisible"
@@ -405,7 +389,7 @@
         <!-- 空间根目录提示 -->
         <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg mb-3">
           <el-icon class="text-blue-500"><Folder /></el-icon>
-          <span class="text-sm font-medium text-slate-700">企业空间</span>
+          <span class="text-sm font-medium text-slate-700">个人空间</span>
         </div>
 
         <!-- 文件夹树形结构 -->
@@ -452,16 +436,13 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Folder,
   FolderOpened,
   Document,
-  Picture,
-  VideoCamera,
-  Headset,
-  Box,
   Upload,
   Plus,
   Download,
@@ -475,138 +456,78 @@ import {
   HomeFilled,
   Check
 } from '@element-plus/icons-vue'
+import axios from 'axios'
+import { useUserStore } from '@/stores/user.js'
+import { useUploadStore } from '@/stores/upload.js'
 
-// 面包屑路径 - 改为空数组，表示当前在根目录
-const currentPath = ref([])
+const userStore = useUserStore()
+const uploadStore = useUploadStore()
 
-// 文件数据
-const fileList = ref([
-  {
-    id: 1,
-    name: '项目重要文件',
-    type: 'folder',
-    createTime: '2020-06-20 12:30:00',
-    size: 0,
-    itemCount: 5
-  },
-  {
-    id: 2,
-    name: '合同资料',
-    type: 'folder',
-    createTime: '2020-05-20 14:30:00',
-    size: 0,
-    itemCount: 12
-  },
-  {
-    id: 3,
-    name: '产品体验报告.excl',
-    type: 'excel',
-    createTime: '2020-03-20 14:20:00',
-    size: 35840000
-  },
-  {
-    id: 4,
-    name: '5月核算清单.txt',
-    type: 'txt',
-    createTime: '2020-05-20 12:30:00',
-    size: 35650000
-  },
-  {
-    id: 5,
-    name: '财务报表.ppt',
-    type: 'ppt',
-    createTime: '2020-05-20 16:30:20',
-    size: 40680000
-  },
-  {
-    id: 6,
-    name: '私密音频.mp3',
-    type: 'audio',
-    createTime: '2020-05-20 18:20:00',
-    size: 5242880
-  },
-  {
-    id: 7,
-    name: '产品未公开视频.mp4',
-    type: 'video',
-    createTime: '2020-05-20 20:20:00',
-    size: 104857600
-  },
-  {
-    id: 8,
-    name: '私密文档.pdf',
-    type: 'pdf',
-    createTime: '2020-05-20 18:30:00',
-    size: 23920000
-  },
-  {
-    id: 9,
-    name: '文件名.txt',
-    type: 'txt',
-    createTime: '2020-05-20 11:10:00',
-    size: 44890000
+// API 基础配置
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取请求配置（包含认证头）
+const getAuthConfig = () => {
+  const token = userStore.token
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
   }
-])
+}
 
-// 模拟文件夹树形数据
-const folderTreeData = ref([
-  {
-    id: 1,
-    name: '项目文件',
-    children: [
-      {
-        id: 11,
-        name: '云盘项目',
-        children: [
-          { id: 111, name: '设计资料', children: [] },
-          { id: 112, name: '需求文档', children: [] }
-        ]
-      },
-      {
-        id: 12,
-        name: '企业官网',
-        children: [
-          { id: 121, name: '前端代码', children: [] },
-          { id: 122, name: '后端接口', children: [] }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: '市场资料',
-    children: [
-      { id: 21, name: '竞品分析', children: [] },
-      { id: 22, name: '用户调研', children: [] }
-    ]
-  },
-  {
-    id: 3,
-    name: '财务文档',
-    children: [
-      {
-        id: 31,
-        name: '2024年',
-        children: [
-          { id: 311, name: 'Q1报表', children: [] },
-          { id: 312, name: 'Q2报表', children: [] }
-        ]
-      },
-      { id: 32, name: '2023年', children: [] }
-    ]
-  },
-  { id: 4, name: '人力资源', children: [] },
-  { id: 5, name: '行政文件', children: [] }
-])
+const route = useRoute()
 
-// 搜索和分页
+// 状态管理
+const loading = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
+const total = ref(0)
 const selectedFiles = ref([])
 const tableRef = ref(null)
 const moveTreeRef = ref(null)
 const copyTreeRef = ref(null)
+const fileInputRef = ref(null)
+
+// driveId 从路由参数获取
+const driveId = computed(() => route.params.driveId)
+
+// 面包屑路径历史（前端维护）
+const pathHistory = ref([])
+
+// 当前所在目录的 parentId（根目录为 0）
+const currentParentId = ref(0)
+
+// 文件列表
+const fileList = ref([
+  {
+    id: 123,
+    name: 'asda',
+    size: 1234,
+    createTime: '2312'
+  }
+])
+
+// 对话框状态
+const createFolderVisible = ref(false)
+const shareVisible = ref(false)
+const moveVisible = ref(false)
+const copyVisible = ref(false)
+const newFolderName = ref('')
+const selectedTargetFolder = ref(null)
+
+// 分享表单
+const shareForm = ref({
+  linkName: '',
+  linkType: 1,
+  accessCode: '',
+  expireTime: null
+})
+
+// 文件夹树形数据（移动/复制对话框用）
+const folderTreeData = ref([])
 
 // 过滤后的文件列表
 const filteredFiles = computed(() => {
@@ -617,50 +538,13 @@ const filteredFiles = computed(() => {
   )
 })
 
-// 对话框状态
-const createFolderVisible = ref(false)
-const shareVisible = ref(false)
-const moveVisible = ref(false)
-const copyVisible = ref(false)
-const newFolderName = ref('')
-const shareExpire = ref('7')
-const shareLink = ref('')
-const selectedTargetFolder = ref(null)
-
 // 获取文件图标
 const getFileIcon = (file) => {
   const iconMap = {
-    folder: FolderOpened,
-    image: Picture,
-    video: VideoCamera,
-    audio: Headset,
-    pdf: Document,
-    word: Document,
-    excel: Document,
-    ppt: Document,
-    txt: Document,
-    zip: Box,
-    code: Document,
+    2: FolderOpened,
     default: Document
   }
   return iconMap[file.type] || iconMap.default
-}
-
-// 获取文件图标背景色
-const getFileIconClass = (file) => {
-  return 'bg-slate-400'
-}
-
-// 格式化日期
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).replace(/\//g, '-')
 }
 
 // 格式化文件大小
@@ -670,11 +554,6 @@ const formatSize = (bytes) => {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
-}
-
-// 表格行类名
-const getRowClassName = () => {
-  return 'group hover:bg-slate-50/80 transition-colors'
 }
 
 // 选择变化
@@ -687,12 +566,45 @@ const handleRowClick = (row) => {
   tableRef.value?.toggleRowSelection(row)
 }
 
+// 加载文件列表
+const loadFileList = async (parentId = 0) => {
+  if (!driveId.value) {
+    ElMessage.error('未获取到 driveId')
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/enterprise`, {
+      ...getAuthConfig(),
+      params: {
+        driveId: driveId.value,
+        parentId: parentId
+      }
+    })
+    if (res.data.code === 200) {
+      fileList.value = res.data.data || []
+      total.value = fileList.value.length
+      selectedFiles.value = []
+    } else {
+      ElMessage.error(res.data.msg || '加载失败')
+    }
+  } catch (error) {
+    console.error('加载文件列表失败:', error)
+    fileList.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
 // 打开文件/文件夹
 const handleOpenFile = (file) => {
-  if (file.type === 'folder') {
-    currentPath.value.push(file.name)
-    ElMessage.success(`进入文件夹: ${file.name}`)
-    // 实际应用中这里应该加载文件夹内容
+  if (file.type === 2) {
+    // 进入文件夹：更新路径历史，重新加载文件列表
+    pathHistory.value.push({ id: file.id, name: file.name })
+    currentParentId.value = file.id
+    loadFileList(file.id)
   } else {
     ElMessage.info(`预览文件: ${file.name}`)
   }
@@ -700,20 +612,154 @@ const handleOpenFile = (file) => {
 
 // 面包屑导航 - 返回根目录
 const goToRoot = () => {
-  currentPath.value = []
-  ElMessage.success('返回根目录')
+  pathHistory.value = []
+  currentParentId.value = 0
+  loadFileList(0)
 }
 
 // 面包屑导航 - 点击某个路径层级
 const goToPath = (index) => {
   // 保留从0到index的路径，删除后面的
-  currentPath.value = currentPath.value.slice(0, index + 1)
-  ElMessage.success(`导航到: ${currentPath.value[index] || '根目录'}`)
+  pathHistory.value = pathHistory.value.slice(0, index + 1)
+  const targetId = pathHistory.value.length > 0 ? pathHistory.value[pathHistory.value.length - 1].id : 0
+  currentParentId.value = targetId
+  loadFileList(targetId)
 }
+
+// 初始化加载
+onMounted(() => {
+  loadFileList()
+})
 
 // 上传
 const handleUpload = () => {
-  ElMessage.info('打开上传对话框')
+  fileInputRef.value?.click()
+}
+
+// 处理文件选择
+const handleFileChange = async (event) => {
+  const files = Array.from(event.target.files)
+  if (files.length === 0) return
+
+  // 检查是否选择了文件夹
+  for (const file of files) {
+    if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
+      ElMessage.warning('暂不支持上传文件夹，请选择文件')
+      event.target.value = ''
+      return
+    }
+  }
+
+  // 检查driveId
+  if (!driveId.value) {
+    ElMessage.error('未获取到 driveId')
+    event.target.value = ''
+    return
+  }
+
+  // 为每个文件创建上传任务
+  const fileTaskMap = new Map()
+  for (const file of files) {
+    const taskId = uploadStore.addTask(file)
+    fileTaskMap.set(file, taskId)
+  }
+
+  // 显示上传面板
+  uploadStore.showUploadPanel()
+
+  // 计算每个文件的SHA256和分片信息
+  ElMessage.info('正在准备上传，计算文件校验值...')
+
+  const uploadArgs = []
+
+  for (const file of files) {
+    const taskId = fileTaskMap.get(file)
+    uploadStore.startTask(taskId)
+
+    try {
+      const sha256 = await calculateSHA256(file)
+      const totalChunks = calculateTotalChunks(file.size)
+
+      uploadArgs.push({
+        entryName: file.name,
+        sha256: sha256,
+        fileSize: file.size,
+        totalChunks: totalChunks,
+        mimeType: file.type || 'application/octet-stream'
+      })
+
+      // 将taskId和sha256关联
+      const task = uploadStore.uploadTasks.find(t => t.id === taskId)
+      if (task) {
+        task.sha256 = sha256
+      }
+    } catch (error) {
+      console.error(`计算文件 "${file.name}" SHA256失败:`, error)
+      uploadStore.failTask(taskId, '文件处理失败')
+    }
+  }
+
+  // 清空input，允许再次选择相同的文件
+  event.target.value = ''
+
+  if (uploadArgs.length === 0) {
+    ElMessage.warning('没有可上传的文件')
+    return
+  }
+
+  // 调用initUpload接口
+  try {
+    const initResponse = await axios.post(`${API_BASE_URL}/api/enterprise/init-upload`, {
+      driveId: driveId.value,
+      parentId: currentParentId.value,
+      argList: uploadArgs
+    }, getAuthConfig())
+
+    if (initResponse.data.code !== 200) {
+      ElMessage.error(initResponse.data.msg || '初始化上传失败')
+      // 将所有任务标记为失败
+      uploadArgs.forEach(arg => {
+        const task = uploadStore.uploadTasks.find(t => t.sha256 === arg.sha256)
+        if (task) {
+          uploadStore.failTask(task.id, '初始化上传失败')
+        }
+      })
+      return
+    }
+
+    const initResult = initResponse.data.data
+    const viewList = initResult.viewList || []
+
+    // 处理每个文件的上传
+    for (const view of viewList) {
+      const file = files.find(f => {
+        const task = uploadStore.uploadTasks.find(t => t.sha256 === view.sha256)
+        return task !== undefined
+      })
+
+      const task = uploadStore.uploadTasks.find(t => t.sha256 === view.sha256)
+      if (!file || !task) {
+        console.error(`找不到文件: ${view.entryName}`)
+        continue
+      }
+
+      if (!view.success) {
+        uploadStore.failTask(task.id, view.message || '初始化失败')
+        continue
+      }
+
+      // 根据返回的上传类型执行相应的上传逻辑
+      await uploadSingleFile(file, view, task.id)
+    }
+
+  } catch (error) {
+    console.error('初始化上传失败:', error)
+    ElMessage.error('上传初始化失败，请重试')
+    // 将所有未完成的任务标记为失败
+    uploadStore.uploadTasks
+        .filter(t => t.status === 'uploading' || t.status === 'waiting')
+        .forEach(task => uploadStore.failTask(task.id, '上传初始化失败'))
+  }
 }
 
 // 新建文件夹
@@ -723,77 +769,195 @@ const handleCreateFolder = () => {
 }
 
 // 确认创建文件夹
-const confirmCreateFolder = () => {
+const confirmCreateFolder = async () => {
   if (!newFolderName.value.trim()) {
     ElMessage.warning('请输入文件夹名称')
     return
   }
 
-  const newFolder = {
-    id: Date.now(),
-    name: newFolderName.value,
-    type: 'folder',
-    createTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
-    size: 0,
-    itemCount: 0
+  if (!driveId.value) {
+    ElMessage.error('未获取到 driveId')
+    return
   }
 
-  fileList.value.unshift(newFolder)
-  createFolderVisible.value = false
-  ElMessage.success('创建成功')
-}
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/create`, {
+      driveId: driveId.value,
+      parentId: currentParentId.value,
+      folderName: newFolderName.value.trim()
+    }, getAuthConfig())
 
-// 下载单个文件
-const handleDownload = (row) => {
-  ElMessage.success(`开始下载: ${row.name}`)
+    if (response.data.code === 200) {
+      createFolderVisible.value = false
+      newFolderName.value = ''
+      ElMessage.success('创建成功')
+      // 重新加载文件列表
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.msg || '创建失败')
+    }
+  } catch (error) {
+    console.error('创建文件夹失败:', error)
+    ElMessage.error('创建失败')
+  }
 }
 
 // 批量下载
-const handleBatchDownload = () => {
+const handleBatchDownload = async () => {
   if (selectedFiles.value.length === 0) return
-  ElMessage.success(`开始下载 ${selectedFiles.value.length} 个文件`)
+
+  try {
+    const ids = selectedFiles.value.map(f => f.id)
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/download`, {
+      ids: ids
+    }, {
+      ...getAuthConfig(),
+      responseType: 'blob'
+    })
+
+    // 从响应头中获取文件名
+    const contentDisposition = response.headers['content-disposition']
+    let filename = 'download'
+    if (contentDisposition) {
+      const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+      if (encodedMatch) {
+        filename = decodeURIComponent(encodedMatch[1])
+      } else {
+        // 回退到 filename="xxx"（英文文件名）
+        const plainMatch = contentDisposition.match(/filename="(.+?)"/)
+        if (plainMatch) {
+          filename = plainMatch[1]
+        }
+      }
+    }
+
+    // 创建下载链接
+    const blob = new Blob([response.data])
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+
+    ElMessage.success('下载成功')
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('下载失败')
+  }
 }
 
-// 分享单个文件
-const handleShareSingle = (row) => {
-  selectedFiles.value = [row]
-  shareLink.value = ''
-  shareVisible.value = true
-}
-
-// 批量分享
+// 分享
 const handleShare = () => {
-  if (selectedFiles.value.length === 0) return
-  shareLink.value = ''
+  if (selectedFiles.value.length !== 1) {
+    ElMessage.warning('只能选择一条记录进行分享')
+    return
+  }
+  // 初始化分享表单
+  shareForm.value = {
+    linkName: selectedFiles.value[0].name,
+    linkType: 1,
+    accessCode: '',
+    expireTime: null
+  }
   shareVisible.value = true
 }
 
 // 生成分享链接
-const generateShareLink = () => {
-  shareLink.value = `https://drive.company.com/s/${Math.random().toString(36).substring(2, 15)}`
-  ElMessage.success('分享链接已生成')
-}
+const generateShareLink = async () => {
+  if (!shareForm.value.linkName.trim()) {
+    ElMessage.warning('请输入链接名称')
+    return
+  }
+  if (!shareForm.value.expireTime) {
+    ElMessage.warning('请选择过期时间')
+    return
+  }
+  if (shareForm.value.linkType === 2 && !shareForm.value.accessCode.trim()) {
+    ElMessage.warning('请输入提取码')
+    return
+  }
 
-// 复制分享链接
-const copyShareLink = () => {
-  navigator.clipboard.writeText(shareLink.value)
-  ElMessage.success('链接已复制到剪贴板')
+  try {
+    // 构造创建分享链接的请求数据
+    const createData = {
+      id: selectedFiles.value[0].id,
+      driveId: driveId.value,
+      linkName: shareForm.value.linkName,
+      linkType: shareForm.value.linkType,
+      accessCode: shareForm.value.linkType === 2 ? shareForm.value.accessCode : null,
+      expireTime: shareForm.value.expireTime
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/share`, createData, getAuthConfig())
+
+    if (response.data.code === 200) {
+      ElMessage.success('分享链接已生成')
+    } else {
+      ElMessage.error(response.data.msg || '生成分享链接失败')
+    }
+  } catch (error) {
+    console.error('生成分享链接失败:', error)
+    ElMessage.error('生成分享链接失败')
+  }
 }
 
 // 更多操作命令
-const handleCommand = (command, row) => {
+const handleCommand = async (command, row) => {
   switch (command) {
     case 'download':
-      handleDownload(row)
+      try {
+        const response = await axios.post(`${API_BASE_URL}/api/enterprise/download`, {
+          ids: [row.id]
+        }, {
+          ...getAuthConfig(),
+          responseType: 'blob'
+        })
+
+        // 从响应头中获取文件名
+        const contentDisposition = response.headers['content-disposition']
+        let filename = row.name || 'download'
+        if (contentDisposition) {
+          const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+          if (encodedMatch) {
+            filename = decodeURIComponent(encodedMatch[1])
+          } else {
+            // 回退到 filename="xxx"（英文文件名）
+            const plainMatch = contentDisposition.match(/filename="(.+?)"/)
+            if (plainMatch) {
+              filename = plainMatch[1]
+            }
+          }
+        }
+
+        // 创建下载链接
+        const blob = new Blob([response.data])
+        const downloadUrl = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(downloadUrl)
+
+        ElMessage.success('下载成功')
+      } catch (error) {
+        console.error('下载失败:', error)
+        ElMessage.error('下载失败')
+      }
+      break
+    case 'share':
+      selectedFiles.value = [row]
+      handleShare()
       break
     case 'rename':
       handleRenameSingle(row)
       break
     case 'move':
       handleMoveSingle(row)
-      break
-    case 'copy':
-      ElMessage.success(`已复制: ${row.name}`)
       break
     case 'delete':
       handleDeleteSingle(row)
@@ -812,11 +976,22 @@ const handleRenameSingle = async (row) => {
       inputErrorMessage: '名称不能为空'
     })
 
-    row.name = value
-    row.createTime = new Date().toISOString().replace('T', ' ').substring(0, 19)
-    ElMessage.success('重命名成功')
-  } catch {
-    // 用户取消
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/rename`, {
+      id: row.id,
+      newEntryName: value
+    }, getAuthConfig())
+
+    if (response.data.code === 200) {
+      ElMessage.success('重命名成功')
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.msg || '重命名失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('重命名失败:', error)
+      ElMessage.error('重命名失败')
+    }
   }
 }
 
@@ -827,26 +1002,57 @@ const handleDeleteSingle = (row) => {
     cancelButtonText: '取消',
     type: 'warning',
     confirmButtonClass: 'el-button--danger'
-  }).then(() => {
-    const index = fileList.value.findIndex(f => f.id === row.id)
-    if (index > -1) {
-      fileList.value.splice(index, 1)
-      ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/enterprise/delete`, {
+        ids: [row.id]
+      }, getAuthConfig())
+      if (response.data.code === 200) {
+        ElMessage.success('删除成功')
+        loadFileList(currentParentId.value)
+      } else {
+        ElMessage.error(response.data.msg || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
     }
   }).catch(() => {})
 }
 
-// 移动文件
+// 加载文件夹树形数据（用于移动/复制对话框）
+const loadFolderTree = async () => {
+  if (!driveId.value) return
+
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/enterprise/folder`, {
+      ...getAuthConfig(),
+      params: {
+        driveId: driveId.value
+      }
+    })
+    if (res.data.code === 200) {
+      folderTreeData.value = res.data.data || []
+    } else {
+      folderTreeData.value = []
+      ElMessage.error(res.data.msg || '加载文件夹列表失败')
+    }
+  } catch (error) {
+    console.error('加载文件夹树失败:', error)
+    folderTreeData.value = []
+    ElMessage.error('加载文件夹列表失败')
+  }
+}
+
+// 移动
 const handleMove = () => {
   if (selectedFiles.value.length === 0) return
   selectedTargetFolder.value = null
   moveVisible.value = true
-  // 默认展开第一级
-  nextTick(() => {
-    moveTreeRef.value?.expandLevel?.(1)
-  })
+  loadFolderTree()
 }
 
+// 移动单个文件
 const handleMoveSingle = (row) => {
   selectedFiles.value = [row]
   handleMove()
@@ -857,20 +1063,33 @@ const handleTreeNodeClick = (data) => {
   selectedTargetFolder.value = data
 }
 
-const confirmMove = () => {
+// 确认移动
+const confirmMove = async () => {
   if (!selectedTargetFolder.value) {
     ElMessage.warning('请选择目标文件夹')
     return
   }
 
-  ElMessage.success(`已将 ${selectedFiles.value.length} 个文件移动到 "${selectedTargetFolder.value.name}"`)
-  moveVisible.value = false
-  selectedTargetFolder.value = null
+  try {
+    const ids = selectedFiles.value.map(f => f.id)
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/move`, {
+      ids: ids,
+      targetId: selectedTargetFolder.value.id
+    }, getAuthConfig())
 
-  // 从列表移除已移动的文件
-  const ids = selectedFiles.value.map(f => f.id)
-  fileList.value = fileList.value.filter(f => !ids.includes(f.id))
-  selectedFiles.value = []
+    if (response.data.code === 200) {
+      ElMessage.success(`已将 ${selectedFiles.value.length} 个文件移动到 "${selectedTargetFolder.value.name}"`)
+      moveVisible.value = false
+      selectedTargetFolder.value = null
+      selectedFiles.value = []
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.msg || '移动失败')
+    }
+  } catch (error) {
+    console.error('移动失败:', error)
+    ElMessage.error('移动失败')
+  }
 }
 
 // 复制
@@ -884,13 +1103,14 @@ const handleCopy = () => {
   }
 
   const selectedFile = selectedFiles.value[0]
-  if (selectedFile.type === 'folder') {
+  if (selectedFile.type === 2) {
     ElMessage.warning('不能复制文件夹，请选择文件')
     return
   }
 
   selectedTargetFolder.value = null
   copyVisible.value = true
+  loadFolderTree()
 }
 
 // 处理复制对话框中的树节点点击
@@ -899,23 +1119,231 @@ const handleCopyTreeNodeClick = (data) => {
 }
 
 // 确认复制
-const confirmCopy = () => {
+const confirmCopy = async () => {
   if (!selectedTargetFolder.value) {
     ElMessage.warning('请选择目标文件夹')
     return
   }
 
   const selectedFile = selectedFiles.value[0]
-  ElMessage.success(`已将 "${selectedFile.name}" 复制到 "${selectedTargetFolder.value.name}"`)
-  copyVisible.value = false
-  selectedTargetFolder.value = null
-  selectedFiles.value = []
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/copy`, {
+      id: selectedFile.id,
+      targetId: selectedTargetFolder.value.id
+    }, getAuthConfig())
+
+    if (response.data.code === 200) {
+      ElMessage.success(`已将 "${selectedFile.name}" 复制到 "${selectedTargetFolder.value.name}"`)
+      copyVisible.value = false
+      selectedTargetFolder.value = null
+      selectedFiles.value = []
+      loadFileList(currentParentId.value)
+    } else {
+      ElMessage.error(response.data.msg || '复制失败')
+    }
+  } catch (error) {
+    console.error('复制失败:', error)
+    ElMessage.error('复制失败')
+  }
 }
 
-// 重命名（批量时禁用）
+// 重命名（批量时禁用，已在按钮中控制）
 const handleRename = () => {
   if (selectedFiles.value.length === 1) {
     handleRenameSingle(selectedFiles.value[0])
+  }
+}
+
+// 上传相关常量
+const CHUNK_SIZE = 10 * 1024 * 1024 // 10MB 分片大小
+
+// 计算文件的SHA256值
+const calculateSHA256 = async (file) => {
+  const arrayBuffer = await file.arrayBuffer()
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  return hashHex
+}
+
+// 计算分片数量
+const calculateTotalChunks = (fileSize) => {
+  return Math.ceil(fileSize / CHUNK_SIZE)
+}
+
+// 获取文件分片
+const getFileChunk = (file, start, end) => {
+  return file.slice(start, end)
+}
+
+// 上传单个文件
+const uploadSingleFile = async (file, initView, taskId) => {
+  // 1. 秒传成功 (isSkip = true)
+  if (initView.isSkip) {
+    uploadStore.markAsSkipped(taskId)
+    ElMessage.success(`文件 "${file.name}" 秒传成功`)
+    // 刷新文件列表
+    loadFileList(currentParentId.value)
+    return
+  }
+
+  // 2. 小文件直传 (uploadUrl 不为 null)
+  if (initView.uploadUrl) {
+    await uploadSmallFile(file, initView, taskId)
+    return
+  }
+
+  // 3. 大文件分片上传 (isMultipart = true)
+  if (initView.isMultipart) {
+    await uploadLargeFile(file, initView, taskId)
+    return
+  }
+}
+
+// 上传小文件（直接上传到MinIO）
+const uploadSmallFile = async (file, initView, taskId) => {
+  try {
+    // 使用预签名URL直接上传到MinIO
+    const response = await axios.put(initView.uploadUrl, file, {
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream'
+      },
+      onUploadProgress: (progressEvent) => {
+        // 更新上传进度
+        uploadStore.updateProgress(taskId, progressEvent.loaded, progressEvent.total)
+      }
+    })
+
+    // 上传完成后通知后端
+    const simpleUploadRes = await axios.post(`${API_BASE_URL}/api/enterprise/simple-upload`, {
+      sha256: initView.sha256
+    }, getAuthConfig())
+
+    if (simpleUploadRes.data.code === 200) {
+      uploadStore.completeTask(taskId)
+      ElMessage.success(`文件 "${file.name}" 上传成功`)
+      // 刷新文件列表
+      loadFileList(currentParentId.value)
+    } else {
+      uploadStore.failTask(taskId, simpleUploadRes.data.msg || '上传记录失败')
+    }
+  } catch (error) {
+    console.error('小文件上传失败:', error)
+    uploadStore.failTask(taskId, '上传失败')
+  }
+}
+
+// 上传大文件（分片上传）
+const uploadLargeFile = async (file, initView, taskId) => {
+  try {
+    const totalChunks = calculateTotalChunks(file.size)
+    const chunkUrls = initView.chunkUrls || []
+    const uploadedChunksSet = new Set(initView.uploadedChunks || [])
+
+    // 设置总分片数
+    const task = uploadStore.uploadTasks.find(t => t.id === taskId)
+    if (task) {
+      task.totalChunks = totalChunks
+    }
+
+    // 批量上报的数组
+    const chunkReportBatch = []
+
+    // 上传每个分片
+    for (let i = 1; i <= totalChunks; i++) {
+      // 如果已经上传过了，跳过
+      if (uploadedChunksSet.has(i)) {
+        continue
+      }
+
+      const start = (i - 1) * CHUNK_SIZE
+      const end = Math.min(i * CHUNK_SIZE, file.size)
+      const chunk = getFileChunk(file, start, end)
+
+      // 获取分片上传URL (chunkUrls从1开始，所以使用i)
+      const chunkUrl = chunkUrls[i - 1]
+      if (!chunkUrl) {
+        console.error(`分片 ${i} 的上传URL不存在`)
+        continue
+      }
+
+      // 上传分片到MinIO
+      const response = await axios.put(chunkUrl, chunk, {
+        headers: {
+          'Content-Type': 'application/octet-stream'
+        }
+      })
+
+      // 获取ETag
+      const etag = response.headers.etag || response.headers.ETag
+
+      // 添加到批量上报数组
+      chunkReportBatch.push({
+        sha256: initView.sha256,
+        chunkNumber: String(i),
+        etag: etag ? etag.replace(/"/g, '') : ''
+      })
+
+      // 更新进度
+      uploadedChunksSet.add(i)
+      uploadStore.updateChunkProgress(taskId, uploadedChunksSet.size, totalChunks)
+
+      // 每5个分片批量上报
+      if (chunkReportBatch.length >= 5) {
+        await reportUploadedChunks(chunkReportBatch)
+        chunkReportBatch.length = 0 // 清空数组
+      }
+    }
+
+    // 循环结束后，上报剩余的分片（如果有）
+    if (chunkReportBatch.length > 0) {
+      await reportUploadedChunks(chunkReportBatch)
+    }
+
+    // 所有分片上传完成，调用合并接口
+    await mergeChunks(initView.sha256, file.name, taskId)
+
+  } catch (error) {
+    console.error('大文件上传失败:', error)
+    uploadStore.failTask(taskId, '上传失败')
+  }
+}
+
+// 批量上报已上传的分片
+const reportUploadedChunks = async (chunks) => {
+  if (chunks.length === 0) return
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/upload-chunk`, {
+      argList: chunks
+    }, getAuthConfig())
+
+    if (response.data.code !== 200) {
+      console.error('批量上报分片失败:', response.data.msg)
+    }
+  } catch (error) {
+    console.error('批量上报分片失败:', error)
+  }
+}
+
+// 合并分片
+const mergeChunks = async (sha256, fileName, taskId) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/enterprise/merge-chunks`, {
+      sha256: sha256
+    }, getAuthConfig())
+
+    if (response.data.code === 200) {
+      uploadStore.completeTask(taskId)
+      ElMessage.success(`文件 "${fileName}" 上传成功`)
+      // 刷新文件列表
+      loadFileList(currentParentId.value)
+    } else {
+      uploadStore.failTask(taskId, response.data.msg || '合并分片失败')
+    }
+  } catch (error) {
+    console.error('合并分片失败:', error)
+    uploadStore.failTask(taskId, '合并分片失败')
   }
 }
 
@@ -928,17 +1356,29 @@ const handleBatchDelete = () => {
     cancelButtonText: '取消',
     type: 'warning',
     confirmButtonClass: 'el-button--danger'
-  }).then(() => {
-    const ids = selectedFiles.value.map(f => f.id)
-    fileList.value = fileList.value.filter(f => !ids.includes(f.id))
-    selectedFiles.value = []
-    ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      const ids = selectedFiles.value.map(f => f.id)
+      const response = await axios.post(`${API_BASE_URL}/api/enterprise/delete`, {
+        ids: ids
+      }, getAuthConfig())
+      if (response.data.code === 200) {
+        ElMessage.success('删除成功')
+        selectedFiles.value = []
+        loadFileList(currentParentId.value)
+      } else {
+        ElMessage.error(response.data.msg || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
   }).catch(() => {})
 }
 </script>
 
 <style scoped>
-/* 文件表格样式 */
+/* 自定义表格样式 - shadcn 风格 */
 :deep(.file-table) {
   --el-table-header-bg-color: #f8fafc;
   --el-table-header-text-color: #64748b;
@@ -967,9 +1407,13 @@ const handleBatchDelete = () => {
   border-color: #2563eb;
 }
 
-/* 分页器样式 */
+/* 分页器样式优化 */
 :deep(.custom-pagination) {
   --el-pagination-hover-color: #2563eb;
+}
+
+:deep(.custom-pagination .el-pagination__sizes .el-input .el-input__inner) {
+  border-radius: 6px;
 }
 
 :deep(.custom-pagination .el-pager li) {
@@ -982,7 +1426,7 @@ const handleBatchDelete = () => {
   color: white;
 }
 
-/* 对话框样式 */
+/* 动画效果 */
 :deep(.el-dialog) {
   border-radius: 12px;
   overflow: hidden;
@@ -1002,6 +1446,17 @@ const handleBatchDelete = () => {
 :deep(.el-dialog__footer) {
   padding: 16px 24px;
   border-top: 1px solid #e2e8f0;
+}
+
+/* 输入框样式 */
+:deep(.el-input__inner) {
+  border-radius: 8px;
+  border-color: #e2e8f0;
+}
+
+:deep(.el-input__inner:focus) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* 移动到对话框样式 */
@@ -1043,24 +1498,5 @@ const handleBatchDelete = () => {
 
 :deep(.folder-tree .el-tree-node__expand-icon.is-leaf) {
   color: transparent;
-}
-
-/* 自定义滚动条 */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }
 </style>

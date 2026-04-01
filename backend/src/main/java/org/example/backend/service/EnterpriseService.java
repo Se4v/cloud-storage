@@ -12,6 +12,7 @@ import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
+import org.example.backend.model.view.FolderTreeView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,51 @@ public class EnterpriseService {
         if (entries == null || entries.isEmpty()) return List.of();
 
         return entries;
+    }
+
+    public List<FolderTreeView> listFolders(Long driveId) {
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId);
+        List<Entry> entries = entryMapper.selectList(entryQuery);
+        if (entries == null || entries.isEmpty()) {
+            // 返回只有个人空间根节点的列表
+            FolderTreeView personalRoot = new FolderTreeView();
+            personalRoot.setId(0L);
+            personalRoot.setName("个人空间");
+            personalRoot.setChildren(new ArrayList<>());
+            return List.of(personalRoot);
+        }
+
+        Map<Long, FolderTreeView> nodeMap = new HashMap<>();
+        List<FolderTreeView> roots = new ArrayList<>();
+
+        for (Entry entry : entries) {
+            FolderTreeView node = new FolderTreeView();
+            node.setId(entry.getId());
+            node.setName(entry.getEntryName());
+            node.setChildren(new ArrayList<>());
+            nodeMap.put(entry.getId(), node);
+        }
+
+        for (Entry entry : entries) {
+            FolderTreeView node = nodeMap.get(entry.getId());
+            Long parentId = entry.getParentId();
+            if (parentId == null || parentId == 0 || !nodeMap.containsKey(parentId)) {
+                roots.add(node);
+            } else {
+                FolderTreeView parent = nodeMap.get(parentId);
+                parent.getChildren().add(node);
+            }
+        }
+
+        // 创建企业空间根节点
+        Drive drive = driveMapper.selectById(driveId);
+        FolderTreeView personalRoot = new FolderTreeView();
+        personalRoot.setId(0L);
+        personalRoot.setName(drive.getDriveName());
+        personalRoot.setChildren(roots);
+
+        return List.of(personalRoot);
     }
 
     @Transactional
