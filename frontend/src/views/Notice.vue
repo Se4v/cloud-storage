@@ -208,13 +208,13 @@ const selectedMessages = ref([])
 // 消息列表
 const messageList = ref([])
 
-// 过滤后的消息列表
+// 过滤后的消息列表（仅搜索标题）
 const filteredMessageList = computed(() => {
   if (!searchQuery.value.trim()) {
     return messageList.value
   }
   const keyword = searchQuery.value.toLowerCase()
-  return messageList.value.filter(msg => 
+  return messageList.value.filter(msg =>
     msg.title.toLowerCase().includes(keyword) ||
     msg.content.toLowerCase().includes(keyword)
   )
@@ -259,7 +259,6 @@ const loadMessageList = async () => {
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  loadMessageList()
 }
 
 // 标记单条消息为已读
