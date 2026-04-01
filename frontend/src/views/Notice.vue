@@ -46,7 +46,7 @@
         <!-- 表格 -->
         <el-table
           v-loading="loading"
-          :data="filteredMessageList"
+          :data="paginatedMessageList"
           row-key="id"
           @selection-change="handleSelectionChange"
           class="message-table"
@@ -158,13 +158,11 @@
 
       <el-pagination
         v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="total"
-        layout="prev, pager, next, sizes"
+        :page-size="pageSize"
+        :total="filteredMessageList.length"
+        layout="prev, pager, next"
         background
         class="!gap-2"
-        @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
       />
     </div>
@@ -202,7 +200,7 @@ const getAuthConfig = () => {
 // 状态
 const loading = ref(false)
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(10)
 const total = ref(0)
 const searchQuery = ref('')
 const selectedMessages = ref([])
@@ -220,6 +218,13 @@ const filteredMessageList = computed(() => {
     msg.title.toLowerCase().includes(keyword) ||
     msg.content.toLowerCase().includes(keyword)
   )
+})
+
+// 分页后的消息列表
+const paginatedMessageList = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredMessageList.value.slice(start, end)
 })
 
 // 未读消息数量
@@ -339,10 +344,6 @@ const handleBatchDelete = () => {
 }
 
 // 分页
-const handleSizeChange = (val) => {
-  pageSize.value = val
-}
-
 const handleCurrentChange = (val) => {
   currentPage.value = val
 }
