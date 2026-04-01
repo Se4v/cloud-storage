@@ -19,6 +19,7 @@ import UserStat from "@/views/admin/UserStat.vue";
 import StorageStat from "@/views/admin/StorageStat.vue";
 import TrafficStat from "@/views/admin/TrafficStat.vue";
 import MemberManage from "@/views/admin/MemberManage.vue";
+import Message from "@/views/Message.vue";
 
 const routes = [
     {
@@ -55,6 +56,11 @@ const routes = [
                 path: 'profile',
                 name: 'Profile',
                 component: Profile
+            },
+            {
+                path: 'message',
+                name: 'Message',
+                component: Message
             }
         ]
     },

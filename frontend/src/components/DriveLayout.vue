@@ -238,7 +238,8 @@
                   
                   <!-- 消息内容 -->
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm text-slate-900 leading-5 line-clamp-2">{{ message.content }}</p>
+                    <p class="text-sm font-medium text-slate-900 truncate">{{ message.title }}</p>
+                    <p class="text-sm text-slate-600 line-clamp-2 mt-0.5">{{ message.content }}</p>
                     <p class="text-xs text-slate-400 mt-1">{{ message.createTime }}</p>
                   </div>
                 </div>
@@ -247,10 +248,10 @@
               <!-- 面板底部 -->
               <div class="flex items-center border-t border-slate-200">
                 <button 
-                  @click="clearAllMessages"
+                  @click="markAllAsRead"
                   class="flex-1 px-4 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors text-center"
                 >
-                  清空通知
+                  全部已读
                 </button>
                 <div class="w-px h-6 bg-slate-200"></div>
                 <button 
@@ -262,9 +263,6 @@
               </div>
             </div>
           </div>
-          <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="公告">
-            <el-icon :size="20"><Notification /></el-icon>
-          </button>
         </div>
       </header>
 
@@ -460,36 +458,41 @@ const messageList = ref([
   // 示例数据，实际应从后端获取
   {
     id: 1,
+    title: '新周报',
     content: '你收到了 14 份新周报',
-    type: 'system',
+    type: 1,
     isRead: false,
     createTime: '6 年前'
   },
   {
     id: 2,
+    title: '面试进度',
     content: '你推荐的 曲妮妮 已通过第三轮面试',
-    type: 'share',
+    type: 1,
     isRead: false,
     createTime: '6 年前'
   },
   {
     id: 3,
+    title: '通知类型',
     content: '这种模板可以区分多种通知类型',
-    type: 'info',
+    type: 2,
     isRead: true,
     createTime: '6 年前'
   },
   {
     id: 4,
+    title: '图标说明',
     content: '左侧图标用于区分不同的类型',
-    type: 'star',
+    type: 3,
     isRead: true,
     createTime: '6 年前'
   },
   {
     id: 5,
+    title: '显示限制',
     content: '内容不要超过两行字，超出时自动截断',
-    type: 'system',
+    type: 1,
     isRead: true,
     createTime: '6 年前'
   }
@@ -510,8 +513,11 @@ const hideMessagePanel = () => {
   isMessagePanelVisible.value = false
 }
 
-// 清空所有消息
-const clearAllMessages = () => {
+// 标记所有消息为已读
+const markAllAsRead = () => {
+  messageList.value.forEach(msg => {
+    msg.isRead = true
+  })
   messageList.value = []
 }
 
@@ -531,9 +537,9 @@ const viewAllMessages = () => {
 // 获取消息图标
 const getMessageIcon = (type) => {
   const iconMap = {
-    system: InfoFilled,
-    share: SuccessFilled,
-    warning: WarningFilled
+    1: InfoFilled,
+    2: WarningFilled,
+    3: SuccessFilled
   }
   return iconMap[type] || InfoFilled
 }
@@ -541,9 +547,9 @@ const getMessageIcon = (type) => {
 // 获取消息图标样式
 const getMessageIconClass = (type) => {
   const classMap = {
-    system: 'bg-blue-100 text-blue-600',
-    share: 'bg-green-100 text-green-600',
-    warning: 'bg-orange-100 text-orange-600'
+    1: 'bg-red-100 text-red-500',
+    2: 'bg-cyan-100 text-cyan-500',
+    3: 'bg-yellow-100 text-yellow-500'
   }
   return classMap[type] || 'bg-slate-100 text-slate-600'
 }
