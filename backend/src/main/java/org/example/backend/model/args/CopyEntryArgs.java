@@ -8,5 +8,7 @@ public class CopyEntryArgs {
     @NotNull
     private Long id;
     @NotNull
+    private Long driveId;
+    @NotNull
     private Long targetId;
 }

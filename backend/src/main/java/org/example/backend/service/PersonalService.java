@@ -53,7 +53,7 @@ public class PersonalService {
 
     public List<FolderTreeView> listFolders(Long driveId) {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId);
+        entryQuery.eq(Entry::getEntryType, FOLDER).eq(Entry::getDriveId, driveId).eq(Entry::getStatus, UNDELETED);
         List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) {
             // 返回只有个人空间根节点的列表
@@ -148,7 +148,8 @@ public class PersonalService {
 
         // 目标目录下是否有同名文件
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getParentId, entry.getParentId())
+        queryWrapper.eq(Entry::getDriveId, args.getDriveId())
+                .eq(Entry::getParentId, entry.getParentId())
                 .eq(Entry::getEntryName, entry.getEntryName());
         Entry sameNameEntry = entryMapper.selectOne(queryWrapper);
         String entryName = sameNameEntry == null ?
@@ -186,7 +187,8 @@ public class PersonalService {
 
         // 目标父目录下是否存在同名条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getParentId, existedEntry.getParentId())
+        queryWrapper.eq(Entry::getDriveId, args.getDriveId())
+                .eq(Entry::getParentId, existedEntry.getParentId())
                 .eq(Entry::getEntryName, args.getNewEntryName());
         Entry sameNameEntry = entryMapper.selectOne(queryWrapper);
         if (sameNameEntry != null) throw new BusinessException("Folder already exists");
@@ -220,42 +222,14 @@ public class PersonalService {
         List<Entry> entries = entryMapper.selectList(queryWrapper);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
-        // 分离文件夹和文件
-        Map<Integer, List<Long>> groupedMap = entries.stream()
-                .collect(Collectors.groupingBy(
-                        Entry::getEntryType, // 按EntryType分组
-                        Collectors.mapping(Entry::getId, Collectors.toList()) // 映射为id列表
-                ));
-        List<Long> fileIds = groupedMap.getOrDefault(FILE, new ArrayList<>());
-        List<Long> folderIds = groupedMap.getOrDefault(FOLDER, new ArrayList<>());
-
-        // 删除文件
-        if (!fileIds.isEmpty()) {
-            LambdaUpdateWrapper<Entry> fileUpdate = new LambdaUpdateWrapper<>();
-            fileUpdate.set(Entry::getStatus, DELETED)
-                    .set(Entry::getDeleterId, userId)
-                    .set(Entry::getDeletedAt, LocalDateTime.now())
-                    .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
-                    .in(Entry::getId, fileIds);
-            int count = entryMapper.update(fileUpdate);
-            if (count != fileIds.size()) throw new BusinessException("delete entries failed");
-        }
-
-        // 删除文件夹及其所有子项
-        if (!folderIds.isEmpty()) {
-            List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
-            List<Long> allFolderIds = new ArrayList<>(folderIds);
-            allFolderIds.addAll(children.stream().map(Entry::getId).toList());
-
-            LambdaUpdateWrapper<Entry> folderUpdate = new LambdaUpdateWrapper<>();
-            folderUpdate.set(Entry::getStatus, DELETED)
-                    .set(Entry::getDeleterId, userId)
-                    .set(Entry::getDeletedAt, LocalDateTime.now())
-                    .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
-                    .in(Entry::getId, allFolderIds);
-            int count = entryMapper.update(folderUpdate);
-            if (count != allFolderIds.size()) throw new BusinessException("delete entries failed");
-        }
+        LambdaUpdateWrapper<Entry> entryUpdate = new LambdaUpdateWrapper<>();
+        entryUpdate.set(Entry::getStatus, DELETED)
+                .set(Entry::getDeleterId, userId)
+                .set(Entry::getDeletedAt, LocalDateTime.now())
+                .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
+                .in(Entry::getId, args.getIds());
+        int count = entryMapper.update(entryUpdate);
+        if (count != entries.size()) throw new BusinessException("Delete entry failed");
     }
 
     @Transactional
@@ -277,7 +251,7 @@ public class PersonalService {
                 .linkKey(generateLinkKey())
                 .accessCode(args.getAccessCode())
                 .expiredAt(args.getExpireTime())
-                .isDeleted(UNDELETED)
+                .isDeleted(0)
                 .build();
 
         int count = shareMapper.insert(link);

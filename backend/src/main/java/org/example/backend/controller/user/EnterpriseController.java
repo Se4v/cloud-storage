@@ -49,7 +49,7 @@ public class EnterpriseController {
     }
 
     @PostMapping("/simple-upload")
-    public Result<SimpleUploadView> simpleUpload(SimpleUploadArgs args) {
+    public Result<SimpleUploadView> simpleUpload(@RequestBody SimpleUploadArgs args) {
         // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
         //

@@ -1007,6 +1007,7 @@ const handleRenameSingle = async (row) => {
 
     const response = await axios.post(`${API_BASE_URL}/api/personal/rename`, {
       id: row.id,
+      driveId: driveId.value,
       newEntryName: value
     }, getAuthConfig())
 
@@ -1158,6 +1159,7 @@ const confirmCopy = async () => {
   try {
     const response = await axios.post(`${API_BASE_URL}/api/personal/copy`, {
       id: selectedFile.id,
+      driveId: driveId.value,
       targetId: selectedTargetFolder.value.id
     }, getAuthConfig())
 

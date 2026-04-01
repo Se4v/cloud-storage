@@ -208,7 +208,7 @@ public class RecycleService {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getDeleterId, userId).eq(Entry::getStatus, DELETED);
         List<Entry> entries = entryMapper.selectList(entryQuery);
-        if (entries == null || entries.isEmpty()) throw new BusinessException("clear recycle bin failed");
+        if (entries == null || entries.isEmpty()) throw new BusinessException("不存在可删除文件");
 
         // 2. 分类为文件和文件夹，同时收集所有文件的storageId
         List<Long> fileIds = new ArrayList<>();
@@ -245,7 +245,7 @@ public class RecycleService {
             LambdaUpdateWrapper<Entry> fileUpdate = new LambdaUpdateWrapper<>();
             fileUpdate.set(Entry::getStatus, PERMANENTLY_DELETED).in(Entry::getId, allFileIds);
             int count = entryMapper.update(fileUpdate);
-            if (count != allFileIds.size()) throw new BusinessException("clear recycle bin failed");
+            if (count != allFileIds.size()) throw new BusinessException("删除文件失败");
         }
 
         // 删除所有文件夹
@@ -255,7 +255,7 @@ public class RecycleService {
             LambdaUpdateWrapper<Entry> folderUpdate = new LambdaUpdateWrapper<>();
             folderUpdate.set(Entry::getStatus, PERMANENTLY_DELETED).in(Entry::getId, allFolderIds);
             int count = entryMapper.update(folderUpdate);
-            if (count != allFolderIds.size()) throw new BusinessException("clear recycle bin failed");
+            if (count != allFolderIds.size()) throw new BusinessException("删除文件夹失败");
         }
 
         // 物理文件的引用计数减1

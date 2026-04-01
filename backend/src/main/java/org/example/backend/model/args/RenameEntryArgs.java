@@ -8,6 +8,8 @@ import lombok.Data;
 public class RenameEntryArgs {
     @NotNull
     private Long id;
+    @NotNull
+    private Long driveId;
     @NotBlank
     private String newEntryName;
 }
