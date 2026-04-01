@@ -451,49 +451,21 @@ const treeRef = ref(null)
 
 // 消息面板相关
 const isMessagePanelVisible = ref(false)
-const messageList = ref([
-  // 示例数据，实际应从后端获取
-  {
-    id: 1,
-    title: '新周报',
-    content: '你收到了 14 份新周报',
-    type: 1,
-    isRead: false,
-    createTime: '6 年前'
-  },
-  {
-    id: 2,
-    title: '面试进度',
-    content: '你推荐的 曲妮妮 已通过第三轮面试',
-    type: 1,
-    isRead: false,
-    createTime: '6 年前'
-  },
-  {
-    id: 3,
-    title: '通知类型',
-    content: '这种模板可以区分多种通知类型',
-    type: 2,
-    isRead: true,
-    createTime: '6 年前'
-  },
-  {
-    id: 4,
-    title: '图标说明',
-    content: '左侧图标用于区分不同的类型',
-    type: 3,
-    isRead: true,
-    createTime: '6 年前'
-  },
-  {
-    id: 5,
-    title: '显示限制',
-    content: '内容不要超过两行字，超出时自动截断',
-    type: 1,
-    isRead: true,
-    createTime: '6 年前'
+const messageList = ref([])
+
+// 加载未读消息列表
+const loadUnreadMessages = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/notice/unread`, getAuthConfig())
+    if (res.data.code === 200) {
+      messageList.value = res.data.data || []
+    } else {
+      console.error('加载消息列表失败:', res.data.msg)
+    }
+  } catch (error) {
+    console.error('加载消息列表失败:', error)
   }
-])
+}
 
 // 未读消息数量
 const unreadMessageCount = computed(() => {
@@ -506,11 +478,20 @@ const toggleMessagePanel = () => {
 }
 
 // 标记所有消息为已读
-const markAllAsRead = () => {
-  messageList.value.forEach(msg => {
-    msg.isRead = true
-  })
-  messageList.value = []
+const markAllAsRead = async () => {
+  if (messageList.value.length === 0) return
+  
+  try {
+    const ids = messageList.value.map(msg => msg.id)
+    const res = await axios.post(`${API_BASE_URL}/api/notice/read`, { ids }, getAuthConfig())
+    if (res.data.code === 200) {
+      messageList.value = []
+    } else {
+      console.error('标记已读失败:', res.data.msg)
+    }
+  } catch (error) {
+    console.error('标记已读失败:', error)
+  }
 }
 
 // 查看全部消息
@@ -612,9 +593,10 @@ const toggleEnterprise = () => {
   isEnterpriseExpanded.value = !isEnterpriseExpanded.value
 }
 
-// 页面加载时获取组织架构树
+// 页面加载时获取组织架构树和未读消息
 onMounted(() => {
   loadOrgTree()
+  loadUnreadMessages()
 })
 
 // 处理个人空间点击

@@ -208,49 +208,7 @@ const searchQuery = ref('')
 const selectedMessages = ref([])
 
 // 消息列表
-const messageList = ref([
-  // 示例数据
-  {
-    id: 1,
-    title: '新周报',
-    content: '你收到了 14 份新周报，请及时查看并处理',
-    type: 1,
-    isRead: false,
-    createTime: '2024-01-15 10:30'
-  },
-  {
-    id: 2,
-    title: '面试进度通知',
-    content: '你推荐的候选人 曲妮妮 已通过第三轮面试，进入录用审批流程',
-    type: 1,
-    isRead: false,
-    createTime: '2024-01-15 09:15'
-  },
-  {
-    id: 3,
-    title: '系统功能更新',
-    content: '这种模板可以区分多种通知类型，帮助你更好地管理不同类型的消息',
-    type: 2,
-    isRead: true,
-    createTime: '2024-01-14 16:45'
-  },
-  {
-    id: 4,
-    title: '功能使用提示',
-    content: '左侧图标用于区分不同的类型，方便你快速识别消息的重要性',
-    type: 3,
-    isRead: true,
-    createTime: '2024-01-14 14:20'
-  },
-  {
-    id: 5,
-    title: '显示优化说明',
-    content: '内容不要超过两行字，超出时自动截断，点击消息可查看完整内容',
-    type: 1,
-    isRead: true,
-    createTime: '2024-01-13 11:00'
-  }
-])
+const messageList = ref([])
 
 // 过滤后的消息列表
 const filteredMessageList = computed(() => {
@@ -278,15 +236,13 @@ const handleSelectionChange = (selection) => {
 const loadMessageList = async () => {
   loading.value = true
   try {
-    // TODO: 接入真实API
-    // const response = await axios.get(`${API_BASE_URL}/api/messages`, getAuthConfig())
-    // if (response.data.code === 200) {
-    //   messageList.value = response.data.data || []
-    //   total.value = response.data.total || 0
-    // }
-    
-    // 模拟数据
-    total.value = messageList.value.length
+    const response = await axios.get(`${API_BASE_URL}/api/notice`, getAuthConfig())
+    if (response.data.code === 200) {
+      messageList.value = response.data.data || []
+      total.value = messageList.value.length
+    } else {
+      ElMessage.error('加载消息列表失败')
+    }
   } catch (error) {
     console.error('加载消息列表失败:', error)
     ElMessage.error('加载消息列表失败')
@@ -302,9 +258,19 @@ const handleSearch = () => {
 }
 
 // 标记单条消息为已读
-const markAsRead = (message) => {
-  message.isRead = true
-  ElMessage.success('已标记为已读')
+const markAsRead = async (message) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/notice/read`, { ids: [message.id] }, getAuthConfig())
+    if (res.data.code === 200) {
+      message.isRead = true
+      ElMessage.success('已标记为已读')
+    } else {
+      ElMessage.error('标记已读失败')
+    }
+  } catch (error) {
+    console.error('标记已读失败:', error)
+    ElMessage.error('标记已读失败')
+  }
 }
 
 // 删除单条消息
@@ -320,12 +286,22 @@ const handleDelete = (row) => {
       cancelButtonClass: '!rounded-lg',
       customClass: '!rounded-xl'
     }
-  ).then(() => {
-    const index = messageList.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      messageList.value.splice(index, 1)
-      total.value--
-      ElMessage.success('删除成功')
+  ).then(async () => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids: [row.id] }, getAuthConfig())
+      if (res.data.code === 200) {
+        const index = messageList.value.findIndex(item => item.id === row.id)
+        if (index > -1) {
+          messageList.value.splice(index, 1)
+          total.value--
+          ElMessage.success('删除成功')
+        }
+      } else {
+        ElMessage.error('删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
     }
   })
 }
@@ -348,12 +324,22 @@ const handleBatchDelete = () => {
       cancelButtonClass: '!rounded-lg',
       customClass: '!rounded-xl'
     }
-  ).then(() => {
-    const ids = selectedMessages.value.map(item => item.id)
-    messageList.value = messageList.value.filter(item => !ids.includes(item.id))
-    total.value = messageList.value.length
-    selectedMessages.value = []
-    ElMessage.success('批量删除成功')
+  ).then(async () => {
+    try {
+      const ids = selectedMessages.value.map(item => item.id)
+      const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids }, getAuthConfig())
+      if (res.data.code === 200) {
+        messageList.value = messageList.value.filter(item => !ids.includes(item.id))
+        total.value = messageList.value.length
+        selectedMessages.value = []
+        ElMessage.success('批量删除成功')
+      } else {
+        ElMessage.error('批量删除失败')
+      }
+    } catch (error) {
+      console.error('批量删除失败:', error)
+      ElMessage.error('批量删除失败')
+    }
   })
 }
 
