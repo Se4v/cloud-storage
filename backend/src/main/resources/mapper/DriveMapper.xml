@@ -18,7 +18,7 @@
             drive_type AS type,
             SUM(total_quota) AS totalQuota
         FROM
-            drive
+            sys_drive
         GROUP BY
             drive_type
     </select>

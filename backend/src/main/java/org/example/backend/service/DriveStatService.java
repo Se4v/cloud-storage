@@ -25,7 +25,7 @@ public class DriveStatService {
 
     public DriveOverviewView getDriveOverview() {
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getConfigKey, "totalQuota");
+        configQuery.eq(Config::getConfigKey, "total_quota");
         Config config = configMapper.selectOne(configQuery);
         Long totalQuota = Long.parseLong(config.getConfigValue());
 
