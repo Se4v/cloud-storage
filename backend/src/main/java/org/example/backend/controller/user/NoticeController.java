@@ -2,6 +2,7 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.GlobalUserDetails;
+import org.example.backend.model.args.MarkNoticeReadArgs;
 import org.example.backend.model.entity.Notice;
 import org.example.backend.model.view.NoticeView;
 import org.example.backend.service.NoticeService;
@@ -21,8 +22,8 @@ public class NoticeController {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @PostMapping("/unread")
-    public Result<List<NoticeView>> listUnreadAlerts() {
+    @GetMapping("/unread")
+    public Result<List<NoticeView>> listUnreadNotices() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
@@ -40,7 +41,7 @@ public class NoticeController {
         return Result.success("", noticeViews);
     }
 
-    @GetMapping("")
+    @GetMapping
     public Result<?> listNotices() {
         List<Notice> results = noticeService.listNotices();
 
@@ -57,8 +58,8 @@ public class NoticeController {
     }
 
     @PostMapping("/read")
-    public Result<Void> markAlertAsRead(@RequestBody List<Long> noticeIds) {
-        noticeService.markAlertAsRead(noticeIds);
+    public Result<Void> markNoticeAsRead(@RequestBody MarkNoticeReadArgs args) {
+        noticeService.markAlertAsRead(args.getNoticeIds());
 
         return Result.success();
     }

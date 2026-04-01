@@ -197,10 +197,71 @@
               {{ uploadStore.activeTaskCount }}
             </span>
           </button>
-          <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="消息">
-            <el-icon :size="20"><Message /></el-icon>
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <div class="relative">
+            <button 
+              @click="toggleMessagePanel"
+              class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" 
+              title="消息"
+            >
+              <el-icon :size="20"><Message /></el-icon>
+              <span v-if="unreadMessageCount > 0" class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            
+            <!-- 消息列表面板 -->
+            <div 
+              v-show="isMessagePanelVisible"
+              class="absolute top-full right-0 mt-2 w-[360px] bg-white rounded-lg shadow-lg border border-slate-200 flex flex-col z-50 overflow-hidden"
+            >
+              <!-- 消息列表 -->
+              <div class="flex-1 overflow-y-auto max-h-[400px]">
+                <div v-if="messageList.length === 0" class="py-12 text-center text-slate-500">
+                  <el-icon :size="40" class="mb-2 opacity-40"><Message /></el-icon>
+                  <p class="text-sm">暂无消息</p>
+                </div>
+                
+                <div 
+                  v-for="message in messageList" 
+                  :key="message.id"
+                  @click="handleMessageClick(message)"
+                  class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
+                  :class="{ 'bg-slate-50/80': !message.isRead }"
+                >
+                  <!-- 消息图标 -->
+                  <div 
+                    class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                    :class="getMessageIconClass(message.type)"
+                  >
+                    <el-icon :size="16">
+                      <component :is="getMessageIcon(message.type)" />
+                    </el-icon>
+                  </div>
+                  
+                  <!-- 消息内容 -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-slate-900 leading-5 line-clamp-2">{{ message.content }}</p>
+                    <p class="text-xs text-slate-400 mt-1">{{ message.createTime }}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 面板底部 -->
+              <div class="flex items-center border-t border-slate-200">
+                <button 
+                  @click="clearAllMessages"
+                  class="flex-1 px-4 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors text-center"
+                >
+                  清空通知
+                </button>
+                <div class="w-px h-6 bg-slate-200"></div>
+                <button 
+                  @click="viewAllMessages"
+                  class="flex-1 px-4 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors text-center"
+                >
+                  查看更多
+                </button>
+              </div>
+            </div>
+          </div>
           <button class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all relative" title="公告">
             <el-icon :size="20"><Notification /></el-icon>
           </button>
@@ -359,7 +420,10 @@ import {
   CircleCloseFilled,
   Timer,
   VideoPlay,
-  VideoPause
+  VideoPause,
+  InfoFilled,
+  WarningFilled,
+  SuccessFilled
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user.js'
 import { useUploadStore } from '@/stores/upload.js'
@@ -390,6 +454,100 @@ const isEnterpriseExpanded = ref(true) // 默认展开，与图片一致
 const expandedKeys = ref(['root', 'dept_2']) // 默认展开的节点
 const treeRef = ref(null)
 
+// 消息面板相关
+const isMessagePanelVisible = ref(false)
+const messageList = ref([
+  // 示例数据，实际应从后端获取
+  {
+    id: 1,
+    content: '你收到了 14 份新周报',
+    type: 'system',
+    isRead: false,
+    createTime: '6 年前'
+  },
+  {
+    id: 2,
+    content: '你推荐的 曲妮妮 已通过第三轮面试',
+    type: 'share',
+    isRead: false,
+    createTime: '6 年前'
+  },
+  {
+    id: 3,
+    content: '这种模板可以区分多种通知类型',
+    type: 'info',
+    isRead: true,
+    createTime: '6 年前'
+  },
+  {
+    id: 4,
+    content: '左侧图标用于区分不同的类型',
+    type: 'star',
+    isRead: true,
+    createTime: '6 年前'
+  },
+  {
+    id: 5,
+    content: '内容不要超过两行字，超出时自动截断',
+    type: 'system',
+    isRead: true,
+    createTime: '6 年前'
+  }
+])
+
+// 未读消息数量
+const unreadMessageCount = computed(() => {
+  return messageList.value.filter(msg => !msg.isRead).length
+})
+
+// 切换消息面板显示/隐藏
+const toggleMessagePanel = () => {
+  isMessagePanelVisible.value = !isMessagePanelVisible.value
+}
+
+// 隐藏消息面板
+const hideMessagePanel = () => {
+  isMessagePanelVisible.value = false
+}
+
+// 清空所有消息
+const clearAllMessages = () => {
+  messageList.value = []
+}
+
+// 处理消息点击
+const handleMessageClick = (message) => {
+  message.isRead = true
+  // 可以根据消息类型进行不同的跳转或操作
+  console.log('点击消息:', message)
+}
+
+// 查看全部消息
+const viewAllMessages = () => {
+  hideMessagePanel()
+  router.push('/drive/messages')
+}
+
+// 获取消息图标
+const getMessageIcon = (type) => {
+  const iconMap = {
+    system: InfoFilled,
+    share: SuccessFilled,
+    warning: WarningFilled
+  }
+  return iconMap[type] || InfoFilled
+}
+
+// 获取消息图标样式
+const getMessageIconClass = (type) => {
+  const classMap = {
+    system: 'bg-blue-100 text-blue-600',
+    share: 'bg-green-100 text-green-600',
+    warning: 'bg-orange-100 text-orange-600'
+  }
+  return classMap[type] || 'bg-slate-100 text-slate-600'
+}
+
 // 组织架构树数据
 const orgTree = ref([])
 
@@ -416,7 +574,7 @@ const treeProps = {
 
 // 分组的菜单项
 const storageMenu = [
-  { key: 'personal', label: '个人空间', icon: User, title: '个人空间', route: '/drive/personal' }
+  { key: 'personal', label: '个人空间', icon: User, title: '个人空间' }
 ]
 
 const fileMenu = [
@@ -460,10 +618,6 @@ const currentTitle = computed(() => {
 // 切换企业空间展开/收起
 const toggleEnterprise = () => {
   isEnterpriseExpanded.value = !isEnterpriseExpanded.value
-  if (isEnterpriseExpanded.value && currentMenu.value !== 'enterprise') {
-    currentMenu.value = 'enterprise'
-    router.push('/drive/enterprise')
-  }
 }
 
 // 页面加载时获取组织架构树
