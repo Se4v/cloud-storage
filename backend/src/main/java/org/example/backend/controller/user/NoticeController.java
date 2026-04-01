@@ -20,12 +20,16 @@ public class NoticeController {
     @Autowired
     private NoticeService noticeService;
 
+    Long userId = 2034965772877197313L;
+
     @GetMapping("/unread")
     public Result<List<NoticeView>> listUnreadNotices() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
 
-        List<Notice> notices = noticeService.listUnreadNotices(userDetails.getUserId());
+        // List<Notice> notices = noticeService.listUnreadNotices(userDetails.getUserId());
+
+        List<Notice> notices = noticeService.listUnreadNotices(userId);
 
         List<NoticeView> noticeViews = notices.stream()
                 .map(notice -> NoticeView.builder()
@@ -43,10 +47,12 @@ public class NoticeController {
 
     @GetMapping
     public Result<?> listNotices() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        //
+        // List<Notice> notices = noticeService.listNotices(userDetails.getUserId());
 
-        List<Notice> notices = noticeService.listNotices(userDetails.getUserId());
+        List<Notice> notices = noticeService.listNotices(userId);
 
         List<NoticeView> noticeViews = notices.stream()
                 .map(notice -> NoticeView.builder()

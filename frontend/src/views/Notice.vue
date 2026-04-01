@@ -290,12 +290,8 @@ const handleDelete = (row) => {
     try {
       const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids: [row.id] }, getAuthConfig())
       if (res.data.code === 200) {
-        const index = messageList.value.findIndex(item => item.id === row.id)
-        if (index > -1) {
-          messageList.value.splice(index, 1)
-          total.value--
-          ElMessage.success('删除成功')
-        }
+        ElMessage.success('删除成功')
+        loadMessageList()
       } else {
         ElMessage.error('删除失败')
       }
@@ -329,10 +325,9 @@ const handleBatchDelete = () => {
       const ids = selectedMessages.value.map(item => item.id)
       const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids }, getAuthConfig())
       if (res.data.code === 200) {
-        messageList.value = messageList.value.filter(item => !ids.includes(item.id))
-        total.value = messageList.value.length
-        selectedMessages.value = []
         ElMessage.success('批量删除成功')
+        loadMessageList()
+        selectedMessages.value = []
       } else {
         ElMessage.error('批量删除失败')
       }
@@ -346,12 +341,10 @@ const handleBatchDelete = () => {
 // 分页
 const handleSizeChange = (val) => {
   pageSize.value = val
-  loadMessageList()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
-  loadMessageList()
 }
 
 // 页面加载
