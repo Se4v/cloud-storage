@@ -7,7 +7,6 @@ import Links from "@/views/Links.vue";
 import Profile from '@/views/Profile.vue';
 import Recovery from "@/views/Recovery.vue";
 import AdminLayout from "@/components/AdminLayout.vue";
-import AnnouncementManage from "@/views/admin/AnnouncementManage.vue";
 import UserManage from "@/views/admin/UserManage.vue";
 import PermissionManage from "@/views/admin/PermissionManage.vue";
 import RoleManage from "@/views/admin/RoleManage.vue";
@@ -19,7 +18,7 @@ import UserStat from "@/views/admin/UserStat.vue";
 import StorageStat from "@/views/admin/StorageStat.vue";
 import TrafficStat from "@/views/admin/TrafficStat.vue";
 import MemberManage from "@/views/admin/MemberManage.vue";
-import Message from "@/views/Message.vue";
+import Notice from "@/views/Notice.vue";
 
 const routes = [
     {
@@ -58,9 +57,9 @@ const routes = [
                 component: Profile
             },
             {
-                path: 'message',
-                name: 'Message',
-                component: Message
+                path: 'notice',
+                name: 'Notice',
+                component: Notice
             }
         ]
     },
@@ -69,11 +68,6 @@ const routes = [
         name: 'admin',
         component: AdminLayout,
         children: [
-            {
-                path: 'announcement',
-                name: 'AnnouncementManage',
-                component: AnnouncementManage
-            },
             {
                 path: 'user',
                 name: 'UserManage',

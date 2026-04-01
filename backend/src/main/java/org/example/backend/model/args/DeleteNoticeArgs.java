@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class MarkNoticeReadArgs {
+public class DeleteNoticeArgs {
     @NotNull
     private List<Long> ids;
 }

@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.NoticeMapper;
+import org.example.backend.model.args.DeleteNoticeArgs;
+import org.example.backend.model.args.MarkNoticeReadArgs;
 import org.example.backend.model.entity.Notice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,33 +26,38 @@ public class NoticeService {
     private static final int ALERT = 2;
     private static final int ALL_USER = 0;
 
-    public List<Notice> listUnreadAlerts(Long userId) {
+    public List<Notice> listUnreadNotices(Long userId) {
         LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Notice::getTargetId, userId)
-                .eq(Notice::getIsRead, UNREAD);
+                .eq(Notice::getIsRead, UNREAD)
+                .eq(Notice::getIsDeleted, UNDELETED);
 
         return noticeMapper.selectList(queryWrapper);
     }
 
-    public List<Notice> listNotices() {
+    public List<Notice> listNotices(Long userId) {
         LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Notice::getTargetId, ALL_USER)
-                .eq(Notice::getType, NOTICE)
-                .eq(Notice::getIsDeleted, UNDELETED)
-                .gt(Notice::getExpiredAt, LocalDateTime.now());
+        queryWrapper.eq(Notice::getTargetId, userId)
+                .eq(Notice::getIsDeleted, UNDELETED);
 
         return noticeMapper.selectList(queryWrapper);
     }
 
     @Transactional
-    public void markAlertAsRead(List<Long> noticeIds) {
+    public void markNoticeAsRead(MarkNoticeReadArgs args) {
         LambdaUpdateWrapper<Notice> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(Notice::getType, ALERT)
-                .in(Notice::getId, noticeIds);
+        updateWrapper.set(Notice::getIsRead, 1)
+                .in(Notice::getId, args.getIds());
 
         int count = noticeMapper.update(updateWrapper);
-        if (count != noticeIds.size()) {
-            throw new BusinessException("<UNK>");
-        }
+        if (count != args.getIds().size()) throw new BusinessException("<UNK>");
+    }
+
+    @Transactional
+    public void deleteNotices(DeleteNoticeArgs args) {
+        LambdaUpdateWrapper<Notice> noticeUpdate = new LambdaUpdateWrapper<>();
+        noticeUpdate.set(Notice::getIsDeleted, 1).in(Notice::getId, args.getIds());
+        int count = noticeMapper.update(noticeUpdate);
+        if (count != args.getIds().size()) throw new BusinessException("<UNK>");
     }
 }

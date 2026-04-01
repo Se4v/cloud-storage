@@ -124,7 +124,6 @@
               </el-icon>
               {{ storageMenu[0].label }}
             </button>
-
           </div>
         </div>
 
@@ -222,7 +221,6 @@
                 <div 
                   v-for="message in messageList" 
                   :key="message.id"
-                  @click="handleMessageClick(message)"
                   class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
                   :class="{ 'bg-slate-50/80': !message.isRead }"
                 >
@@ -403,14 +401,12 @@ import {
   Folder,
   FolderOpened,
   Upload,
-  Download,
   Link,
   Delete,
   ArrowRight,
   ArrowDown,
   OfficeBuilding,
   Message,
-  Notification,
   User,
   Close,
   Document,
@@ -421,7 +417,8 @@ import {
   VideoPause,
   InfoFilled,
   WarningFilled,
-  SuccessFilled
+  SuccessFilled,
+  Bell
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user.js'
 import { useUploadStore } from '@/stores/upload.js'
@@ -508,11 +505,6 @@ const toggleMessagePanel = () => {
   isMessagePanelVisible.value = !isMessagePanelVisible.value
 }
 
-// 隐藏消息面板
-const hideMessagePanel = () => {
-  isMessagePanelVisible.value = false
-}
-
 // 标记所有消息为已读
 const markAllAsRead = () => {
   messageList.value.forEach(msg => {
@@ -521,17 +513,10 @@ const markAllAsRead = () => {
   messageList.value = []
 }
 
-// 处理消息点击
-const handleMessageClick = (message) => {
-  message.isRead = true
-  // 可以根据消息类型进行不同的跳转或操作
-  console.log('点击消息:', message)
-}
-
 // 查看全部消息
 const viewAllMessages = () => {
-  hideMessagePanel()
-  router.push('/drive/messages')
+  isMessagePanelVisible.value = false
+  router.push('/drive/notice')
 }
 
 // 获取消息图标
@@ -585,7 +570,8 @@ const storageMenu = [
 
 const fileMenu = [
   { key: 'link', label: '安全外链', icon: Link, title: '安全外链', route: '/drive/links' },
-  { key: 'recovery', label: '误删恢复', icon: Delete, title: '误删恢复', route: '/drive/recovery' }
+  { key: 'recovery', label: '误删恢复', icon: Delete, title: '误删恢复', route: '/drive/recovery' },
+  { key: 'notice', label: '消息通知', icon: Bell, title: '消息通知', route: '/drive/notice' }
 ]
 
 const accountMenu = [
