@@ -166,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart, PieChart } from 'echarts/charts'
@@ -177,6 +177,8 @@ import {
   DataZoomComponent
 } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import {
   Box,
   Upload,
@@ -198,58 +200,95 @@ use([
   DataZoomComponent
 ])
 
+const API_BASE_URL = 'http://localhost:8080'
+
+// 获取认证配置
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
+// 辅助函数：将后端返回的字符串转换为BigInt
+const toBigInt = (value) => {
+  if (value === null || value === undefined) return 0n
+  if (typeof value === 'bigint') return value
+  if (typeof value === 'number') return BigInt(Math.floor(value))
+  if (typeof value === 'string') {
+    const cleanValue = value.replace(/["']/g, '').trim()
+    if (cleanValue === '' || cleanValue === 'null') return 0n
+    try {
+      return BigInt(cleanValue)
+    } catch (e) {
+      console.error('无法转换为BigInt:', value, e)
+      return 0n
+    }
+  }
+  return 0n
+}
+
+// 格式化存储大小（BigInt版本）
+const formatBytes = (bytes) => {
+  if (bytes === 0n || bytes === 0) return '0 B'
+  const k = 1024n
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = BigInt(bytes)
+  let i = 0
+  while (size >= k && i < sizes.length - 1) {
+    size = size / k
+    i++
+  }
+  return `${Number(size).toFixed(2)} ${sizes[i]}`
+}
+
 // 统计数据
 const stats = ref({
-  totalQuota: 256 * 1024 * 1024 * 1024,  // 256 GB
-  usedQuota: 166.4 * 1024 * 1024 * 1024,  // 166.4 GB (65%)
-  todayUpload: 2.5 * 1024 * 1024 * 1024,   // 2.5 GB
-  todayDownload: 1.8 * 1024 * 1024 * 1024  // 1.8 GB
+  totalQuota: 0n,
+  usedQuota: 0n,
+  todayUpload: 0n,
+  todayDownload: 0n
 })
 
 // 计算使用百分比
 const usagePercent = computed(() => {
-  if (stats.value.totalQuota === 0) return 0
-  return Math.round((stats.value.usedQuota / stats.value.totalQuota) * 100)
+  if (stats.value.totalQuota === 0n) return 0
+  return Math.round(Number((stats.value.usedQuota * 100n) / stats.value.totalQuota))
 })
 
 // 格式化存储
 const formatStorage = (bytes) => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return formatBytes(bytes)
 }
 
 // 近7天流量数据（MB）
-const trafficData = ref([
-  { date: '03/05', upload: 520, download: 380, fullDate: '03月05日' },
-  { date: '03/06', upload: 680, download: 450, fullDate: '03月06日' },
-  { date: '03/07', upload: 450, download: 320, fullDate: '03月07日' },
-  { date: '03/08', upload: 890, download: 620, fullDate: '03月08日' },
-  { date: '03/09', upload: 720, download: 580, fullDate: '03月09日' },
-  { date: '03/10', upload: 950, download: 720, fullDate: '03月10日' },
-  { date: '03/11', upload: 820, download: 610, fullDate: '03月11日' }
-])
+const trafficData = ref([])
 
 // 趋势统计
 const weeklyUploadTotal = computed(() => {
-  const total = trafficData.value.reduce((sum, d) => sum + d.upload, 0)
+  if (!trafficData.value || trafficData.value.length === 0) return '0 GB'
+  const total = trafficData.value.reduce((sum, d) => sum + (d.upload || 0), 0)
   return (total / 1024).toFixed(2) + ' GB'
 })
 
 const weeklyDownloadTotal = computed(() => {
-  const total = trafficData.value.reduce((sum, d) => sum + d.download, 0)
+  if (!trafficData.value || trafficData.value.length === 0) return '0 GB'
+  const total = trafficData.value.reduce((sum, d) => sum + (d.download || 0), 0)
   return (total / 1024).toFixed(2) + ' GB'
 })
 
 const uploadPeak = computed(() => {
-  const max = Math.max(...trafficData.value.map(d => d.upload))
+  if (!trafficData.value || trafficData.value.length === 0) return '0 MB'
+  const max = Math.max(...trafficData.value.map(d => d.upload || 0))
   return max + ' MB'
 })
 
 const downloadPeak = computed(() => {
-  const max = Math.max(...trafficData.value.map(d => d.download))
+  if (!trafficData.value || trafficData.value.length === 0) return '0 MB'
+  const max = Math.max(...trafficData.value.map(d => d.download || 0))
   return max + ' MB'
 })
 
@@ -401,17 +440,7 @@ const colorPalette = [
 ]
 
 // 文件类型数据
-const fileTypeData = [
-  { value: 45.2, name: '文档', size: '115.7 GB' },
-  { value: 28.5, name: '图片', size: '73.0 GB' },
-  { value: 15.3, name: '视频', size: '39.2 GB' },
-  { value: 6.8, name: '音频', size: '17.4 GB' },
-  { value: 4.2, name: '其他', size: '10.7 GB' }
-].map((item, index) => ({
-  ...item,
-  color: colorPalette[index % colorPalette.length],
-  percent: item.value
-}))
+const fileTypeData = ref([])
 
 // 饼图配置
 const pieChartOption = computed(() => ({
@@ -464,14 +493,77 @@ const pieChartOption = computed(() => ({
       labelLine: {
         show: false
       },
-      data: fileTypeData.map(item => ({
-        value: item.value,
+      data: fileTypeData.value.map(item => ({
+        value: item.percent,
         name: item.name,
         itemStyle: { color: item.color }
       }))
     }
   ]
 }))
+// 加载统计数据
+const loadTrafficOverview = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/traffic/overview`, getAuthConfig())
+    if (res.data.code === 200) {
+      const data = res.data.data
+      stats.value = {
+        totalQuota: toBigInt(data.totalQuota),
+        usedQuota: toBigInt(data.usedQuota),
+        todayUpload: toBigInt(data.todayUpload),
+        todayDownload: toBigInt(data.todayDownload)
+      }
+    } else {
+      ElMessage.error(res.data.msg || '加载流量概览失败')
+    }
+  } catch (error) {
+    console.error('加载流量概览失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载流量概览失败')
+  }
+}
+
+// 加载趋势数据
+const loadTrendData = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/traffic/trend`, getAuthConfig())
+    if (res.data.code === 200) {
+      trafficData.value = res.data.data || []
+    } else {
+      ElMessage.error(res.data.msg || '加载趋势数据失败')
+    }
+  } catch (error) {
+    console.error('加载趋势数据失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载趋势数据失败')
+  }
+}
+
+// 加载文件类型分布数据
+const loadFileTypeDistribution = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/traffic/distribution`, getAuthConfig())
+    if (res.data.code === 200) {
+      const data = res.data.data || []
+      fileTypeData.value = data.map((item, index) => ({
+        name: item.name,
+        percent: item.percent,
+        size: formatBytes(toBigInt(item.size)),
+        color: colorPalette[index % colorPalette.length]
+      }))
+    } else {
+      ElMessage.error(res.data.msg || '加载文件类型分布失败')
+    }
+  } catch (error) {
+    console.error('加载文件类型分布失败:', error)
+    ElMessage.error(error.response?.data?.msg || '加载文件类型分布失败')
+  }
+}
+
+// 初始化加载
+onMounted(() => {
+  loadTrafficOverview()
+  loadTrendData()
+  loadFileTypeDistribution()
+})
 </script>
 
 <style scoped>
