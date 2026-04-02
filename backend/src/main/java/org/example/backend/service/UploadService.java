@@ -14,6 +14,7 @@ import org.example.backend.config.MinioConfig;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
+import org.example.backend.mapper.TrafficMapper;
 import org.example.backend.model.args.InitUploadArgs;
 import org.example.backend.model.args.MergeChunksArgs;
 import org.example.backend.model.args.SimpleUploadArgs;
@@ -21,6 +22,7 @@ import org.example.backend.model.args.UploadChunkArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
+import org.example.backend.model.entity.Traffic;
 import org.example.backend.model.view.InitUploadView;
 import org.example.backend.model.view.MergeChunksView;
 import org.example.backend.model.view.SimpleUploadView;
@@ -63,6 +65,8 @@ public class UploadService {
     private EntryMapper entryMapper;
     @Autowired
     private DriveMapper driveMapper;
+    @Autowired
+    private TrafficMapper trafficMapper;
     @Lazy
     @Autowired
     private UploadService self;
@@ -413,6 +417,15 @@ public class UploadService {
         if (driveCount != 1) {
             throw new BusinessException("秒传更新空间配额失败");
         }
+
+        Traffic traffic = Traffic.builder()
+                .userId(userId)
+                .storageId(storage.getId())
+                .type(1) // 上传
+                .fileSize(arg.getFileSize())
+                .status(1) // 成功
+                .build();
+        trafficMapper.insert(traffic);
     }
 
     @Transactional
@@ -480,6 +493,15 @@ public class UploadService {
         if (driveCount != 1) {
             throw new BusinessException("空间配额更新失败");
         }
+
+        Traffic traffic = Traffic.builder()
+                .userId(userId)
+                .storageId(storageId)
+                .type(1) // 上传
+                .fileSize(fileSize)
+                .status(1) // 成功
+                .build();
+        trafficMapper.insert(traffic);
     }
 
     private void saveTaskToRedis(String taskKey, String uploadType, String uploadId,

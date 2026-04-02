@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
+import org.example.backend.mapper.TrafficMapper;
 import org.example.backend.model.args.DownloadArgs;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
+import org.example.backend.model.entity.Traffic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -33,18 +35,35 @@ public class DownloadService {
     private EntryMapper entryMapper;
     @Autowired
     private StorageMapper storageMapper;
+    @Autowired
+    private TrafficMapper trafficMapper;
 
     private static final int TYPE_FILE = 1;
     private static final int TYPE_FOLDER = 2;
     private static final int STATUS_UNDELETED = 1;
 
-    public StreamingResponseBody download(DownloadArgs args) {
+    public StreamingResponseBody download(DownloadArgs args, Long userId) {
         return outputStream -> {
             try {
                 List<DownloadTask> tasks = collectDownloadTasks(args.getIds());
                 if (tasks.isEmpty()) {
                     throw new BusinessException("File not found");
                 }
+
+                // 计算总大小并记录流量
+                long totalSize = tasks.stream()
+                        .filter(task -> !task.isEmptyDir())
+                        .mapToLong(task -> task.size)
+                        .sum();
+
+                Traffic traffic = Traffic.builder()
+                        .userId(userId)
+                        .storageId(null)
+                        .type(2)
+                        .fileSize(totalSize)
+                        .status(1)
+                        .build();
+                trafficMapper.insert(traffic);
 
                 if (tasks.size() == 1 && !tasks.get(0).isEmptyDir()) {
                     DownloadTask task = tasks.get(0);
@@ -112,7 +131,8 @@ public class DownloadService {
             Entry file = roots.get(0);
             Storage storage = storageMapper.selectById(file.getStorageId());
             if (storage != null) {
-                tasks.add(new DownloadTask(file.getEntryName(), storage.getBucketName(), storage.getObjectKey(), false));
+                tasks.add(new DownloadTask(file.getEntryName(), storage.getBucketName(),
+                        storage.getObjectKey(), false, storage.getFileSize()));
             }
             return tasks;
         }
@@ -143,7 +163,8 @@ public class DownloadService {
                 // 文件：直接从 storageMap 获取 objectKey
                 Storage storage = storageMap.get(root.getStorageId());
                 if (storage != null) {
-                    tasks.add(new DownloadTask(root.getEntryName(), storage.getBucketName(), storage.getObjectKey(), false));
+                    tasks.add(new DownloadTask(root.getEntryName(), storage.getBucketName(),
+                            storage.getObjectKey(), false, storage.getFileSize()));
                 }
             }
         }
@@ -209,7 +230,8 @@ public class DownloadService {
                 } else {
                     Storage storage = storageMap.get(child.getStorageId());
                     if (storage != null) {
-                        tasks.add(new DownloadTask(childPath, storage.getBucketName(), storage.getObjectKey(), false));
+                        tasks.add(new DownloadTask(childPath, storage.getBucketName(),
+                                storage.getObjectKey(), false, storage.getFileSize()));
                     }
                 }
             }
@@ -280,10 +302,11 @@ public class DownloadService {
         String objectKey;
         /** 是否为空文件夹 */
         boolean emptyDir;
+        long size;
 
         /** 创建空文件夹任务 */
         static DownloadTask emptyDir(String path) {
-            return new DownloadTask(path, null, null, true);
+            return new DownloadTask(path, null, null, true, 0L);
         }
 
         boolean isEmptyDir() { return emptyDir; }
