@@ -1,5 +1,6 @@
 package org.example.backend.model.view;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,8 +9,10 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class TrendStatisticsView {
+    @JsonFormat(pattern = "MM/dd", timezone = "GMT+8")
     private LocalDateTime date;
     private Long upload;
     private Long download;
+    @JsonFormat(pattern = "MM月dd日", timezone = "GMT+8")
     private LocalDateTime fullDate;
 }

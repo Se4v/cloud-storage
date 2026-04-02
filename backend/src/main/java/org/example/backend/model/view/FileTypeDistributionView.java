@@ -8,5 +8,5 @@ import lombok.Data;
 public class FileTypeDistributionView {
     public String name;
     public Long size;
-    public Double percent;
+    public String percent;
 }

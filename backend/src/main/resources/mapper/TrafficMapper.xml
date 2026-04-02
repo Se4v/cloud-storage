@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.TrafficMapper">
+    <select id="selectTodayTrafficSumByType" resultType="java.util.Map">
+        SELECT
+            type,
+            SUM(file_size) AS totalTraffic
+        FROM
+            sys_traffic
+        WHERE
+            status = 1  -- 只统计成功的流量
+            AND DATE(created_at) = DATE(NOW()) -- 筛选今天的数据 (MySQL语法)
+        GROUP BY
+            type
+    </select>
+
+    <select id="selectLast7DaysTraffic" resultType="java.util.Map">
+        SELECT
+            DATE(created_at) AS statDate,
+            SUM(CASE WHEN type = 1 THEN file_size ELSE 0 END) AS uploadSum,
+            SUM(CASE WHEN type = 2 THEN file_size ELSE 0 END) AS downloadSum
+        FROM
+            sys_traffic
+        WHERE
+            status = 1
+            AND created_at >= DATE_SUB(NOW(), INTERVAL 6 DAY)
+        GROUP BY
+            DATE(created_at)
+        ORDER BY
+            statDate ASC
+    </select>
+
+
+</mapper>

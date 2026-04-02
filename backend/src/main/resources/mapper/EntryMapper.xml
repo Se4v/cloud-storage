@@ -9,9 +9,9 @@
         <!-- 锚点成员：查询传入 ID 列表中的所有直接子项 -->
         <!-- 注意：Entry 表中 parentId 指向的是父级 ID -->
         SELECT
-        id, drive_id, user_id, parent_id, storage_id,
-        entry_name, entry_type, file_size, file_ext,
-        status, deleter_id, deleted_at, expired_at, created_at
+            id, drive_id, user_id, parent_id, storage_id,
+            entry_name, entry_type, file_size, file_ext,
+            status, deleter_id, deleted_at, expired_at, created_at
         FROM file_entry
         WHERE parent_id IN
         <foreach collection="folderIds" item="id" open="(" separator="," close=")">
@@ -22,18 +22,43 @@
 
         <!-- 递归成员：查找上一层级结果中的文件夹（entry_type = 2），并获取它们的子项 -->
         SELECT
-        e.id, e.drive_id, e.user_id, e.parent_id, e.storage_id,
-        e.entry_name, e.entry_type, e.file_size, e.file_ext,
-        e.status, e.deleter_id, e.deleted_at, e.expired_at, e.created_at
+            e.id, e.drive_id, e.user_id, e.parent_id, e.storage_id,
+            e.entry_name, e.entry_type, e.file_size, e.file_ext,
+            e.status, e.deleter_id, e.deleted_at, e.expired_at, e.created_at
         FROM file_entry e
         INNER JOIN FolderTree ft ON e.parent_id = ft.id
         WHERE e.status = 1 -- 确保只查询未删除的文件
         )
         <!-- 最终查询：返回递归过程中收集的所有节点 -->
         SELECT
-        id, drive_id, user_id, parent_id, storage_id,
-        entry_name, entry_type, file_size, file_ext,
-        status, deleter_id, deleted_at, expired_at, created_at
+            id, drive_id, user_id, parent_id, storage_id,
+            entry_name, entry_type, file_size, file_ext,
+            status, deleter_id, deleted_at, expired_at, created_at
         FROM FolderTree
+    </select>
+
+    <select id="selectFileCategoryStats" resultType="java.util.Map">
+        SELECT
+            category,
+            SUM(file_size) AS totalSize
+        FROM (
+             SELECT
+                 file_size,
+                 -- 核心逻辑：根据后缀名进行分类
+                 CASE
+                     WHEN LOWER(file_ext) IN ('doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'txt', 'md') THEN '文档'
+                     WHEN LOWER(file_ext) IN ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico') THEN '图像'
+                     WHEN LOWER(file_ext) IN ('mp4', 'avi', 'mov', 'wmv', 'mkv', 'flv', 'webm') THEN '视频'
+                     WHEN LOWER(file_ext) IN ('mp3', 'wav', 'flac', 'aac', 'ogg', 'wma') THEN '音频'
+                     ELSE '其他'
+                 END AS category
+             FROM
+                 file_entry
+             WHERE
+                 entry_type = 1  -- 只统计文件，排除文件夹
+                 AND status = 1  -- 只统计未删除的文件
+        ) AS categorized_files
+        GROUP BY
+            category
     </select>
 </mapper>
