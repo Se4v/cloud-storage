@@ -33,9 +33,12 @@
           </div>
         </div>
         <div class="mt-4 flex items-center gap-2">
-          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium">
-            <el-icon :size="12"><ArrowUp /></el-icon>
-            23.5%
+          <span :class="[
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+            uploadChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+          ]">
+            <el-icon :size="12"><ArrowUp v-if="uploadChangePercent >= 0" /><ArrowDown v-else /></el-icon>
+            {{ Math.abs(uploadChangePercent) }}%
           </span>
           <span class="text-xs text-slate-500">较昨日</span>
         </div>
@@ -53,9 +56,12 @@
           </div>
         </div>
         <div class="mt-4 flex items-center gap-2">
-          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-xs font-medium">
-            <el-icon :size="12"><ArrowDown /></el-icon>
-            5.2%
+          <span :class="[
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+            downloadChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+          ]">
+            <el-icon :size="12"><ArrowUp v-if="downloadChangePercent >= 0" /><ArrowDown v-else /></el-icon>
+            {{ Math.abs(downloadChangePercent) }}%
           </span>
           <span class="text-xs text-slate-500">较昨日</span>
         </div>
@@ -290,6 +296,28 @@ const downloadPeak = computed(() => {
   if (!trafficData.value || trafficData.value.length === 0) return '0 MB'
   const max = Math.max(...trafficData.value.map(d => d.download || 0))
   return max + ' MB'
+})
+
+// 计算今日vs昨日上传量变化百分比
+const uploadChangePercent = computed(() => {
+  if (!trafficData.value || trafficData.value.length < 2) return 0
+  const today = trafficData.value[trafficData.value.length - 1]
+  const yesterday = trafficData.value[trafficData.value.length - 2]
+  const todayUpload = today?.upload || 0
+  const yesterdayUpload = yesterday?.upload || 0
+  if (yesterdayUpload === 0) return todayUpload > 0 ? 100 : 0
+  return Number(((todayUpload - yesterdayUpload) / yesterdayUpload * 100).toFixed(1))
+})
+
+// 计算今日vs昨日下载量变化百分比
+const downloadChangePercent = computed(() => {
+  if (!trafficData.value || trafficData.value.length < 2) return 0
+  const today = trafficData.value[trafficData.value.length - 1]
+  const yesterday = trafficData.value[trafficData.value.length - 2]
+  const todayDownload = today?.download || 0
+  const yesterdayDownload = yesterday?.download || 0
+  if (yesterdayDownload === 0) return todayDownload > 0 ? 100 : 0
+  return Number(((todayDownload - yesterdayDownload) / yesterdayDownload * 100).toFixed(1))
 })
 
 // 折线图配置
