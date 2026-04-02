@@ -143,7 +143,7 @@
         <!-- 图例列表 -->
         <div class="mt-4 space-y-2 max-h-[160px] overflow-y-auto custom-scrollbar">
           <div 
-            v-for="item in fileTypeList" 
+            v-for="item in fileTypeData" 
             :key="item.name"
             class="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors"
           >
@@ -391,51 +391,27 @@ const trendChartOption = computed(() => ({
   ]
 }))
 
-// 生成随机颜色
-const generateRandomColor = () => {
-  const colors = [
-    '#3b82f6', // blue
-    '#10b981', // emerald
-    '#f59e0b', // amber
-    '#8b5cf6', // violet
-    '#64748b', // slate
-    '#ef4444', // red
-    '#ec4899', // pink
-    '#06b6d4', // cyan
-    '#84cc16', // lime
-    '#f97316', // orange
-    '#6366f1', // indigo
-    '#14b8a6', // teal
-    '#d946ef', // fuchsia
-    '#22c55e', // green
-    '#eab308'  // yellow
-  ]
-  return colors[Math.floor(Math.random() * colors.length)]
-}
+// 预定义颜色列表
+const colorPalette = [
+  '#3b82f6', // blue
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#8b5cf6', // violet
+  '#64748b'  // slate
+]
 
-// 文件类型数据（不带颜色）
-const rawFileTypeData = [
+// 文件类型数据
+const fileTypeData = [
   { value: 45.2, name: '文档', size: '115.7 GB' },
   { value: 28.5, name: '图片', size: '73.0 GB' },
   { value: 15.3, name: '视频', size: '39.2 GB' },
   { value: 6.8, name: '音频', size: '17.4 GB' },
   { value: 4.2, name: '其他', size: '10.7 GB' }
-]
-
-// 为每个文件类型分配随机颜色
-const fileTypeData = computed(() => {
-  return rawFileTypeData.map(item => ({
-    ...item,
-    color: generateRandomColor()
-  }))
-})
-
-const fileTypeList = computed(() => {
-  return fileTypeData.value.map(item => ({
-    ...item,
-    percent: item.value
-  }))
-})
+].map((item, index) => ({
+  ...item,
+  color: colorPalette[index % colorPalette.length],
+  percent: item.value
+}))
 
 // 饼图配置
 const pieChartOption = computed(() => ({
@@ -488,7 +464,7 @@ const pieChartOption = computed(() => ({
       labelLine: {
         show: false
       },
-      data: fileTypeData.value.map(item => ({
+      data: fileTypeData.map(item => ({
         value: item.value,
         name: item.name,
         itemStyle: { color: item.color }
