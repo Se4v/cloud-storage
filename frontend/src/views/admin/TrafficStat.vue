@@ -7,7 +7,7 @@
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">总存储</p>
-            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatStorage(stats.totalStorage) }}</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatStorage(stats.totalQuota) }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
             <el-icon class="text-blue-600" :size="24"><Box /></el-icon>
@@ -15,9 +15,9 @@
         </div>
         <div class="mt-4 flex items-center gap-2">
           <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div class="h-full bg-blue-500 rounded-full" :style="{ width: '65%' }"></div>
+            <div class="h-full bg-blue-500 rounded-full" :style="{ width: usagePercent + '%' }"></div>
           </div>
-          <span class="text-xs text-slate-500 whitespace-nowrap">65% 已使用</span>
+          <span class="text-xs text-slate-500 whitespace-nowrap">{{ usagePercent }}% 已使用</span>
         </div>
       </div>
 
@@ -200,9 +200,16 @@ use([
 
 // 统计数据
 const stats = ref({
-  totalStorage: 256 * 1024 * 1024 * 1024,  // 256 GB
+  totalQuota: 256 * 1024 * 1024 * 1024,  // 256 GB
+  usedQuota: 166.4 * 1024 * 1024 * 1024,  // 166.4 GB (65%)
   todayUpload: 2.5 * 1024 * 1024 * 1024,   // 2.5 GB
   todayDownload: 1.8 * 1024 * 1024 * 1024  // 1.8 GB
+})
+
+// 计算使用百分比
+const usagePercent = computed(() => {
+  if (stats.value.totalQuota === 0) return 0
+  return Math.round((stats.value.usedQuota / stats.value.totalQuota) * 100)
 })
 
 // 格式化存储
@@ -384,19 +391,51 @@ const trendChartOption = computed(() => ({
   ]
 }))
 
-// 文件类型数据
-const fileTypeData = [
-  { value: 45.2, name: '文档', size: '115.7 GB', color: '#3b82f6' },
-  { value: 28.5, name: '图片', size: '73.0 GB', color: '#10b981' },
-  { value: 15.3, name: '视频', size: '39.2 GB', color: '#f59e0b' },
-  { value: 6.8, name: '音频', size: '17.4 GB', color: '#8b5cf6' },
-  { value: 4.2, name: '其他', size: '10.7 GB', color: '#64748b' }
+// 生成随机颜色
+const generateRandomColor = () => {
+  const colors = [
+    '#3b82f6', // blue
+    '#10b981', // emerald
+    '#f59e0b', // amber
+    '#8b5cf6', // violet
+    '#64748b', // slate
+    '#ef4444', // red
+    '#ec4899', // pink
+    '#06b6d4', // cyan
+    '#84cc16', // lime
+    '#f97316', // orange
+    '#6366f1', // indigo
+    '#14b8a6', // teal
+    '#d946ef', // fuchsia
+    '#22c55e', // green
+    '#eab308'  // yellow
+  ]
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+// 文件类型数据（不带颜色）
+const rawFileTypeData = [
+  { value: 45.2, name: '文档', size: '115.7 GB' },
+  { value: 28.5, name: '图片', size: '73.0 GB' },
+  { value: 15.3, name: '视频', size: '39.2 GB' },
+  { value: 6.8, name: '音频', size: '17.4 GB' },
+  { value: 4.2, name: '其他', size: '10.7 GB' }
 ]
 
-const fileTypeList = ref(fileTypeData.map(item => ({
-  ...item,
-  percent: item.value
-})))
+// 为每个文件类型分配随机颜色
+const fileTypeData = computed(() => {
+  return rawFileTypeData.map(item => ({
+    ...item,
+    color: generateRandomColor()
+  }))
+})
+
+const fileTypeList = computed(() => {
+  return fileTypeData.value.map(item => ({
+    ...item,
+    percent: item.value
+  }))
+})
 
 // 饼图配置
 const pieChartOption = computed(() => ({
@@ -410,7 +449,7 @@ const pieChartOption = computed(() => ({
       fontSize: 13
     },
     formatter: (params) => {
-      const item = fileTypeData.find(d => d.name === params.name)
+      const item = fileTypeData.value.find(d => d.name === params.name)
       return `
         <div class="font-medium text-slate-700 mb-1">${params.name}</div>
         <div class="text-slate-600">占比：${params.percent}%</div>
@@ -449,7 +488,7 @@ const pieChartOption = computed(() => ({
       labelLine: {
         show: false
       },
-      data: fileTypeData.map(item => ({
+      data: fileTypeData.value.map(item => ({
         value: item.value,
         name: item.name,
         itemStyle: { color: item.color }
