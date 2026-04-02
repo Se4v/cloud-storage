@@ -79,7 +79,7 @@ public class EnterpriseController {
     public ResponseEntity<StreamingResponseBody> download(@RequestBody DownloadArgs args) {
         String fileName = downloadService.getDownloadFileName(args);
 
-        StreamingResponseBody stream = downloadService.download(args);
+        StreamingResponseBody stream = downloadService.download(args, userId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);

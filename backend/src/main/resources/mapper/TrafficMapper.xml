@@ -11,7 +11,7 @@
             sys_traffic
         WHERE
             status = 1  -- 只统计成功的流量
-            AND DATE(created_at) = DATE(NOW()) -- 筛选今天的数据 (MySQL语法)
+            AND DATE(created_at) = DATE(NOW()) -- 筛选今天的数据
         GROUP BY
             type
     </select>
