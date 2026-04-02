@@ -1,8 +1,6 @@
 package org.example.backend.config;
 
-import org.example.backend.common.security.filter.GlobalFilter;
 import org.example.backend.common.security.GlobalUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -26,8 +24,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
     // @Autowired
     private GlobalUserDetailsService globalUserDetailsService;
-    // @Autowired
-    private GlobalFilter globalFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
