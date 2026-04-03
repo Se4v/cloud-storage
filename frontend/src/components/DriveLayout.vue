@@ -155,39 +155,39 @@
 
       <!-- 用户信息 & 存储空间（始终固定在底部） -->
       <div class="p-4 border-t border-slate-200 bg-slate-50/50 flex-shrink-0 mt-auto">
-        <!-- 用户头像和存储信息 -->
-        <div
-            class="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all
-            cursor-pointer border border-transparent hover:border-slate-200"
-            @click="handleMenuClick(accountMenu[0])"
-        >
-          <!-- 头像 -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+          <!-- 用户头像和名称 -->
           <div
-              v-if="!userAvatar"
-              class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white text-sm font-semibold shadow-sm flex-shrink-0"
+              class="flex items-center gap-3 pb-3 border-b border-slate-100 cursor-pointer"
+              @click="handleMenuClick(accountMenu[0])"
           >
-            ?
+            <!-- 头像 -->
+            <div
+                v-if="!userAvatar"
+                class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white text-sm font-semibold shadow-sm flex-shrink-0"
+            >
+              ?
+            </div>
+            <img
+                v-else
+                :src="userAvatar"
+                class="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0"
+                alt="avatar"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-900 truncate">个人中心</p>
+            </div>
           </div>
-          <img
-              v-else
-              :src="userAvatar"
-              class="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0"
-              alt="avatar"
-          />
-          <!-- 存储信息 -->
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-slate-900 truncate">个人中心</p>
-          </div>
-        </div>
 
-        <!-- 退出管理中心按钮 -->
-        <button
-            @click="handleLogout"
-            class="w-full flex items-center gap-2 px-3 py-2 mt-3 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
-        >
-          <el-icon :size="16"><SwitchButton /></el-icon>
-          <span>退出</span>
-        </button>
+          <!-- 退出管理中心按钮 -->
+          <button
+              @click="handleLogout"
+              class="w-full flex items-center gap-2 mt-3 text-sm text-slate-600 hover:text-red-600 transition-colors"
+          >
+            <el-icon :size="16"><SwitchButton /></el-icon>
+            <span class="font-medium">退出管理中心</span>
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -636,7 +636,6 @@ onMounted(() => {
   loadOrgTree()
   loadUnreadMessages()
   loadUserAvatar()
-  loadStorageInfo()
 })
 
 // 处理个人空间点击
