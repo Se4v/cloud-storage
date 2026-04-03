@@ -155,21 +155,39 @@
 
       <!-- 用户信息 & 存储空间（始终固定在底部） -->
       <div class="p-4 border-t border-slate-200 bg-slate-50/50 flex-shrink-0 mt-auto">
-        <!-- 用户头像 -->
+        <!-- 用户头像和存储信息 -->
         <div
             class="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all
             cursor-pointer border border-transparent hover:border-slate-200"
             @click="handleMenuClick(accountMenu[0])"
         >
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
-            张
+          <!-- 头像 -->
+          <div
+              v-if="!userAvatar"
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white text-sm font-semibold shadow-sm flex-shrink-0"
+          >
+            ?
           </div>
+          <img
+              v-else
+              :src="userAvatar"
+              class="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0"
+              alt="avatar"
+          />
+          <!-- 存储信息 -->
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-slate-900 truncate">张三</p>
-            <p class="text-xs text-slate-500 truncate">zhangsan@company.com</p>
+            <p class="text-sm font-semibold text-slate-900 truncate">个人中心</p>
           </div>
-          <el-icon class="text-slate-400" :size="16"><ArrowRight /></el-icon>
         </div>
+
+        <!-- 退出管理中心按钮 -->
+        <button
+            @click="handleLogout"
+            class="w-full flex items-center gap-2 px-3 py-2 mt-3 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
+        >
+          <el-icon :size="16"><SwitchButton /></el-icon>
+          <span>退出</span>
+        </button>
       </div>
     </aside>
 
@@ -418,7 +436,8 @@ import {
   InfoFilled,
   WarningFilled,
   SuccessFilled,
-  Bell
+  Bell,
+  SwitchButton
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user.js'
 import { useUploadStore } from '@/stores/upload.js'
@@ -426,6 +445,30 @@ import axios from "axios";
 
 const userStore = useUserStore()
 const uploadStore = useUploadStore()
+
+// 用户头像和存储信息
+const userAvatar = ref('')
+
+// 加载用户头像
+const loadUserAvatar = async () => {
+  try {
+    const avatarRes = await axios.get(`${API_BASE_URL}/api/profile/avatar`, getAuthConfig())
+    if (avatarRes.data.code === 200) {
+      userAvatar.value = avatarRes.data.data
+    } else {
+      userAvatar.value = ''
+    }
+  } catch (avatarError) {
+    console.error('获取头像链接失败:', avatarError)
+    userAvatar.value = ''
+  }
+}
+
+// 退出登录
+const handleLogout = () => {
+  userStore.logout()
+  router.push('/login')
+}
 
 // API 基础配置
 const API_BASE_URL = 'http://localhost:8080'
@@ -588,10 +631,12 @@ const toggleEnterprise = () => {
   isEnterpriseExpanded.value = !isEnterpriseExpanded.value
 }
 
-// 页面加载时获取组织架构树和未读消息
+// 页面加载时获取组织架构树、未读消息、用户头像和存储信息
 onMounted(() => {
   loadOrgTree()
   loadUnreadMessages()
+  loadUserAvatar()
+  loadStorageInfo()
 })
 
 // 处理个人空间点击
