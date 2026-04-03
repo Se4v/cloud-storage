@@ -36,22 +36,22 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws IOException, ServletException {
         String header = request.getHeader("Authorization");
         String requestURI = request.getRequestURI();
-        String currentOrgId =  request.getHeader("X-Org-Id");
+        String orgId = request.getHeader("X-Org-Id");
         if (header == null || !header.startsWith("Bearer ")) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+            filterChain.doFilter(request, response);
             return;
         }
 
         String token = header.substring(7);
         if (!jwtUtil.validateToken(token)) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized2");
             return;
         }
 
         // TODO: 反序列化可能有问题
         LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(KEY_AUTH_USER + token);
         if (loginUser == null) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized3");
             return;
         }
 
@@ -62,10 +62,11 @@ public class JwtFilter extends OncePerRequestFilter {
         // 判断是企业空间还是个人空间
         if (requestURI.startsWith("/api/enterprise")) {
             // 访问企业空间
-            if (currentOrgId == null || currentOrgId.isEmpty()) {
+            if (orgId == null || orgId.isEmpty()) {
                 // 拒绝服务：访问企业接口必须指定企业上下文！
                 throw new RuntimeException("缺少 X-Org-Id 请求头");
             }
+            Long currentOrgId = Long.valueOf(orgId);
 
             List<String> orgPermissions = loginUser.getOrgPermissions().get(currentOrgId);
             if (orgPermissions != null) {
@@ -75,7 +76,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 throw new AccessDeniedException("您不属于该企业或部门");
             }
         }
-        // 访问个人空间
 
         // 封装 Authentication 并放行
         List<SimpleGrantedAuthority> grantedAuthorities = authorities.stream()

@@ -21,6 +21,7 @@ logging:
     root: info
     org.example.backend: debug
     org.springframework: warn
+    org.springframework.security: debug
   file:
     name: ./logs/app.log
   pattern:

@@ -1,15 +1,12 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.GlobalUserDetails;
 import org.example.backend.model.args.DeleteNoticeArgs;
 import org.example.backend.model.args.MarkNoticeReadArgs;
 import org.example.backend.model.entity.Notice;
 import org.example.backend.model.view.NoticeView;
 import org.example.backend.service.NoticeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

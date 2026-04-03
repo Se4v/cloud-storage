@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.security.LoginUser;
@@ -25,23 +26,13 @@ public class AuthService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    private UserRoleMapper userRoleMapper;
-    @Autowired
-    private RolePermissionMapper rolePermissionMapper;
-    @Autowired
-    private RoleMapper roleMapper;
-    @Autowired
-    private PermissionMapper permissionMapper;
-    @Autowired
-    private MemberMapper memberMapper;
-    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private JwtUtil jwtUtil;
 
-    private static final String AUTH_USER_KEY = "auth:user:";
+    private static final String KEY_AUTH_USER = "auth:user:";
 
     public String login(String username, String password) {
         LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
@@ -62,7 +53,7 @@ public class AuthService {
         List<Map<String, Object>> orgPermissionList = userMapper.selectOrgPermissions(user.getId());
         Map<Long, List<String>> orgRoles = orgRoleList.stream()
                 .collect(Collectors.groupingBy(
-                   map -> (Long) map.get("node_id"),
+                   map -> ((Number) map.get("node_id")).longValue(),
                         Collectors.mapping(
                                 map -> (String) map.get("role_code"),
                                 Collectors.toList()
@@ -70,7 +61,7 @@ public class AuthService {
                 ));
         Map<Long, List<String>> orgPermissions = orgPermissionList.stream()
                 .collect(Collectors.groupingBy(
-                        map -> (Long) map.get("node_id"),
+                        map -> ((Number) map.get("node_id")).longValue(),
                         Collectors.mapping(
                                 map -> (String) map.get("perm_code"),
                                 Collectors.toList()
@@ -85,14 +76,13 @@ public class AuthService {
         loginUser.setOrgRoles(orgRoles);
         loginUser.setOrgPermissions(orgPermissions);
 
-        String key = AUTH_USER_KEY + token;
-        redisTemplate.expire(AUTH_USER_KEY + token, 3, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(KEY_AUTH_USER + token, loginUser, 4, TimeUnit.HOURS);
 
         return token;
     }
 
     public void logout(String token) {
-        redisTemplate.delete(AUTH_USER_KEY + token);
+        redisTemplate.delete(KEY_AUTH_USER + token);
         SecurityContextHolder.clearContext();
     }
 }

@@ -47,7 +47,7 @@
         JOIN sys_role_perm rp ON om.role_id = rp.role_id
         JOIN sys_perm p ON rp.perm_id = p.id
         WHERE om.user_id = #{userId}
-            AND om.is_deleted = 0;
+            AND om.is_deleted = 0
             AND r.type = 2
             AND r.is_enabled = 1
             AND r.is_deleted = 0;
