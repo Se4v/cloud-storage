@@ -155,6 +155,12 @@ public class PersonalController {
         return Result.success();
     }
 
+    @GetMapping("/preview")
+    public Result<?> preview(@RequestParam("id") Long id) {
+        String url = personalService.preview(id);
+        return Result.success("", url);
+    }
+
     @GetMapping("/usage")
     public Result<?> getPersonalDriveUsage(@RequestParam Long driveId) {
         Drive drive = driveService.getPersonalDriveUsage(driveId);

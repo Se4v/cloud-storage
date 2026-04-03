@@ -2,6 +2,9 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MinioAsyncClient;
+import io.minio.http.Method;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +36,8 @@ public class PersonalService {
     private StorageMapper storageMapper;
     @Autowired
     private ShareMapper shareMapper;
+    @Autowired
+    private MinioAsyncClient minioClient;
 
     private static final int PERSONAL_DRIVE = 1;
     private static final int UNDELETED = 1;
@@ -256,6 +262,37 @@ public class PersonalService {
 
         int count = shareMapper.insert(link);
         if (count != 1) throw new BusinessException("Create share link failed");
+    }
+
+    public String preview(Long id) {
+        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
+        entryQuery.eq(Entry::getId, id).eq(Entry::getStatus, 1);
+        Entry entry = entryMapper.selectOne(entryQuery);
+        if (entry == null) throw new BusinessException("Entry does not exist");
+
+        LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
+        storageQuery.eq(Storage::getId, entry.getStorageId());
+        Storage storage = storageMapper.selectOne(storageQuery);
+        if (storage == null || storage.getEnabled() == 0) throw new BusinessException("Storage does not exist");
+
+        String url;
+        try {
+            url = minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(storage.getBucketName())
+                            .object(storage.getObjectKey())
+                            .expiry(10, TimeUnit.MINUTES)
+                            .extraQueryParams(Map.of(
+                                    "response-content-disposition",
+                                    "inline; filename=\"" + entry.getEntryName() + "\""
+                            ))
+                            .build());
+        } catch (Exception e) {
+            throw new BusinessException(e.getMessage());
+        }
+
+        return url;
     }
 
     private boolean validateFileName(String fileName) {

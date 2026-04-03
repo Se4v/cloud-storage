@@ -147,6 +147,12 @@ public class EnterpriseController {
         return Result.success("", views);
     }
 
+    @PostMapping("/delete")
+    public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
+        enterpriseService.deleteEntries(args, userId);
+        return Result.success();
+    }
+
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody ShareEntryArgs args) {
         // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -156,9 +162,9 @@ public class EnterpriseController {
         return Result.success();
     }
 
-    @PostMapping("/delete")
-    public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
-        enterpriseService.deleteEntries(args, userId);
-        return Result.success();
+    @GetMapping("/preview")
+    public Result<?> preview(@RequestParam("id") Long id) {
+        String url = enterpriseService.preview(id);
+        return Result.success("", url);
     }
 }

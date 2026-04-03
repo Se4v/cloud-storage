@@ -607,14 +607,32 @@ const loadFileList = async (parentId = 0) => {
 }
 
 // 打开文件/文件夹
-const handleOpenFile = (file) => {
+const handleOpenFile = async (file) => {
   if (file.type === 2) {
     // 进入文件夹：更新路径历史，重新加载文件列表
     pathHistory.value.push({ id: file.id, name: file.name })
     currentParentId.value = file.id
     loadFileList(file.id)
   } else {
-    ElMessage.info(`预览文件: ${file.name}`)
+    // 预览文件：传入id获取预签名链接并在新窗口打开
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/personal/preview`, {
+        params: {
+          id: file.id
+        },
+        ...getAuthConfig()
+      })
+      if (res.data.code === 200 && res.data.data) {
+        const previewUrl = res.data.data
+        // 在新窗口打开预签名链接进行预览
+        window.open(previewUrl, '_blank')
+      } else {
+        ElMessage.error(res.data.msg || '获取预览链接失败')
+      }
+    } catch (error) {
+      console.error('获取预览链接失败:', error)
+      ElMessage.error('获取预览链接失败')
+    }
   }
 }
 
