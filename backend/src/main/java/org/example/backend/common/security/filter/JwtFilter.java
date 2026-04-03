@@ -48,7 +48,6 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // TODO: 反序列化可能有问题
         LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(KEY_AUTH_USER + token);
         if (loginUser == null) {
             response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized3");

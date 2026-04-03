@@ -460,6 +460,7 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/user.js'
 import { useUploadStore } from '@/stores/upload.js'
 
+const route = useRoute()
 const userStore = useUserStore()
 const uploadStore = useUploadStore()
 const API_BASE_URL = 'http://localhost:8080'
@@ -467,15 +468,15 @@ const API_BASE_URL = 'http://localhost:8080'
 // 获取请求配置（包含认证头）
 const getAuthConfig = () => {
   const token = userStore.token
+  const orgId = userStore.orgId
   return {
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-Org-Id': orgId || ''
     }
   }
 }
-
-const route = useRoute()
 
 // 状态管理
 const loading = ref(false)
@@ -602,7 +603,7 @@ const handleOpenFile = async (file) => {
     // 进入文件夹：更新路径历史，重新加载文件列表
     pathHistory.value.push({id: file.id, name: file.name})
     currentParentId.value = file.id
-    loadFileList(file.id)
+    await loadFileList(file.id)
   } else {
     // 预览文件：传入id获取预签名链接并在新窗口打开
     try {

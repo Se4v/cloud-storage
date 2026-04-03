@@ -3,7 +3,8 @@ import { defineStore } from 'pinia'
 export const useUserStore = defineStore('user', {
     state: () => ({
         token: '',
-        personalDriveId: null
+        personalDriveId: null,
+        orgId: null
     }),
 
     persist: {

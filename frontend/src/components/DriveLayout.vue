@@ -680,6 +680,9 @@ const handleMenuClick = (item) => {
 const handleNodeClick = (data, node) => {
   currentNodeId.value = data.id
   currentMenu.value = 'enterprise'
+  
+  // 将节点的id赋值给userStore的orgId字段
+  userStore.orgId = data.id
 
   // 如果是叶子节点或部门，跳转路由
   router.push({
