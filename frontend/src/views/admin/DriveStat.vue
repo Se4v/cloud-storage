@@ -205,6 +205,7 @@ import {
   Search,
   Box
 } from '@element-plus/icons-vue'
+import { useUserStore } from "@/stores/user.js";
 
 // 注册 ECharts 组件
 use([
@@ -214,11 +215,12 @@ use([
   LegendComponent
 ])
 
+const userStore = useUserStore()
 const API_BASE_URL = 'http://localhost:8080'
 
 // 获取认证配置
 const getAuthConfig = () => {
-  const token = localStorage.getItem('token')
+  const token = userStore.token
   return {
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',

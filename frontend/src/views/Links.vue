@@ -199,13 +199,14 @@ import {
   CopyDocument
 } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useUserStore } from "@/stores/user.js";
 
-// API 基础配置
+const userStore = useUserStore()
 const API_BASE_URL = 'http://localhost:8080'
 
 // 获取请求配置（包含认证头）
 const getAuthConfig = () => {
-  const token = localStorage.getItem('token')
+  const token = userStore.token
   return {
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',

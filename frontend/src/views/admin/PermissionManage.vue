@@ -135,12 +135,14 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { Search, Loading } from '@element-plus/icons-vue'
+import { useUserStore } from "@/stores/user.js";
 
+const userStore = useUserStore()
 const API_BASE_URL = 'http://localhost:8080'
 
 // 获取认证配置
 const getAuthConfig = () => {
-  const token = localStorage.getItem('token')
+  const token = userStore.token
   return {
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',

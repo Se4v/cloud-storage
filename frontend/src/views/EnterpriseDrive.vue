@@ -462,8 +462,6 @@ import { useUploadStore } from '@/stores/upload.js'
 
 const userStore = useUserStore()
 const uploadStore = useUploadStore()
-
-// API 基础配置
 const API_BASE_URL = 'http://localhost:8080'
 
 // 获取请求配置（包含认证头）

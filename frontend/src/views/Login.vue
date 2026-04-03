@@ -194,6 +194,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from "axios";
 import { useUserStore } from '@/stores/user.js'
 
+const userStore = useUserStore()
 const loginFormRef = ref(null)
 const loading = ref(false)
 const loginType = ref('user') // 'user' 或 'admin'
@@ -214,8 +215,6 @@ const loginRules = {
     { min: 6, message: '密码长度至少为6位', trigger: 'blur' }
   ]
 }
-
-const userStore = useUserStore()
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
@@ -244,7 +243,7 @@ const handleLogin = async () => {
         await router.push('/admin')
       } else {
         ElMessage.success('用户端登录成功，正在跳转...')
-        await router.push('/user')
+        await router.push('/drive')
       }
     } else {
       ElMessage.error(msg || '登录失败')

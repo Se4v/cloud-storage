@@ -182,8 +182,6 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/user.js'
 
 const userStore = useUserStore()
-
-// API 基础配置
 const API_BASE_URL = 'http://localhost:8080'
 
 // 获取请求配置
