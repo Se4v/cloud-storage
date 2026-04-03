@@ -51,14 +51,14 @@ const routes = [
                 component: Recovery
             },
             {
-                path: 'profile',
-                name: 'Profile',
-                component: Profile
-            },
-            {
                 path: 'notice',
                 name: 'Notice',
                 component: Notice
+            },
+            {
+                path: 'profile',
+                name: 'DriveProfile',
+                component: Profile
             }
         ]
     },
@@ -116,10 +116,14 @@ const routes = [
                 path: 'traffic-stats',
                 name: 'TrafficStat',
                 component: TrafficStat
+            },
+            {
+                path: 'profile',
+                name: 'AdminProfile',
+                component: Profile
             }
         ]
     }
-
 ]
 
 const router = createRouter({

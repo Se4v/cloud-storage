@@ -421,7 +421,6 @@ import {
   Upload,
   Link,
   Delete,
-  ArrowRight,
   ArrowDown,
   OfficeBuilding,
   Message,
@@ -442,6 +441,7 @@ import {
 import { useUserStore } from '@/stores/user.js'
 import { useUploadStore } from '@/stores/upload.js'
 import axios from "axios";
+import {ElMessage} from "element-plus";
 
 const userStore = useUserStore()
 const uploadStore = useUploadStore()
@@ -465,9 +465,20 @@ const loadUserAvatar = async () => {
 }
 
 // 退出登录
-const handleLogout = () => {
-  userStore.logout()
-  router.push('/login')
+const handleLogout = async () => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/auth/logout`, getAuthConfig())
+    if (res.data.code === 200) {
+      ElMessage.success("登出成功")
+    } else {
+      ElMessage.warning('登出失败')
+    }
+  } catch (error) {
+    console.error('登出异常:', error)
+  } finally {
+    userStore.$reset()
+    await router.push('/login')
+  }
 }
 
 // API 基础配置
