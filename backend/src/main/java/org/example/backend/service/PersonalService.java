@@ -264,11 +264,12 @@ public class PersonalService {
 
     @Transactional
     public void shareEntry(ShareEntryArgs args, Long userId) {
-        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.eq(Entry::getId, args.getId())
-                .eq(Entry::getDriveId, args.getDriveId())
-                .eq(Entry::getUserId, userId);
-        Entry existedEntry = entryMapper.selectOne(entryQuery);
+        Entry existedEntry = entryMapper.selectOne(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getId, args.getId())
+                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getStatus, UNDELETED));
         if (existedEntry == null) throw new BusinessException("文件条目不存在");
 
         if (args.getLinkType() == 2 && args.getAccessCode().isBlank()) {
@@ -276,7 +277,7 @@ public class PersonalService {
         }
 
         Share link = Share.builder()
-                .driveId(args.getDriveId())
+                .driveId(existedEntry.getDriveId())
                 .entryId(existedEntry.getId())
                 .entryType(existedEntry.getEntryType())
                 .userId(userId)
@@ -287,24 +288,24 @@ public class PersonalService {
                 .expiredAt(args.getExpireTime())
                 .isDeleted(0)
                 .build();
-
         int count = shareMapper.insert(link);
         if (count != 1) throw new BusinessException("Create share link failed");
     }
 
-    public String preview(Long id) {
-        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.eq(Entry::getId, id).eq(Entry::getStatus, 1);
-        Entry entry = entryMapper.selectOne(entryQuery);
+    public String preview(Long id, Long driveId, Long userId) {
+        Entry entry = entryMapper.selectOne(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getId, id)
+                        .eq(Entry::getDriveId, driveId)
+                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getStatus, UNDELETED));
         if (entry == null) throw new BusinessException("Entry does not exist");
 
         if (!PREVIEW_EXT.contains(entry.getFileExt())) {
             throw new BusinessException("Invalid file ext");
         }
 
-        LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
-        storageQuery.eq(Storage::getId, entry.getStorageId());
-        Storage storage = storageMapper.selectOne(storageQuery);
+        Storage storage = storageMapper.selectById(entry.getStorageId());
         if (storage == null || storage.getEnabled() == 0) throw new BusinessException("Storage does not exist");
 
         String url;

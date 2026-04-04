@@ -1,7 +1,5 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
@@ -352,7 +350,7 @@ public class EnterpriseService {
     private boolean validateFileName(String fileName) {
         if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;
 
-        // 检查非法字符 \ / : * ? " < > |
+        // 检查非法字符
         return !fileName.matches(".*[\\\\/:*?\"<>|].*");
     }
 

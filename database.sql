@@ -127,8 +127,6 @@ CREATE TABLE `sys_user` (
     `creator_id`    bigint unsigned NOT NULL DEFAULT 0 COMMENT '创建者ID',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_username` (`username`),
-    UNIQUE KEY `uk_phone` (`mobile`),
-    UNIQUE KEY `uk_email` (`email`),
     KEY `idx_create` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 

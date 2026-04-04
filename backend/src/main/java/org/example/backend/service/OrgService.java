@@ -89,7 +89,7 @@ public class OrgService {
     @Transactional
     public void createOrgNode(CreateNodeArgs args) {
         // 校验父节点是否存在（如果不是根节点）
-        if (args.getParentId() >= 0) {
+        if (args.getParentId() > 0) {
             Node parentNode = nodeMapper.selectById(args.getParentId());
             if (parentNode == null) throw new BusinessException("父节点不存在");
         }

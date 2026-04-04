@@ -36,7 +36,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             "/api/auth/login",
-                            "/api/auth/logout"
+                            "/api/auth/logout",
+                            "/api/user/**",
+                            "/api/role/**",
+                            "/api/member/**",
+                            "/api/org/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
@@ -89,7 +93,6 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
-            // 明确告知调用者：这个方法在这个上下文中是不支持的，或者用户没找到
             throw new UsernameNotFoundException("用户认证不通过此服务查找: " + username);
         };
     }

@@ -618,7 +618,8 @@ const handleOpenFile = async (file) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/personal/preview`, {
         params: {
-          id: file.id
+          id: file.id,
+          driveId: driveId.value
         },
         ...getAuthConfig()
       })

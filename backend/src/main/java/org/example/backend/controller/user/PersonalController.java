@@ -141,8 +141,9 @@ public class PersonalController {
     }
 
     @GetMapping("/preview")
-    public Result<?> preview(@RequestParam("id") Long id) {
-        String url = personalService.preview(id);
+    public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {
+        Long currentUserId = SecurityUtil.getUserId();
+        String url = personalService.preview(id, driveId, currentUserId);
         return Result.success("", url);
     }
 
@@ -154,13 +155,13 @@ public class PersonalController {
                 .usedQuota(drive.getUsedQuota())
                 .totalQuota(drive.getTotalQuota())
                 .build();
-        return Result.success(view);
+        return Result.success("", view);
     }
 
     @GetMapping("/id")
     public Result<?> getPersonalDriveId() {
         Long currentUserId = SecurityUtil.getUserId();
         Long personalDriveId = driveService.getPersonalDriveId(currentUserId);
-        return Result.success(personalDriveId);
+        return Result.success("", personalDriveId);
     }
 }
