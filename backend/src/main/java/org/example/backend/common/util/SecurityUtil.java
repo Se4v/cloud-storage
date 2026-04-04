@@ -22,4 +22,8 @@ public class SecurityUtil {
     public static String getToken() {
         return getLoginUser().getToken();
     }
+
+    public static Long getOrgId() {
+        return getLoginUser().getOrgId();
+    }
 }

@@ -1,6 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
+import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.args.*;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.view.*;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.nio.charset.StandardCharsets;
@@ -28,49 +30,40 @@ public class EnterpriseController {
     @Autowired
     private DownloadService downloadService;
 
-    Long userId = 2034965772877197313L;
-
     @PostMapping("/init-upload")
-    public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-        //
-        // return Result.success(uploadService.initUpload(args, userDetails.getUserId()));
-        return Result.success(uploadService.initUpload(args, userId));
+    public Result<?> initUpload(@RequestBody InitUploadArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        InitUploadView view = uploadService.initUpload(args, currentUserId);
+        return Result.success("", view);
     }
 
     @PostMapping("/simple-upload")
-    public Result<SimpleUploadView> simpleUpload(@RequestBody SimpleUploadArgs args) {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-        //
-        // return Result.success(uploadService.simpleUpload(args, userDetails.getUserId()));
-        return Result.success(uploadService.simpleUpload(args, userId));
+    public Result<?> simpleUpload(@RequestBody SimpleUploadArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        SimpleUploadView view = uploadService.simpleUpload(args, currentUserId);
+        return Result.success("", view);
     }
 
     @PostMapping("/upload-chunk")
     public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-        //
-        // return Result.success(uploadService.uploadChunk(args, userDetails.getUserId()));
-        return Result.success(uploadService.uploadChunk(args, userId));
+        Long currentUserId = SecurityUtil.getUserId();
+        UploadChunkView view = uploadService.uploadChunk(args, currentUserId);
+        return Result.success("", view);
     }
 
     @PostMapping("/merge-chunks")
     public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // OrgUserDetails userDetails = (OrgUserDetails) auth.getPrincipal();
-        //
-        // return Result.success(uploadService.mergeChunks(args, userDetails.getUserId()));
-        return Result.success(uploadService.mergeChunks(args, userId));
+        Long currentUserId = SecurityUtil.getUserId();
+        MergeChunksView view = uploadService.mergeChunks(args, currentUserId);
+        return Result.success("", view);
     }
 
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody DownloadArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
         String fileName = downloadService.getDownloadFileName(args);
 
-        StreamingResponseBody stream = downloadService.download(args, userId);
+        StreamingResponseBody stream = downloadService.download(args, currentUserId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -84,7 +77,8 @@ public class EnterpriseController {
 
     @GetMapping
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
-        List<Entry> entries = enterpriseService.listEntries(driveId, parentId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        List<Entry> entries = enterpriseService.listEntries(driveId, parentId, currentOrgId);
         List<EntryView> views = entries.stream().map(entry -> EntryView.builder()
                 .id(entry.getId())
                 .name(entry.getEntryName())
@@ -97,65 +91,61 @@ public class EnterpriseController {
 
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
-        List<FolderTreeView> views = enterpriseService.listFolders(driveId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        List<FolderTreeView> views = enterpriseService.listFolders(driveId, currentOrgId);
         return Result.success(views);
     }
 
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
-        enterpriseService.createFolder(args, userId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        Long currentUserId = SecurityUtil.getUserId();
+        enterpriseService.createFolder(args, currentUserId, currentOrgId);
         return Result.success();
     }
 
     @PostMapping("/move")
     public Result<?> moveEntries(@RequestBody MoveEntryArgs args) {
-        enterpriseService.moveEntries(args, userId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        enterpriseService.moveEntries(args, currentOrgId);
         return Result.success();
     }
 
     @PostMapping("/copy")
     public Result<?> copyEntry(@RequestBody CopyEntryArgs args) {
-        enterpriseService.copyEntry(args, userId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        Long currentUserId = SecurityUtil.getUserId();
+        enterpriseService.copyEntry(args, currentUserId, currentOrgId);
         return Result.success();
     }
 
     @PostMapping("/rename")
     public Result<?> renameEntry(@RequestBody RenameEntryArgs args) {
-        enterpriseService.renameEntry(args, userId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        enterpriseService.renameEntry(args, currentOrgId);
         return Result.success();
-    }
-
-    @PostMapping("/search")
-    public Result<?> searchEntry(@RequestParam String targetName, @RequestParam Long driveId) {
-        List<Entry> entries = enterpriseService.searchEntry(targetName, driveId, userId);
-        List<EntryView> views = entries.stream().map(entry -> EntryView.builder()
-                .id(entry.getId())
-                .name(entry.getEntryName())
-                .type(entry.getEntryType())
-                .size(entry.getFileSize())
-                .createTime(entry.getCreatedAt())
-                .build()).toList();
-        return Result.success("", views);
     }
 
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
-        enterpriseService.deleteEntries(args, userId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        Long currentUserId = SecurityUtil.getUserId();
+        enterpriseService.deleteEntries(args, currentUserId, currentOrgId);
         return Result.success();
     }
 
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody ShareEntryArgs args) {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-        // shareService.createLink(args, userDetails.getUserId());
-        enterpriseService.shareEntry(args, userId);
+        Long currentOrgId = SecurityUtil.getOrgId();
+        Long currentUserId = SecurityUtil.getUserId();
+        enterpriseService.shareEntry(args, currentUserId, currentOrgId);
         return Result.success();
     }
 
     @GetMapping("/preview")
-    public Result<?> preview(@RequestParam("id") Long id) {
-        String url = enterpriseService.preview(id);
+    public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {
+        Long currentOrgId = SecurityUtil.getOrgId();
+        String url = enterpriseService.preview(id, driveId, currentOrgId);
         return Result.success("", url);
     }
 }

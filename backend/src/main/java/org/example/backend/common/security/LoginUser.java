@@ -14,4 +14,5 @@ public class LoginUser {
     private Map<Long, List<String>> orgRoles;
     private Map<Long, List<String>> orgPermissions;
     private String token;
+    private Long orgId;
 }

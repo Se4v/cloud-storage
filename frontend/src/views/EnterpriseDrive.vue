@@ -609,7 +609,8 @@ const handleOpenFile = async (file) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/enterprise/preview`, {
         params: {
-          id: file.id
+          id: file.id,
+          driveId: driveId.value
         },
         ...getAuthConfig()
       })
@@ -1023,6 +1024,7 @@ const handleDeleteSingle = (row) => {
   }).then(async () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/enterprise/delete`, {
+        driveId: driveId.value,
         ids: [row.id]
       }, getAuthConfig())
       if (response.data.code === 200) {
@@ -1379,6 +1381,7 @@ const handleBatchDelete = () => {
     try {
       const ids = selectedFiles.value.map(f => f.id)
       const response = await axios.post(`${API_BASE_URL}/api/enterprise/delete`, {
+        driveId: driveId.value,
         ids: ids
       }, getAuthConfig())
       if (response.data.code === 200) {

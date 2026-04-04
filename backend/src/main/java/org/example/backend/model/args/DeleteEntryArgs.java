@@ -8,5 +8,7 @@ import java.util.List;
 @Data
 public class DeleteEntryArgs {
     @NotNull
+    private Long driveId;
+    @NotNull
     private List<Long> ids;
 }

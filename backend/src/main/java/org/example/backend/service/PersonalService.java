@@ -2,11 +2,11 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.mapper.StorageMapper;
@@ -28,8 +28,6 @@ import java.util.concurrent.TimeUnit;
 public class PersonalService {
     @Autowired
     private EntryMapper entryMapper;
-    @Autowired
-    private DriveMapper driveMapper;
     @Autowired
     private StorageMapper storageMapper;
     @Autowired
@@ -119,21 +117,22 @@ public class PersonalService {
             parentQuery.eq(Entry::getId, args.getParentId())
                     .eq(Entry::getDriveId, args.getDriveId())
                     .eq(Entry::getUserId, userId)
-                    .eq(Entry::getEntryType, FOLDER);
+                    .eq(Entry::getEntryType, FOLDER)
+                    .eq(Entry::getStatus, UNDELETED);
             Entry parent = entryMapper.selectOne(parentQuery);
             if (parent == null) throw new BusinessException("<UNK>");
         }
 
         // 同空间下目标目录是否存在同名条目
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getDriveId, args.getDriveId())
-                .eq(Entry::getParentId, args.getParentId())
-                .eq(Entry::getEntryName, args.getFolderName());
-        Entry sameEntry = entryMapper.selectOne(queryWrapper);
+        Entry sameEntry = entryMapper.selectOne(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getParentId, args.getParentId())
+                        .eq(Entry::getEntryName, args.getFolderName()));
         if (sameEntry != null) throw new BusinessException("Folder already exists");
 
         // 创建记录
-        int count = entryMapper.insert(Entry.builder()
+        Entry folder = Entry.builder()
                 .driveId(args.getDriveId())
                 .userId(userId)
                 .parentId(args.getParentId())
@@ -141,7 +140,8 @@ public class PersonalService {
                 .entryName(args.getFolderName())
                 .entryType(FOLDER)
                 .status(UNDELETED)
-                .build());
+                .build();
+        int count = entryMapper.insert(folder);
         if (count != 1) throw new BusinessException("Create folder failed");
     }
 
@@ -153,7 +153,8 @@ public class PersonalService {
             entryQuery.eq(Entry::getId, args.getTargetId())
                     .eq(Entry::getDriveId, args.getDriveId())
                     .eq(Entry::getUserId, userId)
-                    .eq(Entry::getEntryType, FOLDER);
+                    .eq(Entry::getEntryType, FOLDER)
+                    .eq(Entry::getStatus, UNDELETED);
             Entry entry = entryMapper.selectOne(entryQuery);
             if (entry == null) throw new BusinessException("Entry does not exist");
         }
@@ -173,7 +174,8 @@ public class PersonalService {
             parentQuery.eq(Entry::getId, args.getTargetId())
                     .eq(Entry::getDriveId, args.getDriveId())
                     .eq(Entry::getUserId, userId)
-                    .eq(Entry::getEntryType, FOLDER);
+                    .eq(Entry::getEntryType, FOLDER)
+                    .eq(Entry::getStatus, UNDELETED);
             Entry parent = entryMapper.selectOne(parentQuery);
             if (parent == null) throw new BusinessException("<UNK>");
         }
@@ -217,7 +219,8 @@ public class PersonalService {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
         entryQuery.eq(Entry::getId, args.getId())
                 .eq(Entry::getDriveId, args.getDriveId())
-                .eq(Entry::getUserId, userId);
+                .eq(Entry::getUserId, userId)
+                .eq(Entry::getStatus, UNDELETED);
         Entry existedEntry = entryMapper.selectOne(entryQuery);
         if (existedEntry == null) throw new BusinessException("Entry does not exist");
 
