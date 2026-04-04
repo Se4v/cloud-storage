@@ -53,6 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
             response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized3");
             return;
         }
+        loginUser.setToken(token);
 
         Set<String> authorities = new HashSet<>();
         if (loginUser.getSystemPermissions() != null) {

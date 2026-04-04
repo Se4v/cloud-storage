@@ -1,10 +1,10 @@
 package org.example.backend.model.args;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class UpdateAvatarArgs {
-    @NotNull
+    @NotBlank
     private String objectName;
 }

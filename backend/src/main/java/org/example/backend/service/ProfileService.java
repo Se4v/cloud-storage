@@ -34,7 +34,6 @@ public class ProfileService {
     private static final String AVATAR_BUCKET = "avatars";
     private static final long AVATAR_MAX_SIZE = 5 * 1024 * 1024;
 
-    // TODO: 前端需要缓存预签名链接，避免每次加载都要请求后端
     public String getAvatar(Long userId) {
         // 判断用户是否存在
         User user = userMapper.selectById(userId);
@@ -58,6 +57,10 @@ public class ProfileService {
     }
 
     public AvatarUploadUrlView getAvatarUploadUrl(String fileName, Long fileSize, Long userId) {
+        // 判断用户是否存在
+        User user = userMapper.selectById(userId);
+        if (user == null) throw new BusinessException("用户不存在");
+
         // 校验文件大小
         if (fileSize != null && fileSize > AVATAR_MAX_SIZE) throw new BusinessException("头像图片过大，请上传5MB以内的图片");
 
@@ -91,6 +94,10 @@ public class ProfileService {
 
     @Transactional
     public void updateAvatar(UpdateAvatarArgs args, Long userId) {
+        // 判断用户是否存在
+        User user = userMapper.selectById(userId);
+        if (user == null) throw new BusinessException("用户不存在");
+
         // 更新头像信息
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(User::getAvatar, args.getObjectName()).eq(User::getId, userId);
@@ -106,25 +113,25 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updateProfile(UpdateProfileArgs args) {
+    public void updateProfile(UpdateProfileArgs args, Long userId) {
         // 判断用户是否存在
-        User user = userMapper.selectById(args.getUserId());
+        User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException("<UNK>");
 
         // 更新用户信息
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(args.getEmail() != null, User::getEmail, args.getEmail())
-                .set(args.getMobile() != null, User::getMobile, args.getMobile())
-                .eq(User::getId, args.getUserId());
+        updateWrapper.set(User::getEmail, args.getEmail())
+                .set(User::getMobile, args.getMobile())
+                .eq(User::getId, user);
 
         int count = userMapper.update(updateWrapper);
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
     @Transactional
-    public void updatePassword(ChangePasswordArgs args) {
+    public void updatePassword(ChangePasswordArgs args, Long userId) {
         // 判断用户是否存在
-        User user = userMapper.selectById(args.getUserId());
+        User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException("用户不存在");
 
         // 密码比对
@@ -138,7 +145,7 @@ public class ProfileService {
         // 更新密码
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(User::getPassword, passwordEncoder.encode(args.getNewPassword()))
-                .eq(User::getId, args.getUserId());
+                .eq(User::getId, user);
 
         int count = userMapper.update(updateWrapper);
         if (count != 1) throw new BusinessException("修改密码失败");

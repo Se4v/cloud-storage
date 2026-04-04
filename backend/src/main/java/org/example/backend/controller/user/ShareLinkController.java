@@ -1,33 +1,31 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.ShareEntryArgs;
+import org.example.backend.common.security.LoginUser;
 import org.example.backend.model.args.DeleteLinkArgs;
 import org.example.backend.model.args.UpdateLinkArgs;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.view.ShareView;
 import org.example.backend.service.ShareService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/link")
-public class ShareController {
+public class ShareLinkController {
     @Autowired
     private ShareService shareService;
 
-    Long userId = 2034965772877197313L;
-
     @GetMapping
     public Result<List<ShareView>> listLinks() {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        LoginUser loginUser = (LoginUser) auth.getPrincipal();
 
-        // List<Share> shareList = shareService.listLinks(userDetails.getUserId());
-
-        List<Share> shareList = shareService.listLinks(userId);
+        List<Share> shareList = shareService.listLinks(loginUser.getUserId());
 
         List<ShareView> views = shareList.stream()
                 .map(share -> ShareView.builder()

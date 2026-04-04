@@ -31,7 +31,6 @@ public class AuthController {
         LoginUser loginUser = (LoginUser) auth.getPrincipal();
 
         authService.logout(loginUser.getToken());
-
         return Result.success();
     }
 }

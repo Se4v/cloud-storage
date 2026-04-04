@@ -1,14 +1,12 @@
 package org.example.backend.model.args;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class UpdateProfileArgs {
-    @NotNull
-    private Long userId;
-    @NotNull
+    @NotBlank
     private String email;
-    @NotNull
+    @NotBlank
     private String mobile;
 }

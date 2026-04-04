@@ -503,7 +503,6 @@ const saveField = async (field) => {
   try {
     // 构建更新参数
     const updateData = {
-      userId: userInfo.userId,
       email: field === 'email' ? tempValue.value : userInfo.email,
       mobile: field === 'mobile' ? tempValue.value : userInfo.mobile
     }
@@ -542,7 +541,6 @@ const handleUpdatePassword = async () => {
       passwordLoading.value = true
       try {
         const passwordData = {
-          userId: userInfo.userId,
           oldPassword: passwordForm.oldPassword,
           newPassword: passwordForm.newPassword,
           confirmPassword: passwordForm.confirmPassword

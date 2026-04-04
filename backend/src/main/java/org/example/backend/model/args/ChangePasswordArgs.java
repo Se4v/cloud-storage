@@ -1,16 +1,14 @@
 package org.example.backend.model.args;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class ChangePasswordArgs {
-    @NotNull
-    private Long userId;
-    @NotNull
+    @NotBlank
     private String oldPassword;
-    @NotNull
+    @NotBlank
     private String newPassword;
-    @NotNull
+    @NotBlank
     private String confirmPassword;
 }
