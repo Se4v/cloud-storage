@@ -12,9 +12,11 @@ public class DriveService {
     @Autowired
     private DriveMapper driveMapper;
 
-    public Drive getPersonalDriveUsage(Long driveId) {
+    public Drive getPersonalDriveUsage(Long userId) {
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getId, driveId);
+        driveQuery.eq(Drive::getUserId, userId)
+                .eq(Drive::getDriveType, 1)
+                .eq(Drive::getNodeId, 0);
         Drive drive = driveMapper.selectOne(driveQuery);
         if (drive == null) throw new BusinessException("Drive does not exist");
 

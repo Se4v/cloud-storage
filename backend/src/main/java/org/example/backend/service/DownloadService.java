@@ -95,7 +95,8 @@ public class DownloadService {
      */
     public String getDownloadFileName(DownloadArgs args) {
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Entry::getId, args.getIds()).eq(Entry::getStatus, STATUS_UNDELETED);
+        queryWrapper.eq(Entry::getStatus, STATUS_UNDELETED)
+                .in(Entry::getId, args.getIds());
         List<Entry> entries = entryMapper.selectList(queryWrapper);
 
         if (entries == null || entries.isEmpty()) {

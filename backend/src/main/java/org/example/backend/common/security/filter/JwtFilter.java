@@ -64,7 +64,8 @@ public class JwtFilter extends OncePerRequestFilter {
             // 访问企业空间
             if (orgId == null || orgId.isEmpty()) {
                 // 拒绝服务：访问企业接口必须指定企业上下文！
-                throw new RuntimeException("缺少 X-Org-Id 请求头");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "缺少 X-Org-Id 请求头");
+                return;
             }
             Long currentOrgId = Long.valueOf(orgId);
 
@@ -73,7 +74,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 authorities.addAll(orgPermissions); // 比如注入了 "file:delete"
             } else {
                 // 用户不属于该企业，直接抛异常，防越权访问
-                throw new AccessDeniedException("您不属于该企业或部门");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "您不属于该企业或部门");
+                return;
             }
         }
 

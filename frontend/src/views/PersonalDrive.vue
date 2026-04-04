@@ -657,12 +657,7 @@ const loadDriveUsage = async () => {
   if (!driveId.value) return
 
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/personal/usage`, {
-      ...getAuthConfig(),
-      params: {
-        driveId: driveId.value
-      }
-    })
+    const res = await axios.get(`${API_BASE_URL}/api/personal/usage`, getAuthConfig())
     if (res.data.code === 200) {
       usedQuota.value = res.data.data?.usedQuota || 0
       totalQuota.value = res.data.data?.totalQuota || 0
@@ -1122,6 +1117,7 @@ const confirmMove = async () => {
     const ids = selectedFiles.value.map(f => f.id)
     const response = await axios.post(`${API_BASE_URL}/api/personal/move`, {
       ids: ids,
+      driveId: driveId.value,
       targetId: selectedTargetFolder.value.id
     }, getAuthConfig())
 

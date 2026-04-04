@@ -1,6 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
+import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.view.OrgTreeView;
 import org.example.backend.service.OrgService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,10 @@ public class OrgController {
     @Autowired
     private OrgService orgService;
 
-    Long userId = 2034965772877197313L;
-
     @GetMapping("/org")
     public Result<?> getOrgTree() {
-        List<OrgTreeView> views = orgService.getOrgTree(userId);
+        Long currentUserId = SecurityUtil.getUserId();
+        List<OrgTreeView> views = orgService.getOrgTree(currentUserId);
         return Result.success(views);
     }
 }

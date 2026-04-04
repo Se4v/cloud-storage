@@ -82,10 +82,12 @@ public class RecycleService {
      * 批量恢复条目
      */
     @Transactional
-    public void restoreEntries(RestoreEntryArgs args) {
+    public void restoreEntries(RestoreEntryArgs args, Long userId) {
         // 查询要恢复的条目
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.in(Entry::getId, args.getIds()).eq(Entry::getStatus, DELETED);
+        entryQuery.eq(Entry::getDeleterId, userId)
+                .eq(Entry::getStatus, DELETED)
+                .in(Entry::getId, args.getIds());
         List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
@@ -135,10 +137,12 @@ public class RecycleService {
      * 批量永久删除条目
      */
     @Transactional
-    public void deleteEntries(DeleteEntryArgs args) {
+    public void deleteEntries(DeleteEntryArgs args, Long userId) {
         // 查询要删除的条目
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.in(Entry::getId, args.getIds()).eq(Entry::getStatus, DELETED);
+        entryQuery.eq(Entry::getDeleterId, userId)
+                .eq(Entry::getStatus, DELETED)
+                .in(Entry::getId, args.getIds());
         List<Entry> entries = entryMapper.selectList(entryQuery);
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 

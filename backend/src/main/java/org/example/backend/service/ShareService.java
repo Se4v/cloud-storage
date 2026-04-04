@@ -37,7 +37,7 @@ public class ShareService {
     }
 
     @Transactional
-    public void updateLink(UpdateLinkArgs args) {
+    public void updateLink(UpdateLinkArgs args, Long userId) {
         // 判断分享链接是否存在
         Share link = shareMapper.selectById(args.getId());
         if (link == null || link.getIsDeleted() == DELETED) throw new BusinessException("分享链接不存在");
@@ -47,6 +47,7 @@ public class ShareService {
         shareUpdate.set(Share::getLinkName, args.getLinkName())
                 .set(Share::getAccessCode, args.getAccessCode())
                 .set(Share::getExpiredAt, args.getExpireTime())
+                .eq(Share::getUserId, userId)
                 .eq(Share::getId, args.getId());
         if (args.getLinkType() == 1)
             shareUpdate.set(Share::getLinkType, args.getLinkType()).set(Share::getAccessCode, "");
@@ -58,11 +59,12 @@ public class ShareService {
     }
 
     @Transactional
-    public void deleteLinks(DeleteLinkArgs args) {
+    public void deleteLinks(DeleteLinkArgs args, Long userId) {
         List<Long> linkIds = args.getLinkIds();
 
         LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
         wrapper.set(Share::getIsDeleted, DELETED)
+                .eq(Share::getUserId, userId)
                 .in(Share::getId, linkIds);
 
         int count = shareMapper.update(wrapper);

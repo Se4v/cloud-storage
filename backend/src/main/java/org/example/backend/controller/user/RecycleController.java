@@ -1,6 +1,7 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
+import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.args.DeleteEntryArgs;
 import org.example.backend.model.args.RestoreEntryArgs;
 import org.example.backend.model.view.RecycleView;
@@ -16,39 +17,32 @@ public class RecycleController {
     @Autowired
     private RecycleService recycleService;
 
-    Long userId = 2034965772877197313L;
-
     @GetMapping
-    public Result<List<RecycleView>> listEntries() {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-        // List<RecycleView> recycleViewList = recycleService.listEntries(userDetails.getUserId());
-
-        List<RecycleView> recycleViewList = recycleService.listEntries(userId);
+    public Result<?> listEntries() {
+        Long currentUserId = SecurityUtil.getUserId();
+        List<RecycleView> recycleViewList = recycleService.listEntries(currentUserId);
         return Result.success("", recycleViewList);
     }
 
 
     @PostMapping("/restore")
-    public Result<Void> restoreEntries(@RequestBody RestoreEntryArgs args) {
-        recycleService.restoreEntries(args);
+    public Result<?> restoreEntries(@RequestBody RestoreEntryArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        recycleService.restoreEntries(args, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteEntries(@RequestBody DeleteEntryArgs args) {
-        recycleService.deleteEntries(args);
+    public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        recycleService.deleteEntries(args, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/clear")
-    public Result<Void> clearEntries() {
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // GlobalUserDetails userDetails = (GlobalUserDetails) auth.getPrincipal();
-        // recycleService.clearRecycleEntries(userDetails.getUserId());
-
-        recycleService.clearEntries(userId);
-
+    public Result<?> clearEntries() {
+        Long currentUserId = SecurityUtil.getUserId();
+        recycleService.clearEntries(currentUserId);
         return Result.success();
     }
 }

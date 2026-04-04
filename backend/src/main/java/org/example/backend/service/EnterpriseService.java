@@ -114,7 +114,8 @@ public class EnterpriseService {
     public void createFolder(CreateFolderArgs args, Long userId) {
         // 目标父目录下是否存在同名条目
         LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getParentId, args.getParentId())
+        queryWrapper.eq(Entry::getDriveId, args.getDriveId())
+                .eq(Entry::getParentId, args.getParentId())
                 .eq(Entry::getEntryName, args.getFolderName());
         Entry sameEntry = entryMapper.selectOne(queryWrapper);
         if (sameEntry != null) throw new BusinessException("Folder already exists");

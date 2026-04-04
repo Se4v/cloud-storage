@@ -2,6 +2,7 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.security.LoginUser;
+import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.args.ChangePasswordArgs;
 import org.example.backend.model.args.UpdateAvatarArgs;
 import org.example.backend.model.args.UpdateProfileArgs;
@@ -25,12 +26,9 @@ public class ProfileController {
      * @return 头像URL字符串
      */
     @GetMapping("/avatar")
-    public Result<String> getAvatar() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
-
-        String avatarUrl = profileService.getAvatar(loginUser.getUserId());
-
+    public Result<?> getAvatar() {
+        Long currentUserId = SecurityUtil.getUserId();
+        String avatarUrl = profileService.getAvatar(currentUserId);
         return Result.success("", avatarUrl);
     }
 
@@ -40,12 +38,10 @@ public class ProfileController {
      * @return 包含直传链接、策略和 objectName 的 Map
      */
     @GetMapping("/avatar/upload-url")
-    public Result<AvatarUploadUrlView> getAvatarUploadUrl(@RequestParam String fileName,
+    public Result<?> getAvatarUploadUrl(@RequestParam String fileName,
                                                           @RequestParam(required = false) Long fileSize) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
-
-        AvatarUploadUrlView view = profileService.getAvatarUploadUrl(fileName, fileSize, loginUser.getUserId());
+        Long currentUserId = SecurityUtil.getUserId();
+        AvatarUploadUrlView view = profileService.getAvatarUploadUrl(fileName, fileSize, currentUserId);
         return Result.success("", view);
     }
 
@@ -55,11 +51,10 @@ public class ProfileController {
      * @return 空响应
      */
     @PostMapping("/avatar")
-    public Result<Void> updateAvatar(@RequestBody UpdateAvatarArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
+    public Result<?> updateAvatar(@RequestBody UpdateAvatarArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
 
-        profileService.updateAvatar(args, loginUser.getUserId());
+        profileService.updateAvatar(args, currentUserId);
         return Result.success("");
     }
 
@@ -68,11 +63,10 @@ public class ProfileController {
      * @return 个人信息视图对象
      */
     @GetMapping
-    public Result<ProfileView> getProfile() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
+    public Result<?> getProfile() {
+        Long currentUserId = SecurityUtil.getUserId();
+        User user = profileService.getProfile(currentUserId);
 
-        User user = profileService.getProfile(loginUser.getUserId());
         ProfileView view = ProfileView.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
@@ -91,11 +85,9 @@ public class ProfileController {
      * @return 空响应
      */
     @PostMapping
-    public Result<Void> updateProfile(@RequestBody UpdateProfileArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
-
-        profileService.updateProfile(args, loginUser.getUserId());
+    public Result<?> updateProfile(@RequestBody UpdateProfileArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        profileService.updateProfile(args, currentUserId);
         return Result.success();
     }
 
@@ -105,11 +97,9 @@ public class ProfileController {
      * @return 空响应
      */
     @PostMapping("/password")
-    public Result<Void> updatePassword(@RequestBody ChangePasswordArgs args) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
-
-        profileService.updatePassword(args, loginUser.getUserId());
+    public Result<?> updatePassword(@RequestBody ChangePasswordArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        profileService.updatePassword(args, currentUserId);
         return Result.success();
     }
 }

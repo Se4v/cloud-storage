@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,10 +20,6 @@ public class NoticeService {
 
     private static final int UNREAD = 0;
     private static final int UNDELETED = 0;
-    private static final int DELETED = 1;
-    private static final int NOTICE = 1;
-    private static final int ALERT = 2;
-    private static final int ALL_USER = 0;
 
     public List<Notice> listUnreadNotices(Long userId) {
         LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
@@ -44,9 +39,10 @@ public class NoticeService {
     }
 
     @Transactional
-    public void markNoticeAsRead(MarkNoticeReadArgs args) {
+    public void markNoticeAsRead(MarkNoticeReadArgs args, Long userId) {
         LambdaUpdateWrapper<Notice> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(Notice::getIsRead, 1)
+                .eq(Notice::getTargetId, userId)
                 .in(Notice::getId, args.getIds());
 
         int count = noticeMapper.update(updateWrapper);
@@ -54,9 +50,11 @@ public class NoticeService {
     }
 
     @Transactional
-    public void deleteNotices(DeleteNoticeArgs args) {
+    public void deleteNotices(DeleteNoticeArgs args, Long userId) {
         LambdaUpdateWrapper<Notice> noticeUpdate = new LambdaUpdateWrapper<>();
-        noticeUpdate.set(Notice::getIsDeleted, 1).in(Notice::getId, args.getIds());
+        noticeUpdate.set(Notice::getIsDeleted, 1)
+                .eq(Notice::getTargetId, userId)
+                .in(Notice::getId, args.getIds());
         int count = noticeMapper.update(noticeUpdate);
         if (count != args.getIds().size()) throw new BusinessException("<UNK>");
     }

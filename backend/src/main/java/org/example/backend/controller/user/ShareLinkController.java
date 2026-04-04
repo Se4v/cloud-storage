@@ -1,15 +1,13 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.LoginUser;
+import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.args.DeleteLinkArgs;
 import org.example.backend.model.args.UpdateLinkArgs;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.view.ShareView;
 import org.example.backend.service.ShareService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,11 +19,9 @@ public class ShareLinkController {
     private ShareService shareService;
 
     @GetMapping
-    public Result<List<ShareView>> listLinks() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser loginUser = (LoginUser) auth.getPrincipal();
-
-        List<Share> shareList = shareService.listLinks(loginUser.getUserId());
+    public Result<?> listLinks() {
+        Long currentUserId = SecurityUtil.getUserId();
+        List<Share> shareList = shareService.listLinks(currentUserId);
 
         List<ShareView> views = shareList.stream()
                 .map(share -> ShareView.builder()
@@ -44,14 +40,16 @@ public class ShareLinkController {
     }
 
     @PostMapping("/update")
-    public Result<Void> updateLink(@RequestBody UpdateLinkArgs args) {
-        shareService.updateLink(args);
+    public Result<?> updateLink(@RequestBody UpdateLinkArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        shareService.updateLink(args, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteLinks(@RequestBody DeleteLinkArgs args) {
-        shareService.deleteLinks(args);
+    public Result<?> deleteLinks(@RequestBody DeleteLinkArgs args) {
+        Long currentUserId = SecurityUtil.getUserId();
+        shareService.deleteLinks(args, currentUserId);
         return Result.success();
     }
 }
