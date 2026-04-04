@@ -32,10 +32,6 @@ public class Member implements Serializable {
     @TableField("role_id")
     private Long roleId;
 
-    /** 是否为主管/负责人:0-否; 1-是 */
-    @TableField("is_leader")
-    private Integer leader;
-
     /** 是否删除:0-未删除; 1-已删除 */
     @TableField("is_deleted")
     private Integer deleted;

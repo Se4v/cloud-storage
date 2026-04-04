@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/log")
-public class LogController {
+public class LogManageController {
     @Autowired
     private LogService logService;
 

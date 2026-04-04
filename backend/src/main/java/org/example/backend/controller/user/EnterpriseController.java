@@ -6,7 +6,6 @@ import org.example.backend.model.entity.Entry;
 import org.example.backend.model.view.*;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.EnterpriseService;
-import org.example.backend.service.OrgService;
 import org.example.backend.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
@@ -28,16 +27,8 @@ public class EnterpriseController {
     private UploadService uploadService;
     @Autowired
     private DownloadService downloadService;
-    @Autowired
-    private OrgService orgService;
 
     Long userId = 2034965772877197313L;
-
-    @GetMapping("/org")
-    public Result<?> getOrgTree() {
-        List<OrgTreeView> views = orgService.getOrgTree(userId);
-        return Result.success(views);
-    }
 
     @PostMapping("/init-upload")
     public Result<InitUploadView> initUpload(@RequestBody InitUploadArgs args) {

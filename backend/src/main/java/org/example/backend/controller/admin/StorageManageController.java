@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/storage")
-public class StorageController {
+public class StorageManageController {
     @Autowired
     private StorageService storageService;
 

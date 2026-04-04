@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/perm")
-public class PermissionController {
+public class PermissionManageController {
     @Autowired
     private PermissionService permissionService;
 

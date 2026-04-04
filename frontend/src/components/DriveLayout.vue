@@ -575,7 +575,7 @@ const orgTree = ref([])
 // 从后端获取组织架构树
 const loadOrgTree = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/enterprise/org`, getAuthConfig())
+    const res = await axios.get(`${API_BASE_URL}/api/tree/org`, getAuthConfig())
     if (res.data.code === 200) {
       orgTree.value = res.data.data || []
     } else {

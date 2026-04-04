@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/system")
-public class SystemController {
+public class SystemManageController {
     @Autowired
     private SystemService systemService;
 

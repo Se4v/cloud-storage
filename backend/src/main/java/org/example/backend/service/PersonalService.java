@@ -45,6 +45,14 @@ public class PersonalService {
     private static final int FILE = 1;
     private static final int FOLDER = 2;
     private static final int EXPIRE_DAYS = 15;
+    private static final List<String> PREVIEW_EXT = Arrays.asList(
+        // 图像格式
+        "jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico",
+        // 文档格式
+        "pdf",
+        // 文本格式
+        "txt", "md", "json", "xml", "csv", "html", "htm"
+    );
 
     public List<Entry> listEntries(Long driveId, Long parentId) {
         LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
@@ -269,6 +277,10 @@ public class PersonalService {
         entryQuery.eq(Entry::getId, id).eq(Entry::getStatus, 1);
         Entry entry = entryMapper.selectOne(entryQuery);
         if (entry == null) throw new BusinessException("Entry does not exist");
+
+        if (!PREVIEW_EXT.contains(entry.getFileExt())) {
+            throw new BusinessException("Invalid file ext");
+        }
 
         LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
         storageQuery.eq(Storage::getId, entry.getStorageId());

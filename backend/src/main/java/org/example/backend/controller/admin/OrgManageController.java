@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/org")
-public class OrgController {
+public class OrgManageController {
     @Autowired
     private OrgService orgService;
 
