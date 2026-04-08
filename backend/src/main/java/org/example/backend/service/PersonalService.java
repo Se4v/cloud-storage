@@ -306,7 +306,7 @@ public class PersonalService {
         }
 
         Storage storage = storageMapper.selectById(entry.getStorageId());
-        if (storage == null || storage.getEnabled() == 0) throw new BusinessException("Storage does not exist");
+        if (storage == null) throw new BusinessException("Storage does not exist");
 
         String url;
         try {

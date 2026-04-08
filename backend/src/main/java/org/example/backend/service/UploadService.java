@@ -276,7 +276,7 @@ public class UploadService {
             LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
             storageQuery.eq(Storage::getSha256, arg.getSha256());
             Storage existedStorage = storageMapper.selectOne(storageQuery);
-            if (existedStorage != null && Objects.equals(existedStorage.getEnabled(), 1)) {
+            if (existedStorage != null) {
                 self.createEntryForInstantUpload(existedStorage, arg, args, userId);
                 return InitUploadView.View.builder()
                         .entryName(arg.getEntryName())
@@ -443,7 +443,7 @@ public class UploadService {
         storageQuery.eq(Storage::getSha256, sha256);
         Storage storage = storageMapper.selectOne(storageQuery);
         Long storageId;
-        if (storage != null && Objects.equals(storage.getEnabled(), 1)) {
+        if (storage != null) {
             LambdaUpdateWrapper<Storage> storageUpdate = new LambdaUpdateWrapper<>();
             storageUpdate.setIncrBy(Storage::getRefCount, 1).eq(Storage::getId, storage.getId());
             int refCount = storageMapper.update(storageUpdate);
@@ -460,7 +460,6 @@ public class UploadService {
                     .bucketName(bucketName)
                     .objectKey(objectName)
                     .mimeType(mimeType)
-                    .enabled(1)
                     .refCount(1)
                     .creatorId(userId)
                     .build();

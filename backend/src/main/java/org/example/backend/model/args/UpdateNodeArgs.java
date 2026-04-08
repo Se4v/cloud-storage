@@ -21,6 +21,5 @@ public class UpdateNodeArgs {
     private Long storageQuota;
     @NotNull
     private Integer isEnabled;
-    @NotBlank
     private String adminUsername;
 }

@@ -71,7 +71,7 @@ public class UserService {
 
         Drive drive = Drive.builder()
                 .driveName("个人空间")
-                .driveType(2)
+                .driveType(1)
                 .nodeId(0L)
                 .userId(user.getId())
                 .totalQuota(args.getStorageQuota())

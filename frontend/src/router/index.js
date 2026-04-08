@@ -11,7 +11,6 @@ import UserManage from "@/views/admin/UserManage.vue";
 import PermissionManage from "@/views/admin/PermissionManage.vue";
 import RoleManage from "@/views/admin/RoleManage.vue";
 import OrgManage from "@/views/admin/OrgManage.vue";
-import StorageManage from "@/views/admin/StorageManage.vue";
 import LogManage from "@/views/admin/LogManage.vue";
 import SystemManage from "@/views/admin/SystemManage.vue";
 import DriveStat from "@/views/admin/DriveStat.vue";
@@ -91,11 +90,6 @@ const routes = [
                 path: 'member',
                 name: 'MemberManage',
                 component: MemberManage
-            },
-            {
-                path: 'storage',
-                name: 'StorageManage',
-                component: StorageManage
             },
             {
                 path: 'log',

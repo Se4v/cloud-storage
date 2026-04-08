@@ -48,10 +48,6 @@ public class Storage implements Serializable {
     @TableField("mime_type")
     private String mimeType;
 
-    /** 是否启用:0-禁用; 1-启用 */
-    @TableField("is_enabled")
-    private Integer enabled;
-
     /** 引用计数(指向该物理文件的逻辑文件数量) */
     @TableField("ref_count")
     private Integer refCount;

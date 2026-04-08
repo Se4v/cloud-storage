@@ -212,7 +212,6 @@ const managementMenu = [
 
 // 网盘配置菜单
 const configMenu = [
-  { key: 'storage-mgmt', label: '存储管理', icon: Box, route: '/admin/storage' },
   { key: 'system-settings', label: '系统设置', icon: SetUp, route: '/admin/settings' }
 ]
 

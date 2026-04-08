@@ -105,21 +105,28 @@ public class OrgService {
                 .nodeType(args.getType())
                 .parentId(args.getParentId())
                 .build();
-
         int nodeInsert = nodeMapper.insert(node);
         if (nodeInsert != 1) throw new BusinessException("创建部门失败");
 
         // 查询节点管理员
-        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(User::getUsername, args.getAdminUsername());
-        User admin = userMapper.selectOne(userQuery);
+        Long adminId;
+        if (args.getAdminUsername().isBlank()) {
+            adminId = 0L;
+        } else {
+            LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
+            userQuery.eq(User::getUsername, args.getAdminUsername());
+            User admin = userMapper.selectOne(userQuery);
+            if (admin == null) throw new BusinessException("该用户不存在");
+            adminId = admin.getId();
+        }
+
 
         // 创建企业空间
         Drive drive = Drive.builder()
                 .driveName(args.getName())
                 .driveType(2)
                 .nodeId(node.getId())
-                .userId(admin.getId())
+                .userId(adminId)
                 .totalQuota(args.getStorageQuota())
                 .build();
 
@@ -177,10 +184,16 @@ public class OrgService {
         if (nodeMapper.update(nodeUpdate) != 1) throw new BusinessException("更新节点失败");
 
         // 校验节点管理员是否存在
-        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(User::getUsername, args.getAdminUsername());
-        User admin = userMapper.selectOne(userQuery);
-        if (admin == null) throw new BusinessException("该用户不存在");
+        Long adminId;
+        if (args.getAdminUsername().isBlank()) {
+            adminId = 0L;
+        } else {
+            LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
+            userQuery.eq(User::getUsername, args.getAdminUsername());
+            User admin = userMapper.selectOne(userQuery);
+            if (admin == null) throw new BusinessException("该用户不存在");
+            adminId = admin.getId();
+        }
 
         // 更新
         LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
@@ -192,7 +205,7 @@ public class OrgService {
         LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
         driveUpdate.set(Drive::getDriveName, args.getName())
                 .set(Drive::getTotalQuota, args.getStorageQuota())
-                .set(Drive::getUserId, admin.getId())
+                .set(Drive::getUserId, adminId)
                 .eq(Drive::getNodeId, drive.getNodeId());
         if (driveMapper.update(driveUpdate) != 1) throw new BusinessException("更新节点-空间失败");
     }

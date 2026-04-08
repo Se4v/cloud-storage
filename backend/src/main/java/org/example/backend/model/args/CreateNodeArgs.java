@@ -17,6 +17,5 @@ public class CreateNodeArgs {
     @NotNull
     @PositiveOrZero
     private Long storageQuota;
-    @NotBlank
     private String adminUsername;
 }

@@ -40,7 +40,13 @@ public class SecurityConfig {
                             "/api/user/**",
                             "/api/role/**",
                             "/api/member/**",
-                            "/api/org/**"
+                            "/api/org/**",
+                            "/api/drive-stat/**",
+                            "/api/log/**",
+                            "/api/perm/**",
+                            "/api/storage/**",
+                            "/api/system/**",
+                            "/api/traffic/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

@@ -57,7 +57,6 @@ CREATE TABLE `file_storage` (
     `bucket_name`       varchar(64) NOT NULL DEFAULT '' COMMENT 'MinIO Bucket',
     `object_key`        varchar(255) NOT NULL DEFAULT '' COMMENT 'MinIO ObjectKey',
     `mime_type`         varchar(128) NOT NULL DEFAULT '' COMMENT '文件MIME类型',
-    `is_enabled`        tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否启用:0-禁用; 1-启用',
     `ref_count`         int unsigned NOT NULL DEFAULT 0 COMMENT '引用计数(指向该物理文件的逻辑文件数量)',
     `created_at`        datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '首次上传时间',
     `creator_id`        bigint unsigned NOT NULL DEFAULT 0 COMMENT '首次创建者ID',
