@@ -3,8 +3,8 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.NoticeMapper;
-import org.example.backend.model.request.DeleteNoticeArgs;
-import org.example.backend.model.request.MarkNoticeReadArgs;
+import org.example.backend.model.request.notice.NoticeDeletionReq;
+import org.example.backend.model.request.notice.NoticeReadMarkReq;
 import org.example.backend.model.entity.Notice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,22 +42,22 @@ public class NoticeService {
     }
 
     @Transactional
-    public void markNoticeAsRead(MarkNoticeReadArgs args, Long userId) {
+    public void markNoticeAsRead(NoticeReadMarkReq req, Long userId) {
         int count = noticeMapper.update(
                 Wrappers.<Notice>lambdaUpdate()
                         .set(Notice::getIsRead, 1)
                         .eq(Notice::getTargetId, userId)
-                        .in(Notice::getId, args.getIds()));
-        if (count != args.getIds().size()) throw new BusinessException("<UNK>");
+                        .in(Notice::getId, req.getIds()));
+        if (count != req.getIds().size()) throw new BusinessException("<UNK>");
     }
 
     @Transactional
-    public void deleteNotices(DeleteNoticeArgs args, Long userId) {
+    public void deleteNotices(NoticeDeletionReq req, Long userId) {
         int count = noticeMapper.update(
                 Wrappers.<Notice>lambdaUpdate()
                         .set(Notice::getIsDeleted, 1)
                         .eq(Notice::getTargetId, userId)
-                        .in(Notice::getId, args.getIds()));
-        if (count != args.getIds().size()) throw new BusinessException("<UNK>");
+                        .in(Notice::getId, req.getIds()));
+        if (count != req.getIds().size()) throw new BusinessException("<UNK>");
     }
 }

@@ -1,9 +1,9 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
-import org.example.backend.model.request.CreateNodeArgs;
-import org.example.backend.model.request.DeleteNodeArgs;
-import org.example.backend.model.request.UpdateNodeArgs;
+import org.example.backend.common.result.Result;
+import org.example.backend.model.request.notice.NodeCreationReq;
+import org.example.backend.model.request.org.OrgNodeDeletionReq;
+import org.example.backend.model.request.org.OrgNodeUpdateReq;
 import org.example.backend.model.response.NodeView;
 import org.example.backend.service.OrgService;
 import org.springframework.web.bind.annotation.*;
@@ -20,26 +20,26 @@ public class OrgManageController {
     }
 
     @PostMapping("/create")
-    public Result<?> createOrgNode(@RequestBody CreateNodeArgs args) {
-        orgService.createOrgNode(args);
+    public Result<?> createOrgNode(@RequestBody NodeCreationReq req) {
+        orgService.createOrgNode(req);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteOrgNodes(@RequestBody DeleteNodeArgs args) {
-        orgService.deleteOrgNodes(args);
+    public Result<?> deleteOrgNodes(@RequestBody OrgNodeDeletionReq req) {
+        orgService.deleteOrgNodes(req);
         return Result.success();
     }
 
     @PostMapping("/update")
-    public Result<?> updateOrgNode(@RequestBody UpdateNodeArgs args) {
-        orgService.updateOrgNode(args);
+    public Result<?> updateOrgNode(@RequestBody OrgNodeUpdateReq req) {
+        orgService.updateOrgNode(req);
         return Result.success();
     }
 
     @GetMapping("/all")
     public Result<?> listAllOrgNodes() {
-        List<NodeView> nodeViewList = orgService.listAllOrgNodes();
-        return Result.success(nodeViewList);
+        List<NodeView> resp = orgService.listAllOrgNodes();
+        return Result.success(resp);
     }
 }

@@ -1,10 +1,10 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.ConfigMapper;
-import org.example.backend.model.request.UpdateSystemConfigArgs;
+import org.example.backend.model.request.sys.SystemConfigUpdateReq;
 import org.example.backend.model.entity.Config;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,27 +17,27 @@ import java.util.stream.Collectors;
 
 @Service
 public class SystemService {
-    private ConfigMapper configMapper;
+    private final ConfigMapper configMapper;
 
     public SystemService(ConfigMapper configMapper) {
         this.configMapper = configMapper;
     }
 
     public Map<String, String> getSystemConfigs() {
-        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getIsEnabled, 1);
-        List<Config> configList = configMapper.selectList(configQuery);
+        List<Config> configList = configMapper.selectList(
+                Wrappers.<Config>lambdaQuery()
+                        .eq(Config::getIsEnabled, 1));
         Map<String, String> configMap = configList.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getConfigValue, (a, b) -> a));
         return configMap;
     }
 
     @Transactional
-    public void updateSystemConfigs(UpdateSystemConfigArgs args) {
+    public void updateSystemConfigs(SystemConfigUpdateReq req) {
         // 查询配置项
-        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getIsEnabled, 1);
-        List<Config> configList = configMapper.selectList(configQuery);
+        List<Config> configList = configMapper.selectList(
+                Wrappers.<Config>lambdaQuery()
+                        .eq(Config::getIsEnabled, 1));
         Map<String, Long> configMap = configList.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getId));
 
@@ -45,34 +45,34 @@ public class SystemService {
         updateConfigList.add(Config.builder()
                 .id(configMap.get("login_fail_threshold"))
                 .configKey("login_fail_threshold")
-                .configValue(args.getLoginFailThreshold())
+                .configValue(req.getLoginFailThreshold())
                 .build());
 
         updateConfigList.add(Config.builder()
                 .id(configMap.get("default_password"))
                 .configKey("default_password")
-                .configValue(args.getDefaultPassword())
+                .configValue(req.getDefaultPassword())
                 .build());
 
         updateConfigList.add(Config.builder()
                 .id(configMap.get("default_storage_quota"))
                 .configKey("default_storage_quota")
-                .configValue(args.getDefaultStorageQuota())
+                .configValue(req.getDefaultStorageQuota())
                 .build());
 
         updateConfigList.add(Config.builder()
                 .id(configMap.get("max_file_size"))
                 .configKey("max_file_size")
-                .configValue(args.getMaxFileSize())
+                .configValue(req.getMaxFileSize())
                 .build());
 
         updateConfigList.add(Config.builder()
                 .id(configMap.get("storage_warning_threshold"))
                 .configKey("storage_warning_threshold")
-                .configValue(args.getStorageWarningThreshold())
+                .configValue(req.getStorageWarningThreshold())
                 .build());
 
-        String blackList = args.getFileTypeBlacklist().stream()
+        String blackList = req.getFileTypeBlacklist().stream()
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining(","));

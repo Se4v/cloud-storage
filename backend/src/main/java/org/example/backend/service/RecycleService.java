@@ -1,13 +1,12 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
-import org.example.backend.model.request.DeleteEntryArgs;
-import org.example.backend.model.request.RestoreEntryArgs;
+import org.example.backend.model.request.file.DeleteEntryArgs;
+import org.example.backend.model.request.file.RestoreEntryArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.response.RecycleView;
@@ -127,13 +126,13 @@ public class RecycleService {
                             .toList()
             );
 
-            LambdaUpdateWrapper<Entry> folderUpdate = new LambdaUpdateWrapper<>();
-            folderUpdate.set(Entry::getStatus, UNDELETED)
-                    .set(Entry::getDeletedAt, null)
-                    .set(Entry::getExpiredAt, null)
-                    .set(Entry::getDeleterId, 0)
-                    .in(Entry::getId, allFolderIds);
-            int count = entryMapper.update(folderUpdate);
+            int count = entryMapper.update(
+                    Wrappers.<Entry>lambdaUpdate()
+                            .set(Entry::getStatus, UNDELETED)
+                            .set(Entry::getDeletedAt, null)
+                            .set(Entry::getExpiredAt, null)
+                            .set(Entry::getDeleterId, 0)
+                            .in(Entry::getId, allFolderIds));
             if (count != allFolderIds.size()) throw new BusinessException("Restore folders failed");
         }
     }

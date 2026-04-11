@@ -2,7 +2,6 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.CreateMultipartUploadResponse;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
@@ -16,10 +15,10 @@ import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.mapper.TrafficMapper;
-import org.example.backend.model.request.InitUploadArgs;
-import org.example.backend.model.request.MergeChunksArgs;
-import org.example.backend.model.request.SimpleUploadArgs;
-import org.example.backend.model.request.UploadChunkArgs;
+import org.example.backend.model.request.file.InitUploadArgs;
+import org.example.backend.model.request.file.MergeChunksArgs;
+import org.example.backend.model.request.file.SimpleUploadArgs;
+import org.example.backend.model.request.file.UploadChunkArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
@@ -52,25 +51,30 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class UploadService {
-    @Autowired
-    private RedissonClient redissonClient;
-    @Autowired
-    private MinioConfig minioConfig;
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private MinioAsyncClient minioAsyncClient;
-    @Autowired
-    private StorageMapper storageMapper;
-    @Autowired
-    private EntryMapper entryMapper;
-    @Autowired
-    private DriveMapper driveMapper;
-    @Autowired
-    private TrafficMapper trafficMapper;
     @Lazy
     @Autowired
     private UploadService self;
+    private final RedissonClient redissonClient;
+    private final MinioConfig minioConfig;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final MinioAsyncClient minioAsyncClient;
+    private final StorageMapper storageMapper;
+    private final EntryMapper entryMapper;
+    private final DriveMapper driveMapper;
+    private final TrafficMapper trafficMapper;
+
+    public UploadService(RedissonClient redissonClient, MinioConfig minioConfig, RedisTemplate<String, Object> redisTemplate,
+                         MinioAsyncClient minioAsyncClient, StorageMapper storageMapper, EntryMapper entryMapper,
+                         DriveMapper driveMapper, TrafficMapper trafficMapper) {
+        this.redissonClient = redissonClient;
+        this.minioConfig = minioConfig;
+        this.redisTemplate = redisTemplate;
+        this.minioAsyncClient = minioAsyncClient;
+        this.storageMapper = storageMapper;
+        this.entryMapper = entryMapper;
+        this.driveMapper = driveMapper;
+        this.trafficMapper = trafficMapper;
+    }
 
     private static final String TASK_KEY_PREFIX = "upload:task:";
     private static final String CHUNKS_KEY_PREFIX = "upload:chunks:";

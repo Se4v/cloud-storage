@@ -1,10 +1,10 @@
 package org.example.backend.controller.user;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.request.*;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
+import org.example.backend.model.request.file.*;
 import org.example.backend.model.response.*;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.DriveService;
@@ -37,38 +37,38 @@ public class PersonalController {
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody InitUploadArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
-        InitUploadView view = uploadService.initUpload(args, currentUserId);
-        return Result.success("", view);
+        InitUploadView resp = uploadService.initUpload(args, currentUserId);
+        return Result.success(resp);
     }
 
     @PostMapping("/simple-upload")
     public Result<?> simpleUpload(@RequestBody SimpleUploadArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
-        SimpleUploadView view = uploadService.simpleUpload(args, currentUserId);
-        return Result.success("", view);
+        SimpleUploadView resp = uploadService.simpleUpload(args, currentUserId);
+        return Result.success(resp);
     }
 
     @PostMapping("/upload-chunk")
     public Result<?> uploadChunk(@RequestBody UploadChunkArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
-        UploadChunkView view = uploadService.uploadChunk(args, currentUserId);
-        return Result.success("", view);
+        UploadChunkView resp = uploadService.uploadChunk(args, currentUserId);
+        return Result.success(resp);
     }
 
     @PostMapping("/merge-chunks")
     public Result<?> mergeChunks(@RequestBody MergeChunksArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
-        MergeChunksView view = uploadService.mergeChunks(args, currentUserId);
-        return Result.success("", view);
+        MergeChunksView resp = uploadService.mergeChunks(args, currentUserId);
+        return Result.success(resp);
     }
 
     @PostMapping("/download")
-    public ResponseEntity<StreamingResponseBody> download(@RequestBody DownloadArgs args) {
+    public ResponseEntity<StreamingResponseBody> download(@RequestBody FileDownloadReq req) {
         Long currentUserId = SecurityUtil.getUserId();
 
-        String fileName = downloadService.getDownloadFileName(args);
+        String fileName = downloadService.getDownloadFileName(req);
 
-        StreamingResponseBody stream = downloadService.download(args, currentUserId);
+        StreamingResponseBody stream = downloadService.download(req, currentUserId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -84,21 +84,21 @@ public class PersonalController {
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
         Long currentUserId = SecurityUtil.getUserId();
         List<Entry> entries = personalService.listEntries(driveId, parentId, currentUserId);
-        List<EntryView> views = entries.stream().map(entry -> EntryView.builder()
+        List<EntryView> resp = entries.stream().map(entry -> EntryView.builder()
                 .id(entry.getId())
                 .name(entry.getEntryName())
                 .type(entry.getEntryType())
                 .size(entry.getFileSize())
                 .createTime(entry.getCreatedAt())
                 .build()).toList();
-        return Result.success("", views);
+        return Result.success(resp);
     }
 
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
         Long currentUserId = SecurityUtil.getUserId();
-        List<FolderTreeView> views = personalService.listFolders(driveId, currentUserId);
-        return Result.success(views);
+        List<FolderTreeView> resp = personalService.listFolders(driveId, currentUserId);
+        return Result.success(resp);
     }
 
     @PostMapping("/create")
@@ -147,24 +147,24 @@ public class PersonalController {
     public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {
         Long currentUserId = SecurityUtil.getUserId();
         String url = personalService.preview(id, driveId, currentUserId);
-        return Result.success("", url);
+        return Result.success(url);
     }
 
     @GetMapping("/usage")
     public Result<?> getPersonalDriveUsage() {
         Long currentUserId = SecurityUtil.getUserId();
         Drive drive = driveService.getPersonalDriveUsage(currentUserId);
-        PersonalDriveUsageView view = PersonalDriveUsageView.builder()
+        PersonalDriveUsageView resp = PersonalDriveUsageView.builder()
                 .usedQuota(drive.getUsedQuota())
                 .totalQuota(drive.getTotalQuota())
                 .build();
-        return Result.success("", view);
+        return Result.success(resp);
     }
 
     @GetMapping("/id")
     public Result<?> getPersonalDriveId() {
         Long currentUserId = SecurityUtil.getUserId();
         Long personalDriveId = driveService.getPersonalDriveId(currentUserId);
-        return Result.success("", personalDriveId);
+        return Result.success(personalDriveId);
     }
 }

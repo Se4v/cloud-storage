@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.*;
-import org.example.backend.model.request.AssignGlobalRoleArgs;
-import org.example.backend.model.request.CreateUserArgs;
-import org.example.backend.model.request.DeleteUserArgs;
-import org.example.backend.model.request.UpdateUserArgs;
+import org.example.backend.model.request.role.SystemRoleAssignmentReq;
+import org.example.backend.model.request.user.UserCreationReq;
+import org.example.backend.model.request.user.UserDeletionReq;
+import org.example.backend.model.request.user.UserUpdateReq;
 import org.example.backend.model.entity.*;
 import org.example.backend.model.response.UserView;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,11 +45,11 @@ public class UserService {
      * 创建用户
      */
     @Transactional
-    public void createUser(CreateUserArgs args) {
+    public void createUser(UserCreationReq req) {
         // 检查用户名是否已存在
         User existUser = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery()
-                        .eq(User::getUsername, args.getUsername())
+                        .eq(User::getUsername, req.getUsername())
                         .eq(User::getDeleted, UNDELETED));
         if (existUser != null) throw new BusinessException("用户名已存在");
 
@@ -61,10 +61,10 @@ public class UserService {
 
         // 创建用户
         User user = User.builder()
-                .username(args.getUsername())
+                .username(req.getUsername())
                 .password(passwordEncoder.encode(config.getConfigValue()))
-                .realName(args.getRealName())
-                .mobile(args.getMobile())
+                .realName(req.getRealName())
+                .mobile(req.getMobile())
                 .build();
 
         int userCount = userMapper.insert(user);
@@ -75,7 +75,7 @@ public class UserService {
                 .driveType(1)
                 .nodeId(0L)
                 .userId(user.getId())
-                .totalQuota(args.getStorageQuota())
+                .totalQuota(req.getStorageQuota())
                 .usedQuota(0L)
                 .build();
 
@@ -87,26 +87,26 @@ public class UserService {
      * 批量删除用户（逻辑删除）
      */
     @Transactional
-    public void deleteUsers(DeleteUserArgs args) {
+    public void deleteUsers(UserDeletionReq req) {
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
                         .set(User::getDeleted, DELETED)
-                        .in(User::getId, args.getUserIds()));
-        if (count != args.getUserIds().size()) throw new BusinessException("删除用户失败");
+                        .in(User::getId, req.getUserIds()));
+        if (count != req.getUserIds().size()) throw new BusinessException("删除用户失败");
     }
 
     /**
      * 更新用户信息
      */
     @Transactional
-    public void updateUser(UpdateUserArgs args) {
+    public void updateUser(UserUpdateReq req) {
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
-                        .set(User::getRealName, args.getRealName())
-                        .set(User::getMobile, args.getMobile())
-                        .set(User::getEmail, args.getEmail())
-                        .set(User::getEnabled, Boolean.TRUE.equals(args.getIsEnabled()) ? ENABLED : DISABLED)
-                        .eq(User::getId, args.getId()));
+                        .set(User::getRealName, req.getRealName())
+                        .set(User::getMobile, req.getMobile())
+                        .set(User::getEmail, req.getEmail())
+                        .set(User::getEnabled, Boolean.TRUE.equals(req.getIsEnabled()) ? ENABLED : DISABLED)
+                        .eq(User::getId, req.getId()));
         if (count != 1) throw new BusinessException("更新用户失败");
     }
 
@@ -159,10 +159,10 @@ public class UserService {
     }
 
     @Transactional
-    public void assignGlobalRole(AssignGlobalRoleArgs args) {
-        if (args == null) throw new BusinessException("角色分配参数不能为空");
-        Long userId = args.getUserId();
-        List<Long> targetRoleIds = args.getRoleIds() == null ? List.of() : args.getRoleIds() ;
+    public void assignGlobalRole(SystemRoleAssignmentReq req) {
+        if (req == null) throw new BusinessException("角色分配参数不能为空");
+        Long userId = req.getUserId();
+        List<Long> targetRoleIds = req.getRoleIds() == null ? List.of() : req.getRoleIds() ;
 
         // 查询该用户当前已绑定的角色
         List<UserRole> existingUserRoles = userRoleMapper.selectList(

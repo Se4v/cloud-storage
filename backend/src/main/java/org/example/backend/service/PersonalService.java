@@ -8,10 +8,10 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.mapper.StorageMapper;
-import org.example.backend.model.request.*;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
+import org.example.backend.model.request.file.*;
 import org.example.backend.model.response.FolderTreeView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,10 +158,11 @@ public class PersonalService {
             if (entry == null) throw new BusinessException("Entry does not exist");
         }
 
-        int count = entryMapper.update(Wrappers.<Entry>lambdaUpdate()
-                .set(Entry::getParentId, args.getTargetId())
-                .eq(Entry::getUserId, userId)
-                .in(Entry::getId, args.getIds()));
+        int count = entryMapper.update(
+                Wrappers.<Entry>lambdaUpdate()
+                        .set(Entry::getParentId, args.getTargetId())
+                        .eq(Entry::getUserId, userId)
+                        .in(Entry::getId, args.getIds()));
         if (count != args.getIds().size()) throw new BusinessException("Move entry failed");
     }
 

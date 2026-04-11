@@ -1,10 +1,10 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
-import org.example.backend.model.request.AssignPermissionArgs;
-import org.example.backend.model.request.CreateRoleArgs;
-import org.example.backend.model.request.DeleteRoleReq;
-import org.example.backend.model.request.UpdateRoleArgs;
+import org.example.backend.common.result.Result;
+import org.example.backend.model.request.perm.PermAssignmentReq;
+import org.example.backend.model.request.role.RoleCreationReq;
+import org.example.backend.model.request.role.RoleDeletionReq;
+import org.example.backend.model.request.role.RoleUpdateReq;
 import org.example.backend.model.entity.Permission;
 import org.example.backend.model.entity.Role;
 import org.example.backend.model.response.PermissionView;
@@ -24,27 +24,27 @@ public class RoleManageController {
     }
 
     @PostMapping("/create")
-    public Result<?> createRole(@RequestBody CreateRoleArgs args) {
-        roleService.createRole(args);
-        return Result.success("");
+    public Result<?> createRole(@RequestBody RoleCreationReq req) {
+        roleService.createRole(req);
+        return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteRoles(@RequestBody DeleteRoleReq req) {
+    public Result<?> deleteRoles(@RequestBody RoleDeletionReq req) {
         roleService.deleteRoles(req);
-        return Result.success("");
+        return Result.success();
     }
 
     @PostMapping("/update")
-    public Result<?> updateRole(@RequestBody UpdateRoleArgs args) {
-        roleService.updateRole(args);
-        return Result.success("");
+    public Result<?> updateRole(@RequestBody RoleUpdateReq req) {
+        roleService.updateRole(req);
+        return Result.success();
     }
 
     @GetMapping("/all")
     public Result<?> listAllRoles() {
         List<Role> roleList = roleService.listAllRoles();
-        List<RoleView> views = roleList.stream()
+        List<RoleView> resp = roleList.stream()
                 .map(role -> RoleView.builder()
                         .id(role.getId())
                         .name(role.getName())
@@ -54,24 +54,24 @@ public class RoleManageController {
                         .isEnabled(role.getEnabled())
                         .build())
                 .toList();
-        return Result.success("", views);
+        return Result.success(resp);
     }
 
     @PostMapping("/assign")
-    public Result<?> assignPermissions(@RequestBody AssignPermissionArgs args) {
-        roleService.assignPermissions(args);
-        return Result.success("");
+    public Result<?> assignPermissions(@RequestBody PermAssignmentReq req) {
+        roleService.assignPermissions(req);
+        return Result.success();
     }
 
     @GetMapping("/perm")
     public Result<?> listPermissions() {
         List<Permission> permissionList = roleService.listPermissions();
-        List<PermissionView> views = permissionList.stream()
+        List<PermissionView> resp = permissionList.stream()
                 .map(permission -> PermissionView.builder()
                         .id(permission.getId())
                         .name(permission.getName())
                         .build())
                 .toList();
-        return Result.success("", views);
+        return Result.success(resp);
     }
 }

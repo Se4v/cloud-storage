@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.*;
-import org.example.backend.model.request.AssignPermissionArgs;
-import org.example.backend.model.request.CreateRoleArgs;
-import org.example.backend.model.request.DeleteRoleReq;
-import org.example.backend.model.request.UpdateRoleArgs;
+import org.example.backend.model.request.perm.PermAssignmentReq;
+import org.example.backend.model.request.role.RoleCreationReq;
+import org.example.backend.model.request.role.RoleDeletionReq;
+import org.example.backend.model.request.role.RoleUpdateReq;
 import org.example.backend.model.entity.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,26 +40,26 @@ public class RoleService {
      * 创建角色
      */
     @Transactional
-    public void createRole(CreateRoleArgs args) {
+    public void createRole(RoleCreationReq req) {
         // 校验角色编码是否重复
         long sameCode = roleMapper.selectCount(
                 Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getCode, args.getCode())
+                        .eq(Role::getCode, req.getCode())
                         .eq(Role::getDeleted, 0));
         if (sameCode > 0) throw new BusinessException("角色编码已存在");
 
         // 校验角色名称是否重复
         long sameName = roleMapper.selectCount(
                 Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getName, args.getName())
+                        .eq(Role::getName, req.getName())
                         .eq(Role::getDeleted, 0));
         if (sameName > 0) throw new BusinessException("角色名称已存在");
 
         // 创建角色
         Role role = Role.builder()
-                .name(args.getName())
-                .code(args.getCode())
-                .type(args.getType())
+                .name(req.getName())
+                .code(req.getCode())
+                .type(req.getType())
                 .build();
         int count = roleMapper.insert(role);
         if (count != 1) throw new BusinessException("创建角色失败");
@@ -69,7 +69,7 @@ public class RoleService {
      * 批量删除角色
      */
     @Transactional
-    public void deleteRoles(DeleteRoleReq req) {
+    public void deleteRoles(RoleDeletionReq req) {
         // 查询组织角色是否被使用
         long usedMember = memberMapper.selectCount(
                 Wrappers.<Member>lambdaQuery()
@@ -111,36 +111,36 @@ public class RoleService {
      * 更新角色
      */
     @Transactional
-    public void updateRole(UpdateRoleArgs args) {
+    public void updateRole(RoleUpdateReq req) {
         // 校验角色是否存在
-        Role existingRole = roleMapper.selectById(args.getId());
+        Role existingRole = roleMapper.selectById(req.getId());
         if (existingRole == null) throw new BusinessException("角色不存在");
 
         // 校验角色编码是否重复
-        if (args.getCode() != null && !args.getCode().equals(existingRole.getCode())) {
+        if (req.getCode() != null && !req.getCode().equals(existingRole.getCode())) {
             long sameCode = roleMapper.selectCount(
                     Wrappers.<Role>lambdaQuery()
-                            .eq(Role::getCode, args.getCode())
-                            .ne(Role::getId, args.getId()));
+                            .eq(Role::getCode, req.getCode())
+                            .ne(Role::getId, req.getId()));
             if (sameCode > 0) throw new BusinessException("角色编码已存在");
         }
 
         // 校验角色名称是否重复
-        if (args.getName() != null && !args.getName().equals(existingRole.getName())) {
+        if (req.getName() != null && !req.getName().equals(existingRole.getName())) {
             long sameName = roleMapper.selectCount(
                     Wrappers.<Role>lambdaQuery()
-                            .eq(Role::getName, args.getName())
-                            .ne(Role::getId, args.getId()));
+                            .eq(Role::getName, req.getName())
+                            .ne(Role::getId, req.getId()));
             if (sameName > 0) throw new BusinessException("角色名称已存在");
         }
 
         // 更新角色
         int count = roleMapper.update(
                 Wrappers.<Role>lambdaUpdate()
-                        .set(Role::getName, args.getName())
-                        .set(Role::getCode, args.getCode())
-                        .set(Role::getEnabled, args.getIsEnabled())
-                        .eq(Role::getId, args.getId()));
+                        .set(Role::getName, req.getName())
+                        .set(Role::getCode, req.getCode())
+                        .set(Role::getEnabled, req.getIsEnabled())
+                        .eq(Role::getId, req.getId()));
         if (count != 1) throw new BusinessException("更新角色失败");
     }
 
@@ -155,11 +155,11 @@ public class RoleService {
     }
 
     @Transactional
-    public void assignPermissions(AssignPermissionArgs args) {
+    public void assignPermissions(PermAssignmentReq req) {
         // 基础参数校验
-        Long roleId = args.getRoleId();
+        Long roleId = req.getRoleId();
         // 处理permissionIds：null视为清空所有权限，转为空列表
-        List<Long> targetPermissionIds = args.getPermissionIds() == null ? List.of() : args.getPermissionIds();
+        List<Long> targetPermissionIds = req.getPermissionIds() == null ? List.of() : req.getPermissionIds();
 
         // 查询该角色当前已绑定的权限
         List<RolePermission> boundedPermissions = rolePermissionMapper.selectList(

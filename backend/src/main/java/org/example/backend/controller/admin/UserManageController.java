@@ -1,10 +1,10 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
-import org.example.backend.model.request.AssignGlobalRoleArgs;
-import org.example.backend.model.request.CreateUserArgs;
-import org.example.backend.model.request.DeleteUserArgs;
-import org.example.backend.model.request.UpdateUserArgs;
+import org.example.backend.common.result.Result;
+import org.example.backend.model.request.role.SystemRoleAssignmentReq;
+import org.example.backend.model.request.user.UserCreationReq;
+import org.example.backend.model.request.user.UserDeletionReq;
+import org.example.backend.model.request.user.UserUpdateReq;
 import org.example.backend.model.entity.Role;
 import org.example.backend.model.response.RoleView;
 import org.example.backend.model.response.UserView;
@@ -23,50 +23,50 @@ public class UserManageController {
     }
 
     @PostMapping("/create")
-    public Result<?> createUser(@RequestBody CreateUserArgs args) {
-        userService.createUser(args);
-        return Result.success("创建用户成功");
+    public Result<?> createUser(@RequestBody UserCreationReq req) {
+        userService.createUser(req);
+        return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteUsers(@RequestBody DeleteUserArgs args) {
-        userService.deleteUsers(args);
-        return Result.success("删除用户成功");
+    public Result<?> deleteUsers(@RequestBody UserDeletionReq req) {
+        userService.deleteUsers(req);
+        return Result.success();
     }
 
     @PostMapping("/update")
-    public Result<?> updateUser(@RequestBody UpdateUserArgs args) {
-        userService.updateUser(args);
-        return Result.success("更新用户成功");
+    public Result<?> updateUser(@RequestBody UserUpdateReq req) {
+        userService.updateUser(req);
+        return Result.success();
     }
 
     @GetMapping("/all")
     public Result<?> listAllUsers() {
-        List<UserView> views = userService.listAllUsers();
-        return Result.success("", views);
+        List<UserView> resp = userService.listAllUsers();
+        return Result.success(resp);
     }
 
     @PostMapping("/assign")
-    public Result<?> assignGlobalRole(@RequestBody AssignGlobalRoleArgs args) {
-        userService.assignGlobalRole(args);
-        return Result.success("<UNK>");
+    public Result<?> assignGlobalRole(@RequestBody SystemRoleAssignmentReq req) {
+        userService.assignGlobalRole(req);
+        return Result.success();
     }
 
     @PostMapping("/reset")
     public Result<?> resetPassword(Long id) {
         userService.resetPassword(id);
-        return Result.success("<UNK>");
+        return Result.success();
     }
 
     @GetMapping("/role")
     public Result<?> listGlobalRole() {
         List<Role> roleList = userService.listGlobalRole();
-        List<RoleView> views = roleList.stream()
+        List<RoleView> resp = roleList.stream()
                 .map(role -> RoleView.builder()
                         .id(role.getId())
                         .name(role.getName())
                         .build()).toList();
 
-        return Result.success("", views);
+        return Result.success(resp);
     }
 }

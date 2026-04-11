@@ -1,9 +1,9 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
-import org.example.backend.model.request.CreateMemberArgs;
-import org.example.backend.model.request.DeleteMemberArgs;
-import org.example.backend.model.request.UpdateMemberArgs;
+import org.example.backend.common.result.Result;
+import org.example.backend.model.request.member.MemberCreationReq;
+import org.example.backend.model.request.member.MemberDeletionReq;
+import org.example.backend.model.request.member.MemberUpdateReq;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.Role;
 import org.example.backend.model.response.MemberNodeView;
@@ -24,50 +24,50 @@ public class MemberManageController {
     }
 
     @PostMapping("/create")
-    public Result<Void> createMember(@RequestBody CreateMemberArgs args) {
-        memberService.createMember(args);
-        return Result.success("");
+    public Result<?> createMember(@RequestBody MemberCreationReq req) {
+        memberService.createMember(req);
+        return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteMembers(@RequestBody DeleteMemberArgs args) {
-        memberService.deleteMembers(args);
-        return Result.success("");
+    public Result<?> deleteMembers(@RequestBody MemberDeletionReq req) {
+        memberService.deleteMembers(req);
+        return Result.success();
     }
 
     @PostMapping("/update")
-    public Result<Void> updateMember(@RequestBody UpdateMemberArgs args) {
-        memberService.updateMember(args);
-        return Result.success("");
+    public Result<?> updateMember(@RequestBody MemberUpdateReq req) {
+        memberService.updateMember(req);
+        return Result.success();
     }
 
     @GetMapping("/all")
-    public Result<List<MemberView>> listAllMembers() {
-        List<MemberView> memberViews = memberService.listAllMembers();
-        return Result.success(memberViews);
+    public Result<?> listAllMembers() {
+        List<MemberView> resp = memberService.listAllMembers();
+        return Result.success(resp);
     }
 
     @GetMapping("/role")
-    public Result<List<MemberRoleView>> listOrgRoles() {
+    public Result<?> listOrgRoles() {
         List<Role> roles = memberService.listOrgRoles();
-        List<MemberRoleView> memberRoleViews = roles.stream()
+        List<MemberRoleView> resp = roles.stream()
                 .map(role -> MemberRoleView.builder()
                         .id(role.getId())
                         .name(role.getName())
                         .build())
                 .toList();
-        return Result.success(memberRoleViews);
+        return Result.success(resp);
     }
 
     @GetMapping("/org")
-    public Result<List<MemberNodeView>> listOrgNodes() {
+    public Result<?> listOrgNodes() {
         List<Node> nodes = memberService.listOrgNodes();
-        List<MemberNodeView> memberNodeViews = nodes.stream()
+        List<MemberNodeView> resp = nodes.stream()
                 .map(node -> MemberNodeView.builder()
                         .id(node.getId())
                         .name(node.getNodeName())
                         .build())
                 .toList();
-        return Result.success(memberNodeViews);
+        return Result.success(resp);
     }
 }

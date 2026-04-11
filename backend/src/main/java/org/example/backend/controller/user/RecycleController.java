@@ -1,9 +1,9 @@
 package org.example.backend.controller.user;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.request.DeleteEntryArgs;
-import org.example.backend.model.request.RestoreEntryArgs;
+import org.example.backend.model.request.file.DeleteEntryArgs;
+import org.example.backend.model.request.file.RestoreEntryArgs;
 import org.example.backend.model.response.RecycleView;
 import org.example.backend.service.RecycleService;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +22,8 @@ public class RecycleController {
     @GetMapping
     public Result<?> listEntries() {
         Long currentUserId = SecurityUtil.getUserId();
-        List<RecycleView> recycleViewList = recycleService.listEntries(currentUserId);
-        return Result.success("", recycleViewList);
+        List<RecycleView> resp = recycleService.listEntries(currentUserId);
+        return Result.success(resp);
     }
 
 

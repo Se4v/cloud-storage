@@ -7,10 +7,10 @@ import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.UserMapper;
-import org.example.backend.model.request.UpdateAvatarArgs;
+import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.request.ChangePasswordArgs;
-import org.example.backend.model.request.UpdateProfileArgs;
+import org.example.backend.model.request.user.PasswordChangeReq;
+import org.example.backend.model.request.user.ProfileUpdateReq;
 import org.example.backend.model.response.AvatarUploadUrlView;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -95,7 +95,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updateAvatar(UpdateAvatarArgs args, Long userId) {
+    public void updateAvatar(AvatarUpdateReq req, Long userId) {
         // 判断用户是否存在
         User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException("用户不存在");
@@ -103,7 +103,7 @@ public class ProfileService {
         // 更新头像信息
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
-                        .set(User::getAvatar, args.getObjectName())
+                        .set(User::getAvatar, req.getObjectName())
                         .eq(User::getId, user.getId()));
         if (count != 1) throw new BusinessException("<UNK>");
     }
@@ -115,7 +115,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updateProfile(UpdateProfileArgs args, Long userId) {
+    public void updateProfile(ProfileUpdateReq req, Long userId) {
         // 判断用户是否存在
         User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException("<UNK>");
@@ -123,30 +123,30 @@ public class ProfileService {
         // 更新用户信息
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
-                        .set(User::getEmail, args.getEmail())
-                        .set(User::getMobile, args.getMobile())
+                        .set(User::getEmail, req.getEmail())
+                        .set(User::getMobile, req.getMobile())
                         .eq(User::getId, user.getId()));
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
     @Transactional
-    public void updatePassword(ChangePasswordArgs args, Long userId) {
+    public void updatePassword(PasswordChangeReq req, Long userId) {
         // 判断用户是否存在
         User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException("用户不存在");
 
         // 密码比对
-        if (!passwordEncoder.matches(args.getOldPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
             throw new BusinessException("旧密码不相同");
         }
-        if (!args.getNewPassword().equals(args.getConfirmPassword())) {
+        if (!req.getNewPassword().equals(req.getConfirmPassword())) {
             throw new BusinessException("新密码与确认密码不同");
         }
 
         // 更新密码
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
-                        .set(User::getPassword, passwordEncoder.encode(args.getNewPassword()))
+                        .set(User::getPassword, passwordEncoder.encode(req.getNewPassword()))
                         .eq(User::getId, user.getId()));
         if (count != 1) throw new BusinessException("修改密码失败");
     }

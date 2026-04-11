@@ -1,6 +1,6 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.model.response.FileTypeDistributionView;
 import org.example.backend.model.response.TrafficOverviewView;
 import org.example.backend.model.response.TrendStatisticsView;
@@ -22,19 +22,19 @@ public class TrafficStatController {
 
     @GetMapping("/overview")
     public Result<?> getTrafficOverview() {
-        TrafficOverviewView view = trafficStatService.getTrafficOverview();
-        return Result.success(view);
+        TrafficOverviewView resp = trafficStatService.getTrafficOverview();
+        return Result.success(resp);
     }
 
     @GetMapping("/trend")
     public Result<?> getTrendStatistics() {
-        List<TrendStatisticsView> views = trafficStatService.getTrendStatistics();
-        return Result.success(views);
+        List<TrendStatisticsView> resp = trafficStatService.getTrendStatistics();
+        return Result.success(resp);
     }
 
     @GetMapping("/distribution")
     public Result<?> getFileTypeDistribution() {
-        List<FileTypeDistributionView> views = trafficStatService.getFileTypeDistribution();
-        return Result.success(views);
+        List<FileTypeDistributionView> resp = trafficStatService.getFileTypeDistribution();
+        return Result.success(resp);
     }
 }

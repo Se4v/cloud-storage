@@ -1,6 +1,6 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.model.response.DriveDetailView;
 import org.example.backend.model.response.DriveOverviewView;
 import org.example.backend.model.response.DriveUsageBreakdownView;
@@ -22,25 +22,25 @@ public class DriveStatController {
 
     @GetMapping("/overview")
     public Result<?> getDriveOverview() {
-        DriveOverviewView view = driveStatService.getDriveOverview();
-        return Result.success(view);
+        DriveOverviewView resp = driveStatService.getDriveOverview();
+        return Result.success(resp);
     }
 
     @GetMapping("/breakdown")
     public Result<?> getDriveUsageBreakdown() {
-        DriveUsageBreakdownView view = driveStatService.getDriveUsageBreakdown();
-        return Result.success(view);
+        DriveUsageBreakdownView resp = driveStatService.getDriveUsageBreakdown();
+        return Result.success(resp);
     }
 
     @GetMapping("/enterprise")
     public Result<?> getEnterpriseDriveDetails() {
-        List<DriveDetailView> views = driveStatService.getEnterpriseDriveDetails();
-        return Result.success(views);
+        List<DriveDetailView> resp = driveStatService.getEnterpriseDriveDetails();
+        return Result.success(resp);
     }
 
     @GetMapping("/personal")
     public Result<?> getPersonalDriveDetails() {
-        List<DriveDetailView> views = driveStatService.getPersonalDriveDetails();
-        return Result.success(views);
+        List<DriveDetailView> resp = driveStatService.getPersonalDriveDetails();
+        return Result.success(resp);
     }
 }

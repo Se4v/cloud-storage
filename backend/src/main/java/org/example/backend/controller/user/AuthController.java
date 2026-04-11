@@ -1,8 +1,8 @@
 package org.example.backend.controller.user;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.request.LoginArgs;
+import org.example.backend.model.request.auth.AuthReq;
 import org.example.backend.service.AuthService;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +16,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Result<?> login(@RequestBody LoginArgs args) {
-        String token = authService.login(args.getUsername(), args.getPassword());
-        return Result.success("", token);
+    public Result<?> login(@RequestBody AuthReq req) {
+        String token = authService.login(req.getUsername(), req.getPassword());
+        return Result.success(token);
     }
 
     @GetMapping("/logout")

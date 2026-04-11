@@ -1,6 +1,6 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import lombok.AllArgsConstructor;
@@ -9,11 +9,10 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.mapper.TrafficMapper;
-import org.example.backend.model.request.DownloadArgs;
+import org.example.backend.model.request.file.FileDownloadReq;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Traffic;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -29,23 +28,27 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @Service
 public class DownloadService {
-    @Autowired
-    private MinioClient minioClient;
-    @Autowired
-    private EntryMapper entryMapper;
-    @Autowired
-    private StorageMapper storageMapper;
-    @Autowired
-    private TrafficMapper trafficMapper;
+    private final MinioClient minioClient;
+    private final EntryMapper entryMapper;
+    private final StorageMapper storageMapper;
+    private final TrafficMapper trafficMapper;
+
+    public DownloadService(MinioClient minioClient, EntryMapper entryMapper,
+                           StorageMapper storageMapper, TrafficMapper trafficMapper) {
+        this.minioClient = minioClient;
+        this.entryMapper = entryMapper;
+        this.storageMapper = storageMapper;
+        this.trafficMapper = trafficMapper;
+    }
 
     private static final int TYPE_FILE = 1;
     private static final int TYPE_FOLDER = 2;
     private static final int STATUS_UNDELETED = 1;
 
-    public StreamingResponseBody download(DownloadArgs args, Long userId) {
+    public StreamingResponseBody download(FileDownloadReq req, Long userId) {
         return outputStream -> {
             try {
-                List<DownloadTask> tasks = collectDownloadTasks(args.getIds());
+                List<DownloadTask> tasks = collectDownloadTasks(req.getIds());
                 if (tasks.isEmpty()) {
                     throw new BusinessException("File not found");
                 }
@@ -93,11 +96,11 @@ public class DownloadService {
     /**
      * 获取下载文件名（在流式传输前调用）
      */
-    public String getDownloadFileName(DownloadArgs args) {
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getStatus, STATUS_UNDELETED)
-                .in(Entry::getId, args.getIds());
-        List<Entry> entries = entryMapper.selectList(queryWrapper);
+    public String getDownloadFileName(FileDownloadReq req) {
+        List<Entry> entries = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getStatus, STATUS_UNDELETED)
+                        .in(Entry::getId, req.getIds()));
 
         if (entries == null || entries.isEmpty()) {
             throw new BusinessException("File not found");
@@ -119,9 +122,10 @@ public class DownloadService {
         List<DownloadTask> tasks = new ArrayList<>();
 
         // 1. 批量查询根节点（状态为未删除）
-        LambdaQueryWrapper<Entry> rootQueryWrapper = new LambdaQueryWrapper<>();
-        rootQueryWrapper.in(Entry::getId, entryIds).eq(Entry::getStatus, STATUS_UNDELETED);
-        List<Entry> roots = entryMapper.selectList(rootQueryWrapper);
+        List<Entry> roots = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .in(Entry::getId, entryIds)
+                        .eq(Entry::getStatus, STATUS_UNDELETED));
 
         if (roots == null || roots.isEmpty()) {
             return tasks;
@@ -201,9 +205,9 @@ public class DownloadService {
         }
 
         // 批量查询 Storage 记录，构建 storageId -> Storage 映射
-        LambdaQueryWrapper<Storage> storageQueryWrapper = new LambdaQueryWrapper<>();
-        storageQueryWrapper.in(Storage::getId, storageIds);
-        List<Storage> storages = storageMapper.selectList(storageQueryWrapper);
+        List<Storage> storages = storageMapper.selectList(
+                Wrappers.<Storage>lambdaQuery()
+                        .in(Storage::getId, storageIds));
 
         return storages.stream().collect(Collectors.toMap(Storage::getId, s -> s));
     }

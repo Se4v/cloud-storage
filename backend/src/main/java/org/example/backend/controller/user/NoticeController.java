@@ -1,9 +1,9 @@
 package org.example.backend.controller.user;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.request.DeleteNoticeArgs;
-import org.example.backend.model.request.MarkNoticeReadArgs;
+import org.example.backend.model.request.notice.NoticeDeletionReq;
+import org.example.backend.model.request.notice.NoticeReadMarkReq;
 import org.example.backend.model.entity.Notice;
 import org.example.backend.model.response.NoticeView;
 import org.example.backend.service.NoticeService;
@@ -25,7 +25,7 @@ public class NoticeController {
         Long currentUserId = SecurityUtil.getUserId();
         List<Notice> notices = noticeService.listUnreadNotices(currentUserId);
 
-        List<NoticeView> noticeViews = notices.stream()
+        List<NoticeView> resp = notices.stream()
                 .map(notice -> NoticeView.builder()
                         .id(notice.getId())
                         .title(notice.getTitle())
@@ -36,7 +36,7 @@ public class NoticeController {
                         .build())
                 .toList();
 
-        return Result.success("", noticeViews);
+        return Result.success(resp);
     }
 
     @GetMapping
@@ -44,7 +44,7 @@ public class NoticeController {
         Long currentUserId = SecurityUtil.getUserId();
         List<Notice> notices = noticeService.listNotices(currentUserId);
 
-        List<NoticeView> noticeViews = notices.stream()
+        List<NoticeView> resp = notices.stream()
                 .map(notice -> NoticeView.builder()
                         .id(notice.getId())
                         .title(notice.getTitle())
@@ -55,20 +55,20 @@ public class NoticeController {
                         .build())
                 .toList();
 
-        return Result.success("", noticeViews);
+        return Result.success(resp);
     }
 
     @PostMapping("/read")
-    public Result<?> markNoticeAsRead(@RequestBody MarkNoticeReadArgs args) {
+    public Result<?> markNoticeAsRead(@RequestBody NoticeReadMarkReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        noticeService.markNoticeAsRead(args, currentUserId);
+        noticeService.markNoticeAsRead(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteNotices(@RequestBody DeleteNoticeArgs args) {
+    public Result<?> deleteNotices(@RequestBody NoticeDeletionReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        noticeService.deleteNotices(args, currentUserId);
+        noticeService.deleteNotices(req, currentUserId);
         return Result.success();
     }
 }

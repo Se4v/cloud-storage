@@ -1,6 +1,6 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.model.entity.Log;
 import org.example.backend.model.response.LogView;
 import org.example.backend.service.LogService;
@@ -22,7 +22,7 @@ public class LogManageController {
     @GetMapping("/all")
     public Result<List<LogView>> listAllLogs() {
         List<Log> logList = logService.listAllLogs();
-        List<LogView> logViewList = logList.stream()
+        List<LogView> resp = logList.stream()
                 .map(log -> LogView.builder()
                         .id(log.getId())
                         .username(log.getUsername())
@@ -33,6 +33,6 @@ public class LogManageController {
                         .success(log.getStatus() == 1)
                         .build())
                 .toList();
-        return Result.success(logViewList);
+        return Result.success(resp);
     }
 }

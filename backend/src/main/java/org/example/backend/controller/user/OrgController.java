@@ -1,6 +1,6 @@
 package org.example.backend.controller.user;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.response.OrgTreeView;
 import org.example.backend.service.OrgService;
@@ -22,7 +22,7 @@ public class OrgController {
     @GetMapping("/org")
     public Result<?> getOrgTree() {
         Long currentUserId = SecurityUtil.getUserId();
-        List<OrgTreeView> views = orgService.getOrgTree(currentUserId);
-        return Result.success(views);
+        List<OrgTreeView> resp = orgService.getOrgTree(currentUserId);
+        return Result.success(resp);
     }
 }

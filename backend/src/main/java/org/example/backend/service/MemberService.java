@@ -6,9 +6,9 @@ import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.NodeMapper;
 import org.example.backend.mapper.RoleMapper;
 import org.example.backend.mapper.UserMapper;
-import org.example.backend.model.request.CreateMemberArgs;
-import org.example.backend.model.request.DeleteMemberArgs;
-import org.example.backend.model.request.UpdateMemberArgs;
+import org.example.backend.model.request.member.MemberCreationReq;
+import org.example.backend.model.request.member.MemberDeletionReq;
+import org.example.backend.model.request.member.MemberUpdateReq;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.Role;
@@ -36,13 +36,11 @@ public class MemberService {
     }
 
     @Transactional
-    public void createMember(CreateMemberArgs args) {
-        if (args == null) throw new BusinessException("");
-
+    public void createMember(MemberCreationReq req) {
         // 查询用户是否存在
         User user = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery()
-                        .eq(User::getUsername, args.getUsername())
+                        .eq(User::getUsername, req.getUsername())
                         .eq(User::getEnabled, 1)
                         .eq(User::getDeleted, 0));
         if (user == null) throw new BusinessException("<UNK>");
@@ -50,7 +48,7 @@ public class MemberService {
         // 查询角色是否存在
         Role role = roleMapper.selectOne(
                 Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getId, args.getRoleId())
+                        .eq(Role::getId, req.getRoleId())
                         .eq(Role::getEnabled, 1)
                         .eq(Role::getDeleted, 0));
         if (role == null) throw new BusinessException("<UNK>");
@@ -58,44 +56,44 @@ public class MemberService {
         // 查询组织节点是否存在
         Node node = nodeMapper.selectOne(
                 Wrappers.<Node>lambdaQuery()
-                        .eq(Node::getId, args.getNodeId())
+                        .eq(Node::getId, req.getNodeId())
                         .eq(Node::getIsEnabled, 1)
                         .eq(Node::getIsDeleted, 0));
         if (node == null) throw new BusinessException("<UNK>");
 
         Member member = Member.builder()
                 .userId(user.getId())
-                .nodeId(args.getNodeId())
-                .roleId(args.getRoleId())
+                .nodeId(req.getNodeId())
+                .roleId(req.getRoleId())
                 .build();
         int count = memberMapper.insert(member);
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
     @Transactional
-    public void deleteMembers(DeleteMemberArgs args) {
+    public void deleteMembers(MemberDeletionReq req) {
         int count = memberMapper.update(
                 Wrappers.<Member>lambdaUpdate()
                         .set(Member::getDeleted, 1)
-                        .in(Member::getId, args.getMemberIds()));
-        if (count != args.getMemberIds().size()) throw new BusinessException("<UNK>");
+                        .in(Member::getId, req.getMemberIds()));
+        if (count != req.getMemberIds().size()) throw new BusinessException("<UNK>");
     }
 
     @Transactional
-    public void updateMember(UpdateMemberArgs args) {
+    public void updateMember(MemberUpdateReq req) {
         // 查询成员信息是否存在
         Member member = memberMapper.selectOne(
                 Wrappers.<Member>lambdaQuery()
-                        .eq(Member::getId, args.getMemberId())
+                        .eq(Member::getId, req.getMemberId())
                         .eq(Member::getDeleted, 0));
         if (member == null) throw new BusinessException("<UNK>");
 
         // 更新信息
         int count = memberMapper.update(
                 Wrappers.<Member>lambdaUpdate()
-                        .set(Member::getNodeId, args.getNodeId())
-                        .set(Member::getRoleId, args.getRoleId())
-                        .eq(Member::getId, args.getMemberId()));
+                        .set(Member::getNodeId, req.getNodeId())
+                        .set(Member::getRoleId, req.getRoleId())
+                        .eq(Member::getId, req.getMemberId()));
         if (count != 1) throw new BusinessException("<UNK>");
     }
 

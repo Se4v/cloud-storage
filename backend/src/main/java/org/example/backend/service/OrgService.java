@@ -1,15 +1,14 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.NodeMapper;
 import org.example.backend.mapper.UserMapper;
-import org.example.backend.model.request.CreateNodeArgs;
-import org.example.backend.model.request.DeleteNodeArgs;
-import org.example.backend.model.request.UpdateNodeArgs;
+import org.example.backend.model.request.notice.NodeCreationReq;
+import org.example.backend.model.request.org.OrgNodeDeletionReq;
+import org.example.backend.model.request.org.OrgNodeUpdateReq;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
@@ -91,48 +90,48 @@ public class OrgService {
     }
 
     @Transactional
-    public void createOrgNode(CreateNodeArgs args) {
+    public void createOrgNode(NodeCreationReq req) {
         // 校验父节点是否存在（如果不是根节点）
-        if (args.getParentId() > 0) {
-            Node parentNode = nodeMapper.selectById(args.getParentId());
+        if (req.getParentId() > 0) {
+            Node parentNode = nodeMapper.selectById(req.getParentId());
             if (parentNode == null) throw new BusinessException("父节点不存在");
         }
 
         // 校验同一父节点下名称是否重复
         long sameName = nodeMapper.selectCount(
                 Wrappers.<Node>lambdaQuery()
-                        .eq(Node::getParentId, args.getParentId())
-                        .eq(Node::getNodeName, args.getName()));
+                        .eq(Node::getParentId, req.getParentId())
+                        .eq(Node::getNodeName, req.getName()));
         if (sameName > 0) throw new BusinessException("同一父节点下已存在相同名称的部门");
 
         // 创建节点
         Node node = Node.builder()
-                .nodeName(args.getName())
-                .nodeType(args.getType())
-                .parentId(args.getParentId())
+                .nodeName(req.getName())
+                .nodeType(req.getType())
+                .parentId(req.getParentId())
                 .build();
         int nodeInsert = nodeMapper.insert(node);
         if (nodeInsert != 1) throw new BusinessException("创建部门失败");
 
         // 查询节点管理员
         Long adminId;
-        if (args.getAdminUsername().isBlank()) {
+        if (req.getAdminUsername().isBlank()) {
             adminId = 0L;
         } else {
-            LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-            userQuery.eq(User::getUsername, args.getAdminUsername());
-            User admin = userMapper.selectOne(userQuery);
+            User admin = userMapper.selectOne(
+                    Wrappers.<User>lambdaQuery()
+                            .eq(User::getUsername, req.getAdminUsername()));
             if (admin == null) throw new BusinessException("该用户不存在");
             adminId = admin.getId();
         }
 
         // 创建企业空间
         Drive drive = Drive.builder()
-                .driveName(args.getName())
+                .driveName(req.getName())
                 .driveType(2)
                 .nodeId(node.getId())
                 .userId(adminId)
-                .totalQuota(args.getStorageQuota())
+                .totalQuota(req.getStorageQuota())
                 .build();
 
         int driveInsert = driveMapper.insert(drive);
@@ -140,8 +139,8 @@ public class OrgService {
     }
 
     @Transactional
-    public void deleteOrgNodes(DeleteNodeArgs args) {
-        List<Long> nodeIds = args.getNodeIds();
+    public void deleteOrgNodes(OrgNodeDeletionReq req) {
+        List<Long> nodeIds = req.getNodeIds();
 
         // 校验是否存在子节点
         long childCount = nodeMapper.selectCount(
@@ -158,52 +157,52 @@ public class OrgService {
     }
 
     @Transactional
-    public void updateOrgNode(UpdateNodeArgs args) {
+    public void updateOrgNode(OrgNodeUpdateReq req) {
         // 校验节点是否存在
-        Node existingNode = nodeMapper.selectById(args.getId());
+        Node existingNode = nodeMapper.selectById(req.getId());
         if (existingNode == null) throw new BusinessException("节点不存在");
 
         // 校验父节点是否合法
-        if (args.getParentId() >= 0) {
-            if (args.getParentId().equals(args.getId())) throw new BusinessException("不能设置自己为父节点");
+        if (req.getParentId() >= 0) {
+            if (req.getParentId().equals(req.getId())) throw new BusinessException("不能设置自己为父节点");
             List<Node> children = nodeMapper.selectList(
                     Wrappers.<Node>lambdaQuery()
-                            .eq(Node::getParentId, args.getId())
+                            .eq(Node::getParentId, req.getId())
                             .eq(Node::getIsDeleted, 0));
             Map<Long, Node> childrenMap = children.stream().collect(Collectors.toMap(Node::getId, node -> node));
-            if (childrenMap.containsKey(args.getParentId())) throw new BusinessException("不能设置自己的子节点为父节点");
+            if (childrenMap.containsKey(req.getParentId())) throw new BusinessException("不能设置自己的子节点为父节点");
         }
 
         // 校验名称是否重复（如果名称有变更）
-        if (!args.getName().equals(existingNode.getNodeName())) {
-            Long parentId = Objects.equals(args.getParentId(), existingNode.getParentId())
-                    ? existingNode.getParentId() : args.getParentId();
+        if (!req.getName().equals(existingNode.getNodeName())) {
+            Long parentId = Objects.equals(req.getParentId(), existingNode.getParentId())
+                    ? existingNode.getParentId() : req.getParentId();
             long sameName = nodeMapper.selectCount(
                     Wrappers.<Node>lambdaQuery()
                             .eq(Node::getParentId, parentId)
-                            .eq(Node::getNodeName, args.getName())
-                            .ne(Node::getId, args.getId()));
+                            .eq(Node::getNodeName, req.getName())
+                            .ne(Node::getId, req.getId()));
             if (sameName > 0) throw new BusinessException("同一父节点下已存在相同名称的节点");
         }
 
         // 更新组织节点
         int nodeUpdateCount = nodeMapper.update(
                 Wrappers.<Node>lambdaUpdate()
-                        .set(Node::getNodeName, args.getName())
-                        .set(Node::getNodeType, args.getType())
-                        .set(Node::getParentId, args.getParentId())
-                        .set(Node::getIsEnabled, args.getIsEnabled())
-                        .eq(Node::getId, args.getId()));
+                        .set(Node::getNodeName, req.getName())
+                        .set(Node::getNodeType, req.getType())
+                        .set(Node::getParentId, req.getParentId())
+                        .set(Node::getIsEnabled, req.getIsEnabled())
+                        .eq(Node::getId, req.getId()));
         if (nodeUpdateCount != 1) throw new BusinessException("更新节点失败");
 
         // 校验节点管理员是否存在
         Long adminId;
-        if (args.getAdminUsername().isBlank()) {
+        if (req.getAdminUsername().isBlank()) {
             adminId = 0L;
         } else {
             User admin = userMapper.selectOne(
                     Wrappers.<User>lambdaQuery()
-                            .eq(User::getUsername, args.getAdminUsername()));
+                            .eq(User::getUsername, req.getAdminUsername()));
             if (admin == null) throw new BusinessException("该用户不存在");
             adminId = admin.getId();
         }
@@ -211,14 +210,14 @@ public class OrgService {
         // 更新
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getNodeId, args.getId()));
+                        .eq(Drive::getNodeId, req.getId()));
         if (drive == null) throw new BusinessException("节点对应的存储空间不存在");
-        if (drive.getUsedQuota() > args.getStorageQuota()) throw new BusinessException("");
+        if (drive.getUsedQuota() > req.getStorageQuota()) throw new BusinessException("");
 
         int driveUpdateCount = driveMapper.update(
                 Wrappers.<Drive>lambdaUpdate()
-                        .set(Drive::getDriveName, args.getName())
-                        .set(Drive::getTotalQuota, args.getStorageQuota())
+                        .set(Drive::getDriveName, req.getName())
+                        .set(Drive::getTotalQuota, req.getStorageQuota())
                         .set(Drive::getUserId, adminId)
                         .eq(Drive::getNodeId, drive.getNodeId()));
         if (driveUpdateCount != 1) throw new BusinessException("更新节点-空间失败");

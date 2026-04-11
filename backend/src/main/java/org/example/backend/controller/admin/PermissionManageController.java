@@ -1,6 +1,6 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.model.entity.Permission;
 import org.example.backend.model.response.PermissionView;
 import org.example.backend.service.PermissionService;
@@ -23,7 +23,7 @@ public class PermissionManageController {
     public Result<?> listALlPermissions() {
         List<Permission> permissionList = permissionService.listAllPermissions();
 
-        List<PermissionView> views = permissionList.stream()
+        List<PermissionView> resp = permissionList.stream()
                 .map(permission -> {
                     return PermissionView.builder()
                             .id(permission.getId())
@@ -34,6 +34,6 @@ public class PermissionManageController {
                 })
                 .toList();
 
-        return Result.success("", views);
+        return Result.success(resp);
     }
 }

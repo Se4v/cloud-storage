@@ -1,7 +1,7 @@
 package org.example.backend.controller.admin;
 
-import org.example.backend.common.Result;
-import org.example.backend.model.request.UpdateSystemConfigArgs;
+import org.example.backend.common.result.Result;
+import org.example.backend.model.request.sys.SystemConfigUpdateReq;
 import org.example.backend.model.response.SystemConfigView;
 import org.example.backend.service.SystemService;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class SystemManageController {
         String storageWarningThreshold = configMap.getOrDefault("storage_warning_threshold", "0");
         List<String> fileTypeBlacklist = List.of(configMap.getOrDefault("file_type_blacklist", "").split(","));
 
-        SystemConfigView view = SystemConfigView.builder()
+        SystemConfigView resp = SystemConfigView.builder()
                 .loginFailThreshold(loginFailThreshold)
                 .defaultPassword(defaultPassword)
                 .defaultStorageQuota(defaultStorageQuota)
@@ -38,12 +38,12 @@ public class SystemManageController {
                 .fileTypeBlacklist(fileTypeBlacklist)
                 .build();
 
-        return Result.success(view);
+        return Result.success(resp);
     }
 
     @PostMapping("/update")
-    public Result<Void> updateSystemConfigs(@RequestBody UpdateSystemConfigArgs args) {
-        systemService.updateSystemConfigs(args);
-        return Result.success("");
+    public Result<Void> updateSystemConfigs(@RequestBody SystemConfigUpdateReq req) {
+        systemService.updateSystemConfigs(req);
+        return Result.success();
     }
 }

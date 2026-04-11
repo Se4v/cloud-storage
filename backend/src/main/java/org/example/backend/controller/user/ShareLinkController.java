@@ -1,9 +1,9 @@
 package org.example.backend.controller.user;
 
-import org.example.backend.common.Result;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.request.DeleteLinkArgs;
-import org.example.backend.model.request.UpdateLinkArgs;
+import org.example.backend.model.request.share.LinkDeletionReq;
+import org.example.backend.model.request.share.LinkUpdateReq;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.response.ShareView;
 import org.example.backend.service.ShareService;
@@ -25,7 +25,7 @@ public class ShareLinkController {
         Long currentUserId = SecurityUtil.getUserId();
         List<Share> shareList = shareService.listLinks(currentUserId);
 
-        List<ShareView> views = shareList.stream()
+        List<ShareView> resp = shareList.stream()
                 .map(share -> ShareView.builder()
                         .id(share.getId())
                         .fileType(share.getEntryType())
@@ -38,20 +38,20 @@ public class ShareLinkController {
                         .build())
                 .toList();
 
-        return Result.success("", views);
+        return Result.success(resp);
     }
 
     @PostMapping("/update")
-    public Result<?> updateLink(@RequestBody UpdateLinkArgs args) {
+    public Result<?> updateLink(@RequestBody LinkUpdateReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        shareService.updateLink(args, currentUserId);
+        shareService.updateLink(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteLinks(@RequestBody DeleteLinkArgs args) {
+    public Result<?> deleteLinks(@RequestBody LinkDeletionReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        shareService.deleteLinks(args, currentUserId);
+        shareService.deleteLinks(req, currentUserId);
         return Result.success();
     }
 }
