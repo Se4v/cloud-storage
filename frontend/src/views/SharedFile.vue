@@ -1,313 +1,165 @@
 <template>
-  <div class="h-full flex flex-col bg-[#f5f6f7] overflow-hidden">
-    <!-- 1. 全局顶部 Logo 栏 (类似夸克顶栏) -->
-    <div class="h-16 bg-white px-8 flex items-center justify-between shrink-0 z-20 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-          <el-icon class="text-white" :size="20"><Cloudy /></el-icon>
+  <div class="min-h-screen bg-[#f7f8fa] flex flex-col font-sans">
+    <!-- Top Header -->
+    <header class="h-14 bg-white flex items-center px-6 shadow-sm z-10">
+      <div class="flex items-center gap-2 cursor-pointer">
+        <div class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+          <div class="w-3 h-3 bg-white rounded-full"></div>
         </div>
-        <div class="flex items-baseline gap-1">
-          <span class="text-xl font-bold text-slate-900 tracking-tight">夸克</span>
-          <span class="text-lg font-medium text-slate-700">夸克网盘</span>
-        </div>
+        <span class="font-bold text-[17px] tracking-wide text-gray-900">云盘分享</span>
       </div>
-      <div class="flex items-center gap-4">
-        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-          登录账号
-        </button>
-        <button class="px-6 py-2 bg-[#ffefd5] text-[#b8860b] rounded-lg text-sm font-medium hover:bg-[#ffebcd] transition-colors">
-          会员中心
-        </button>
-      </div>
-    </div>
+    </header>
 
-    <!-- 主容器 -->
-    <div class="flex-1 overflow-auto">
-      <div class="max-w-[1200px] mx-auto p-6 space-y-4">
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-[1100px] mx-auto pt-6 px-4 pb-12">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[600px] flex flex-col">
         
-        <!-- 2. 分享信息卡片 (下载按钮与用户名并列) -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <div class="flex items-start justify-between">
-            <!-- 左侧：头像、名称、统计信息 -->
-            <div class="flex gap-4">
-              <div class="w-14 h-14 rounded-full bg-yellow-400 flex items-center justify-center text-white text-xl font-bold shadow-inner">
-                {{ shareInfo.shareUserName?.charAt(0) }}
+        <!-- User Info & Top Actions -->
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between bg-white">
+          <div class="flex items-center gap-4">
+            <el-avatar 
+              :size="48" 
+              src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" 
+              class="border border-gray-200 bg-gray-50 text-gray-300" 
+            />
+            <div>
+              <div class="text-[16px] font-medium text-gray-900 flex items-center gap-2">
+                <span>夸父*836的分享</span>
               </div>
-              <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                  <h1 class="text-lg font-bold text-slate-800">{{ shareInfo.shareUserName }}的分享</h1>
-                  <span class="bg-orange-100 text-orange-600 text-[10px] px-1.5 py-0.5 rounded-sm font-bold">SVIP</span>
-                </div>
-                <div class="flex items-center gap-4 text-xs text-slate-400">
-                  <span>共 {{ fileList.length }} 个文件</span>
-                  <span>{{ formatSize(shareInfo.totalSize || 0) }}</span>
-                  <span class="flex items-center gap-1"><el-icon><Clock /></el-icon> 永久有效</span>
-                  <button class="hover:text-blue-600">举报</button>
-                </div>
+              <div class="text-[13px] text-gray-500 mt-1 flex items-center gap-3">
+                <span>共 {{ fileList.length }} 个文件 {{ totalSize }}</span>
+                <span>1天后过期</span>
               </div>
             </div>
+          </div>
+          
+          <!-- Download Button -->
+          <div class="flex items-center gap-3">
+            <el-button 
+              type="primary" 
+              class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-lg !px-6 h-9 transition-all shadow-sm flex items-center gap-1.5"
+              @click="handleDownload"
+              :disabled="selectedFiles.length === 0 && fileList.length === 0"
+            >
+              <template #icon>
+                <Download class="w-4 h-4" />
+              </template>
+              <span class="font-medium text-[13px]">下载</span>
+            </el-button>
+          </div>
+        </div>
 
-            <!-- 右侧：搜索框与下载按钮并列显示 -->
-            <div class="flex items-center gap-4">
-              <!-- 搜索框 -->
-              <div class="relative w-64 hidden md:block">
-                <el-input
-                  v-model="searchQuery"
-                  placeholder="搜索链接中的文件"
-                  class="quark-search"
-                  clearable
-                >
-                  <template #prefix>
-                    <el-icon class="text-slate-400"><Search /></el-icon>
-                  </template>
-                </el-input>
-              </div>
-              
-              <!-- 客户端按钮 (模拟图片) -->
-              <button class="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
-                <el-icon><Monitor /></el-icon>
-                去客户端查看
-              </button>
-
-              <!-- 下载按钮 (侧重显示) -->
-              <button
-                @click="handleBatchDownload"
-                class="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-100"
-              >
-                <el-icon :size="18"><Download /></el-icon>
-                下载
-              </button>
+        <!-- File List Tools -->
+        <div class="px-6 py-4 flex items-center justify-between bg-white">
+          <div class="text-[14px] text-gray-700 font-medium">全部文件</div>
+          <div class="flex items-center gap-3 text-gray-500">
+            <div class="p-1.5 hover:bg-gray-100 rounded-md cursor-pointer transition-colors text-gray-500" title="排序">
+              <Sort class="w-[18px] h-[18px]" />
             </div>
           </div>
         </div>
 
-        <!-- 3. 文件展示区域 -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[500px]">
-          <!-- 列表工具栏 -->
-          <div class="px-6 py-4 flex items-center justify-between">
-            <div class="text-sm font-bold text-slate-800">全部文件</div>
-            <div class="flex items-center gap-2 text-slate-400">
-              <el-icon class="p-2 cursor-pointer hover:bg-slate-50 rounded"><Sort /></el-icon>
-              <el-icon class="p-2 cursor-pointer hover:bg-slate-50 rounded"><List /></el-icon>
-              <el-icon class="p-2 cursor-pointer hover:bg-slate-50 rounded"><Menu /></el-icon>
-            </div>
-          </div>
-
-          <!-- 表格主体 (夸克风格) -->
-          <el-table
-            ref="tableRef"
-            v-loading="loading"
-            :data="fileList"
-            class="quark-table"
-            @selection-change="handleSelectionChange"
-            @row-click="handleRowClick"
+        <!-- File List Table -->
+        <div class="flex-1 px-6 pb-6 bg-white">
+          <el-table 
+            :data="fileList" 
+            style="width: 100%" 
+            @selection-change="handleSelectionChange" 
+            class="!border-none share-table" 
+            :header-cell-style="{ background: '#fff', color: '#64748b', fontWeight: 500, fontSize: '13px', borderBottom: '1px solid #f1f5f9', padding: '10px 0' }" 
+            :cell-style="{ borderBottom: '1px solid #f8fafc', padding: '12px 0' }"
           >
-            <el-table-column type="selection" width="55" align="center" />
-            
-            <el-table-column label="文件名" min-width="400">
+            <el-table-column type="selection" width="50" align="center" />
+            <el-table-column label="文件名" min-width="450">
               <template #default="{ row }">
-                <div class="flex items-center gap-3 py-1 group">
-                  <!-- 文件/文件夹图标 -->
-                  <div class="w-10 h-10 flex items-center justify-center shrink-0">
-                    <img v-if="row.type === 2" src="https://img.icons8.com/color/48/folder-invoices.png" class="w-8 h-8" />
-                    <div v-else 
-                      class="w-8 h-8 rounded flex items-center justify-center text-white"
-                      :class="getFileIconBgClass(row.type, row.name)"
-                    >
-                      <el-icon :size="16">
-                        <component :is="getFileIcon(row.type, row.name)" />
-                      </el-icon>
+                <div class="flex items-center gap-3 group cursor-pointer pr-4">
+                  <!-- File Icon -->
+                  <div class="w-8 h-8 shrink-0 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg">
+                    <Document v-if="row.type === 'document'" class="w-5 h-5" />
+                    <Picture v-else-if="row.type === 'image'" class="w-5 h-5" />
+                    <Folder v-else-if="row.type === 'folder'" class="w-5 h-5" />
+                    <Files v-else class="w-5 h-5" />
+                  </div>
+                  <span class="text-[14px] text-gray-800 group-hover:text-blue-600 transition-colors truncate">{{ row.name }}</span>
+                  
+                  <!-- Hover Actions -->
+                  <div class="hidden group-hover:flex items-center gap-2 ml-auto shrink-0">
+                    <div class="w-8 h-8 rounded-md flex items-center justify-center hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-colors" title="下载" @click.stop="downloadFile(row)">
+                      <Download class="w-4 h-4" />
                     </div>
                   </div>
-                  <span class="text-sm text-slate-700 font-medium truncate group-hover:text-blue-600 transition-colors">{{ row.name }}</span>
                 </div>
               </template>
             </el-table-column>
-
-            <el-table-column label="大小" width="160">
+            <el-table-column prop="size" label="大小" width="150">
               <template #default="{ row }">
-                <span class="text-sm text-slate-400 tabular-nums">
-                  {{ row.type === 2 ? '1项' : formatSize(row.size) }}
-                </span>
+                <span class="text-[13px] text-gray-500">{{ row.size || '-' }}</span>
               </template>
             </el-table-column>
-
-            <el-table-column label="修改日期" width="200">
-              <template #default="{ row }">
-                <span class="text-sm text-slate-400 tabular-nums">{{ row.updateTime }}</span>
+            <el-table-column prop="date" label="修改日期" width="180">
+               <template #default="{ row }">
+                <span class="text-[13px] text-gray-500">{{ row.date }}</span>
               </template>
             </el-table-column>
           </el-table>
+        </div>
 
-          <!-- 空状态 -->
-          <div v-if="!loading && fileList.length === 0" class="flex-1 flex flex-col items-center justify-center text-slate-300">
-            <el-icon :size="64"><FolderOpened /></el-icon>
-            <p class="mt-2 text-sm">暂无内容</p>
-          </div>
-        </div>
       </div>
-    </div>
-
-    <!-- 4. 底部固定操作栏 -->
-    <div class="h-20 bg-white border-t border-slate-100 px-8 flex items-center justify-between shrink-0 z-20 shadow-[0_-1px_3px_rgba(0,0,0,0.02)]">
-      <div class="flex items-center gap-3">
-        <div class="w-[300px] px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-500 flex items-center justify-between">
-          <span>转存至：<span class="font-bold text-slate-700">我的网盘</span></span>
-          <el-icon class="cursor-pointer hover:text-blue-600"><FolderOpened /></el-icon>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <div v-if="selectedFiles.length > 0" class="text-sm text-slate-400 mr-4">
-          已选择 {{ selectedFiles.length }} 个文件
-        </div>
-        <button
-          @click="handleBatchDownload"
-          class="flex items-center gap-2 px-10 py-2.5 border border-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition-all"
-        >
-          <el-icon :size="18"><Download /></el-icon>
-          下载
-        </button>
-        <!-- 已移除“保存到网盘”按钮 -->
-      </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import {
-  Download, Search, Clock, FolderOpened, Menu, Sort, List, Monitor, Cloudy,
-  Document, Picture, VideoCamera, Headset, Box, Files
-} from '@element-plus/icons-vue'
+import { ref, computed } from 'vue'
+import { Download, Sort, Menu, Grid, Document, Folder, Picture, Files } from '@element-plus/icons-vue'
 
-const route = useRoute()
-const loading = ref(false)
-const tableRef = ref(null)
-const searchQuery = ref('')
-const selectedFiles = ref([])
-
-// 分享信息 (Mock 数据参考图片)
-const shareInfo = ref({
-  shareId: '',
-  shareUserName: '图欧*公益资源',
-  totalSize: 99213742080, // 92.4G
-})
-
-// 文件列表 (Mock 数据参考图片)
 const fileList = ref([
-  { id: 1, name: '科学探索馆', type: 2, size: 0, updateTime: '2024-11-04 11:22' },
-  { id: 2, name: '项目资源包.zip', type: 1, size: 1024 * 1024 * 1024 * 2.5, updateTime: '2024-11-03 14:30' },
-  { id: 3, name: '年度总结.pdf', type: 1, size: 1024 * 1024 * 12, updateTime: '2024-11-02 10:15' }
+  {
+    id: 1,
+    name: 'Idea 版本控制配置.docx',
+    size: '687.5KB',
+    date: '2026-01-11 18:28',
+    type: 'document'
+  }
 ])
 
-// 选择处理
-const handleSelectionChange = (selection) => {
-  selectedFiles.value = selection
-}
+const selectedFiles = ref([])
 
-const handleRowClick = (row) => {
-  tableRef.value?.toggleRowSelection(row)
-}
-
-// 下载处理
-const handleBatchDownload = () => {
-  if (selectedFiles.value.length === 0) {
-    ElMessage.warning('请选择要下载的文件')
-    return
-  }
-  ElMessage.success(`正在为您准备 ${selectedFiles.value.length} 个文件的下载任务...`)
-}
-
-// 辅助方法
-const getFileIcon = (type, name) => {
-  if (type === 2) return FolderOpened
-  const ext = name.split('.').pop().toLowerCase()
-  if (['jpg','png','gif','jpeg'].includes(ext)) return Picture
-  if (['mp4','mov','avi'].includes(ext)) return VideoCamera
-  if (['zip','7z','rar'].includes(ext)) return Box
-  return Document
-}
-
-const getFileIconBgClass = (type, name) => {
-  if (type === 2) return 'bg-[#7ec1ff]'
-  const ext = name.split('.').pop().toLowerCase()
-  if (ext === 'pdf') return 'bg-[#ff7e7e]'
-  if (ext === 'zip' || ext === 'rar') return 'bg-[#ffb97e]'
-  if (ext === 'mp4') return 'bg-[#ac86ff]'
-  return 'bg-[#94a3b8]'
-}
-
-const formatSize = (bytes) => {
-  if (bytes === 0 || !bytes) return '0 B'
-  const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
-}
-
-onMounted(() => {
-  // 模拟加载
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-  }, 500)
+const totalSize = computed(() => {
+  if (fileList.value.length === 1) return fileList.value[0].size
+  return '...'
 })
+
+const handleSelectionChange = (val) => {
+  selectedFiles.value = val
+}
+
+const handleDownload = () => {
+  const filesToDownload = selectedFiles.value.length > 0 ? selectedFiles.value : fileList.value
+  console.log('Downloading:', filesToDownload)
+}
+
+const downloadFile = (file) => {
+  console.log('Downloading single file:', file)
+}
 </script>
 
 <style scoped>
-/* 搜索框夸克样式 */
-:deep(.quark-search .el-input__wrapper) {
-  background-color: #f5f6f7;
-  box-shadow: none !important;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-  height: 40px;
+/* Customize Element Plus Table styling to align with shadcn/modern UI */
+.share-table :deep(.el-table__row:hover > td.el-table__cell) {
+  background-color: #f8fafc !important;
 }
-:deep(.quark-search .el-input__wrapper.is-focus) {
-  background-color: #fff;
+.share-table :deep(.el-checkbox__inner) {
+  border-radius: 4px;
+  border-color: #cbd5e1;
+  width: 16px;
+  height: 16px;
+}
+.share-table :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background-color: #2563eb;
   border-color: #2563eb;
 }
-
-/* 表格样式重构 (夸克简约风格) */
-:deep(.quark-table) {
-  --el-table-header-bg-color: transparent;
-  --el-table-border-color: transparent;
-  --el-table-row-hover-bg-color: #f8fafc;
-}
-
-:deep(.quark-table .el-table__header th) {
-  color: #94a3b8;
-  font-weight: normal;
-  font-size: 13px;
-  height: 50px;
-}
-
-:deep(.quark-table .el-table__cell) {
-  border-bottom: 1px solid #f8fafc;
-}
-
-:deep(.quark-table .el-checkbox__inner) {
-  border-radius: 4px;
-  border-color: #e2e8f0;
-}
-
-:deep(.quark-table .el-table__row) {
-  cursor: pointer;
-}
-
-:deep(.quark-table::before) {
+.share-table :deep(.el-table__inner-wrapper::before) {
   display: none;
-}
-
-/* 隐藏滚动条 */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 10px;
 }
 </style>
