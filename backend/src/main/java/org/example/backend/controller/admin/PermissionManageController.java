@@ -20,26 +20,20 @@ public class PermissionManageController {
     }
 
     @GetMapping("/all")
-    public Result<List<PermissionView>> listALlPermissions() {
+    public Result<?> listALlPermissions() {
         List<Permission> permissionList = permissionService.listAllPermissions();
 
-        List<PermissionView> permissionViews = permissionList.stream()
+        List<PermissionView> views = permissionList.stream()
                 .map(permission -> {
-                    String type = switch (permission.getType()) {
-                        case 1 -> "menu";
-                        case 2 -> "operation";
-                        case 3 -> "data";
-                        default -> "unknown";
-                    };
                     return PermissionView.builder()
                             .id(permission.getId())
                             .name(permission.getName())
                             .code(permission.getCode())
-                            .type(type)
+                            .type(permission.getType())
                             .build();
                 })
                 .toList();
 
-        return Result.success("", permissionViews);
+        return Result.success("", views);
     }
 }

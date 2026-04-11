@@ -118,7 +118,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { Search, Loading } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import { useUserStore } from "@/stores/user.js";
 
 const userStore = useUserStore()
@@ -150,29 +150,27 @@ const typeFilters = [
 ]
 
 // 权限数据
-const permissions = ref([])
+const permissionList = ref([])
 const loading = ref(false)
 
 // 状态管理
 const searchQuery = ref('')
 const currentType = ref('all')
 const currentPage = ref(1)
-const pageSize = ref(10)
 
-// 类型样式映射（支持数字和字符串）
+// 类型样式映射（type值为数字：1-菜单, 2-操作, 3-数据）
 const getTypeStyle = (type) => {
   const styles = {
-    'menu': 'bg-blue-50 text-blue-700 border border-blue-200',
-    'operation': 'bg-amber-50 text-amber-700 border border-amber-200',
-    'data': 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    1: 'bg-blue-50 text-blue-700 border border-blue-200',
+    2: 'bg-amber-50 text-amber-700 border border-amber-200',
+    3: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
   }
   return styles[type] || 'bg-slate-100 text-slate-700'
 }
 
 const getTypeLabel = (type) => {
-  const byCode = permissionTypes.find(t => t.code === type)?.label
-  if (byCode) return byCode
-  return type
+  const typeObj = permissionTypes.find(t => t.value === type)
+  return typeObj ? typeObj.label : type
 }
 
 // 获取权限列表
@@ -181,7 +179,7 @@ const loadPermissions = async () => {
   try {
     const res = await axios.get(`${API_BASE_URL}/api/perm/all`, getAuthConfig())
     if (res.data.code === 200) {
-      permissions.value = res.data.data || []
+      permissionList.value = res.data.data || []
     } else {
       ElMessage.error(res.data.msg || '获取权限列表失败')
     }
@@ -200,7 +198,7 @@ onMounted(() => {
 
 // 筛选逻辑
 const filteredPermissions = computed(() => {
-  let result = permissions.value
+  let result = permissionList.value
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
@@ -211,11 +209,7 @@ const filteredPermissions = computed(() => {
   }
 
   if (currentType.value !== 'all') {
-    // 获取当前选中类型的所有可能值（数字和字符串）
-    const selectedType = permissionTypes.find(t => t.value === currentType.value)
-    if (selectedType) {
-      result = result.filter(p => p.type === selectedType.value || p.type === selectedType.code)
-    }
+    result = result.filter(p => p.type === currentType.value)
   }
 
   return result

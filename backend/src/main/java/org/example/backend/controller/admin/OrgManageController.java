@@ -20,27 +20,26 @@ public class OrgManageController {
     }
 
     @PostMapping("/create")
-    public Result<Void> createOrgNode(@RequestBody CreateNodeArgs args) {
+    public Result<?> createOrgNode(@RequestBody CreateNodeArgs args) {
         orgService.createOrgNode(args);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Void> deleteOrgNodes(@RequestBody DeleteNodeArgs args) {
+    public Result<?> deleteOrgNodes(@RequestBody DeleteNodeArgs args) {
         orgService.deleteOrgNodes(args);
         return Result.success();
     }
 
     @PostMapping("/update")
-    public Result<Void> updateOrgNode(@RequestBody UpdateNodeArgs args) {
+    public Result<?> updateOrgNode(@RequestBody UpdateNodeArgs args) {
         orgService.updateOrgNode(args);
         return Result.success();
     }
 
     @GetMapping("/all")
-    public Result<List<NodeView>> listAllOrgNodes() {
+    public Result<?> listAllOrgNodes() {
         List<NodeView> nodeViewList = orgService.listAllOrgNodes();
         return Result.success(nodeViewList);
     }
-
 }

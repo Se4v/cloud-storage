@@ -85,12 +85,12 @@
             <span
                 :class="[
                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                row.type === 'global'
+                row.type === 1
                   ? 'bg-amber-50 text-amber-700 border-amber-200'
                   : 'bg-emerald-50 text-emerald-700 border-emerald-200'
               ]"
             >
-              {{ row.type === 'global' ? '全局角色' : '组织角色' }}
+              {{ row.type === 1 ? '系统角色' : '组织角色' }}
             </span>
           </template>
         </el-table-column>
@@ -100,7 +100,7 @@
             <span
                 :class="[
                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                row.isEnabled
+                row.isEnabled === 1
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-red-50 text-red-700 border-red-200'
               ]"
@@ -108,10 +108,10 @@
               <span
                   :class="[
                   'w-1.5 h-1.5 rounded-full mr-1.5',
-                  row.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
+                  row.isEnabled === 1 ? 'bg-emerald-500' : 'bg-red-500'
                 ]"
               ></span>
-              {{ row.isEnabled ? '启用' : '禁用' }}
+              {{ row.isEnabled === 1 ? '启用' : '禁用' }}
             </span>
           </template>
         </el-table-column>
@@ -126,7 +126,7 @@
           <template #default="{ row }">
             <div class="flex items-center justify-end gap-2">
               <button
-                  v-if="row.type === 'org'"
+                  v-if="row.type === 2"
                   @click="handlePermissionConfig(row)"
                   class="p-2 text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
                   title="配置权限"
@@ -142,10 +142,10 @@
               </button>
               <button
                   @click="handleDelete(row)"
-                  :disabled="row.type === 'global'"
+                  :disabled="row.type === 1"
                   :class="[
                   'p-2 rounded-lg transition-colors duration-200',
-                  row.type === 'global'
+                  row.type === 1
                     ? 'text-slate-300 cursor-not-allowed'
                     : 'text-slate-600 hover:text-red-600 hover:bg-red-50'
                 ]"
@@ -224,7 +224,7 @@
                 placeholder="请输入角色代码，如：ROLE_USER"
                 size="large"
                 class="custom-input"
-                :disabled="isEditing && form.type === 'global'"
+                :disabled="isEditing && form.type === 1"
             >
             </el-input>
             <p class="mt-1.5 text-xs text-slate-500">代码用于系统识别，创建后不可修改</p>
@@ -238,17 +238,17 @@
                 class="w-full custom-select"
                 :disabled="isEditing"
             >
-              <el-option label="组织角色" value="org">
+              <el-option label="组织角色" :value="2">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
                   <span>组织角色</span>
                   <span class="text-xs text-slate-400 ml-auto">可删除修改</span>
                 </div>
               </el-option>
-              <el-option label="全局角色" value="global">
+              <el-option label="系统角色" :value="1">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                  <span>全局角色</span>
+                  <span>系统角色</span>
                   <span class="text-xs text-slate-400 ml-auto">不可删除</span>
                 </div>
               </el-option>
@@ -262,7 +262,7 @@
                 <input
                     type="radio"
                     v-model="form.isEnabled"
-                    :value="true"
+                    :value="1"
                     class="text-blue-600 focus:ring-blue-500 border-slate-300"
                 />
                 <span class="text-sm text-slate-700">启用</span>
@@ -271,7 +271,7 @@
                 <input
                     type="radio"
                     v-model="form.isEnabled"
-                    :value="false"
+                    :value="0"
                     class="text-blue-600 focus:ring-blue-500 border-slate-300"
                 />
                 <span class="text-sm text-slate-700">禁用</span>
@@ -488,8 +488,8 @@ const form = reactive({
   id: null,
   name: '',
   code: '',
-  type: 'org',
-  isEnabled: true
+  type: 2,
+  isEnabled: 1
 })
 
 // 表单验证规则
@@ -506,8 +506,6 @@ const formRules = {
     { required: true, message: '请选择角色类型', trigger: 'change' }
   ]
 }
-
-
 
 // 初始化
 onMounted(() => {
@@ -657,8 +655,8 @@ const handleSubmit = async () => {
 
 // 删除角色
 const handleDelete = (row) => {
-  if (row.type === 'global') {
-    ElMessage.warning('全局角色不可删除')
+  if (row.type === 1) {
+    ElMessage.warning('系统角色不可删除')
     return
   }
   isBatchDelete.value = false
@@ -678,18 +676,20 @@ const confirmDelete = async () => {
   deleteLoading.value = true
   try {
     if (isBatchDelete.value) {
-      // 过滤掉全局角色
+      // 过滤掉系统角色
       const deletableIds = selectedRoles.value
-          .filter(item => item.type !== 'global')
+          .filter(item => item.type !== 1)
           .map(item => item.id)
 
       if (deletableIds.length === 0) {
-        ElMessage.warning('选中的角色中包含全局角色，无法删除')
+        ElMessage.warning('选中的角色中包含系统角色，无法删除')
         deleteDialogVisible.value = false
         return
       }
 
-      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, deletableIds, getAuthConfig())
+      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, {
+        roleIds: deletableIds
+      }, getAuthConfig())
       if (res.data.code === 200) {
         ElMessage.success(`成功删除 ${deletableIds.length} 个角色`)
         selectedRoles.value = []
@@ -699,7 +699,9 @@ const confirmDelete = async () => {
         ElMessage.error(res.data.msg || '删除失败')
       }
     } else {
-      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, [currentRow.value.id], getAuthConfig())
+      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, {
+        roleIds: [currentRow.value.id]
+      }, getAuthConfig())
       if (res.data.code === 200) {
         ElMessage.success('角色删除成功')
         deleteDialogVisible.value = false
@@ -716,24 +718,13 @@ const confirmDelete = async () => {
   }
 }
 
-// 分页
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  loadRoleList()
-}
-
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-  loadRoleList()
-}
-
 // 重置表单
 const resetForm = () => {
   form.id = null
   form.name = ''
   form.code = ''
-  form.type = 'org'
-  form.isEnabled = true
+  form.type = 2
+  form.isEnabled = 1
   if (formRef.value) {
     formRef.value.resetFields()
   }

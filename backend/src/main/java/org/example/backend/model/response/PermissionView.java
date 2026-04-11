@@ -9,5 +9,5 @@ public class PermissionView {
     private Long id;
     private String name;
     private String code;
-    private String type;
+    private Integer type;
 }
