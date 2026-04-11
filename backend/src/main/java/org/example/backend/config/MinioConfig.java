@@ -16,7 +16,6 @@ public class MinioConfig {
     private String secretKey;
     private String bucketName;
     private boolean secure;
-    private Long directUploadThreshold;
 
     @Bean
     public MinioClient minioClient() {

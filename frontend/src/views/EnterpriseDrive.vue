@@ -1094,6 +1094,7 @@ const confirmMove = async () => {
     const ids = selectedFiles.value.map(f => f.id)
     const response = await axios.post(`${API_BASE_URL}/api/enterprise/move`, {
       ids: ids,
+      driveId: driveId.value,
       targetId: selectedTargetFolder.value.id
     }, getAuthConfig())
 

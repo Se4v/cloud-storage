@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.CreateMultipartUploadResponse;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
@@ -108,6 +109,10 @@ public class UploadService {
                     .totalCount(0)
                     .successCount(0)
                     .build();
+        }
+
+        if (!isUploadSizeValid(args)) {
+            throw new BusinessException("<UNK>");
         }
 
         for (InitUploadArgs.Arg arg : args.getArgList()) {
@@ -633,5 +638,16 @@ public class UploadService {
             return fileName.substring(lastDotIndex + 1).toLowerCase();
         }
         return "";
+    }
+
+    private boolean isUploadSizeValid(InitUploadArgs uploadArgs) {
+        long totalUploadSize = uploadArgs.getArgList().stream()
+                .mapToLong(arg -> arg.getFileSize() != null ? arg.getFileSize() : 0)
+                .sum();
+
+        Drive drive = driveMapper.selectById(uploadArgs.getDriveId());
+        long remainingSpace = drive.getTotalQuota() - drive.getUsedQuota();
+
+        return totalUploadSize <= remainingSpace;
     }
 }

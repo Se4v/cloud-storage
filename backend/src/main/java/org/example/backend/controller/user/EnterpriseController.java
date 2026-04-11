@@ -13,6 +13,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -29,6 +30,7 @@ public class EnterpriseController {
     @Autowired
     private DownloadService downloadService;
 
+    @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody InitUploadArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
@@ -36,6 +38,7 @@ public class EnterpriseController {
         return Result.success("", view);
     }
 
+    @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/simple-upload")
     public Result<?> simpleUpload(@RequestBody SimpleUploadArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
@@ -43,6 +46,7 @@ public class EnterpriseController {
         return Result.success("", view);
     }
 
+    @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/upload-chunk")
     public Result<UploadChunkView> uploadChunk(@RequestBody UploadChunkArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
@@ -50,6 +54,7 @@ public class EnterpriseController {
         return Result.success("", view);
     }
 
+    @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/merge-chunks")
     public Result<MergeChunksView> mergeChunks(@RequestBody MergeChunksArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
@@ -57,6 +62,7 @@ public class EnterpriseController {
         return Result.success("", view);
     }
 
+    @PreAuthorize("hasAuthority('file:dowanload')")
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody DownloadArgs args) {
         Long currentUserId = SecurityUtil.getUserId();
@@ -74,6 +80,7 @@ public class EnterpriseController {
         return ResponseEntity.ok().headers(headers).body(stream);
     }
 
+    @PreAuthorize("hasAuthority('file:list')")
     @GetMapping
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -88,6 +95,7 @@ public class EnterpriseController {
         return Result.success("", views);
     }
 
+
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -95,6 +103,7 @@ public class EnterpriseController {
         return Result.success(views);
     }
 
+    @PreAuthorize("hasAuthority('file:mkdir')")
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -103,6 +112,7 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('file:move')")
     @PostMapping("/move")
     public Result<?> moveEntries(@RequestBody MoveEntryArgs args) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -110,6 +120,7 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('file:copy')")
     @PostMapping("/copy")
     public Result<?> copyEntry(@RequestBody CopyEntryArgs args) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -118,6 +129,7 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('file:rename')")
     @PostMapping("/rename")
     public Result<?> renameEntry(@RequestBody RenameEntryArgs args) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -125,6 +137,7 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('file:delete')")
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -133,6 +146,7 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('file:share')")
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody ShareEntryArgs args) {
         Long currentOrgId = SecurityUtil.getOrgId();
@@ -141,6 +155,7 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('file:view')")
     @GetMapping("/preview")
     public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {
         Long currentOrgId = SecurityUtil.getOrgId();

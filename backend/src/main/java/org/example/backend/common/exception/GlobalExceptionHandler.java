@@ -7,6 +7,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.Result;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -105,6 +106,15 @@ public class GlobalExceptionHandler {
         } catch (IOException e) {
             // 记录日志
         }
+    }
+
+    /**
+     * 处理权限不足异常
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<Void> handleAccessDeniedException(Exception e, HttpServletRequest request) {
+        log.error("系统异常 - URI: [{}]", request.getRequestURI(), e);
+        return Result.fail(403, "权限不足，禁止访问");
     }
 
     /**

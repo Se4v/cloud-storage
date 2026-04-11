@@ -43,13 +43,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
         if (!jwtUtil.validateToken(token)) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized2");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized2");
             return;
         }
 
         LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(KEY_AUTH_USER + token);
         if (loginUser == null) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized3");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized3");
             return;
         }
         loginUser.setToken(token);
@@ -76,6 +76,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "您不属于该企业或部门");
                 return;
             }
+            loginUser.setOrgId(currentOrgId);
         }
 
         // 封装 Authentication 并放行
