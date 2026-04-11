@@ -204,13 +204,11 @@
         </span>
         <el-pagination
             v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+            :page-size="10"
             :total="total"
-            layout="prev, pager, next, sizes"
+            layout="prev, pager, next"
             background
             class="!gap-2"
-            @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
         />
       </div>
@@ -446,7 +444,7 @@ const getAuthConfig = () => {
 const searchQuery = ref('')
 const filterStatus = ref('')
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(10)
 const total = ref(0)
 const selectedUsers = ref([])
 

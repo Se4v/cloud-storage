@@ -155,15 +155,14 @@
           <span class="text-sm text-slate-500">
             共 <span class="font-medium text-slate-900">{{ total }}</span> 条记录
           </span>
-          <el-pagination
-              v-model:current-page="currentPage"
-              v-model:page-size="pageSize"
-              :page-sizes="[10, 20, 50]"
-              :total="total"
-              layout="prev, pager, next, sizes"
-              background
-              class="!gap-2"
-          />
+        <el-pagination
+            v-model:current-page="currentPage"
+            :page-size="10"
+            :total="total"
+            layout="prev, pager, next"
+            background
+            class="!gap-2"
+        />
         </div>
       </div>
     </div>

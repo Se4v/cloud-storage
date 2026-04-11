@@ -112,16 +112,15 @@
       </div>
 
       <!-- 分页 -->
-      <div v-if="filteredPermissions.length > 0" class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
         <span class="text-sm text-slate-500">
           共 <span class="font-medium text-slate-900">{{ filteredPermissions.length }}</span> 条记录
         </span>
         <el-pagination
             v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50]"
+            :page-size="10"
             :total="filteredPermissions.length"
-            layout="prev, pager, next, sizes"
+            layout="prev, pager, next"
             background
             class="!gap-2"
         />
