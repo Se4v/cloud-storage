@@ -1,7 +1,6 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.security.LoginUser;
@@ -14,7 +13,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +80,11 @@ public class AuthService {
     }
 
     public void logout(String token) {
-        redisTemplate.delete(KEY_AUTH_USER + token);
+        if (token.isBlank()) throw new BusinessException("token is empty");
+
+        boolean isDeleted = redisTemplate.delete(KEY_AUTH_USER + token);
+        if (!isDeleted) throw new BusinessException("token expired");
+
         SecurityContextHolder.clearContext();
     }
 }

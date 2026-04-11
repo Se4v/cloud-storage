@@ -231,7 +231,7 @@ const handleMenuClick = (item) => {
 // 退出登录
 const handleLogout = async () => {
   try {
-    const res = await axios.post(`${API_BASE_URL}/api/auth/logout`, getAuthConfig())
+    const res = await axios.get(`${API_BASE_URL}/api/auth/logout`, getAuthConfig())
     if (res.data.code === 200) {
       ElMessage.success("登出成功")
     } else {

@@ -5,10 +5,7 @@ import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.LoginArgs;
 import org.example.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,7 +19,7 @@ public class AuthController {
         return Result.success("", token);
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public Result<?> logout() {
         String token = SecurityUtil.getToken();
         authService.logout(token);
