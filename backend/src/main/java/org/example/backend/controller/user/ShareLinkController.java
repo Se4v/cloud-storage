@@ -2,10 +2,10 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.args.DeleteLinkArgs;
-import org.example.backend.model.args.UpdateLinkArgs;
+import org.example.backend.model.request.DeleteLinkArgs;
+import org.example.backend.model.request.UpdateLinkArgs;
 import org.example.backend.model.entity.Share;
-import org.example.backend.model.view.ShareView;
+import org.example.backend.model.response.ShareView;
 import org.example.backend.service.ShareService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

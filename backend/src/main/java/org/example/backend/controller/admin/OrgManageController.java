@@ -1,10 +1,10 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.CreateNodeArgs;
-import org.example.backend.model.args.DeleteNodeArgs;
-import org.example.backend.model.args.UpdateNodeArgs;
-import org.example.backend.model.view.NodeView;
+import org.example.backend.model.request.CreateNodeArgs;
+import org.example.backend.model.request.DeleteNodeArgs;
+import org.example.backend.model.request.UpdateNodeArgs;
+import org.example.backend.model.response.NodeView;
 import org.example.backend.service.OrgService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

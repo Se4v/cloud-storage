@@ -3,19 +3,15 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
-import org.example.backend.model.args.ShareEntryArgs;
-import org.example.backend.model.args.DeleteLinkArgs;
-import org.example.backend.model.args.UpdateLinkArgs;
-import org.example.backend.model.entity.Entry;
+import org.example.backend.model.request.DeleteLinkArgs;
+import org.example.backend.model.request.UpdateLinkArgs;
 import org.example.backend.model.entity.Share;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ShareService {

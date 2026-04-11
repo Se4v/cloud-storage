@@ -1,13 +1,13 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.AssignGlobalRoleArgs;
-import org.example.backend.model.args.CreateUserArgs;
-import org.example.backend.model.args.DeleteUserArgs;
-import org.example.backend.model.args.UpdateUserArgs;
+import org.example.backend.model.request.AssignGlobalRoleArgs;
+import org.example.backend.model.request.CreateUserArgs;
+import org.example.backend.model.request.DeleteUserArgs;
+import org.example.backend.model.request.UpdateUserArgs;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.view.RoleView;
-import org.example.backend.model.view.UserView;
+import org.example.backend.model.response.RoleView;
+import org.example.backend.model.response.UserView;
 import org.example.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

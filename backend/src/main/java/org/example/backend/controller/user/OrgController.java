@@ -2,7 +2,7 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.view.OrgTreeView;
+import org.example.backend.model.response.OrgTreeView;
 import org.example.backend.service.OrgService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

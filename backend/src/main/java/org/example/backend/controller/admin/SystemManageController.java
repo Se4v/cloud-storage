@@ -1,8 +1,8 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.UpdateSystemConfigArgs;
-import org.example.backend.model.view.SystemConfigView;
+import org.example.backend.model.request.UpdateSystemConfigArgs;
+import org.example.backend.model.response.SystemConfigView;
 import org.example.backend.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

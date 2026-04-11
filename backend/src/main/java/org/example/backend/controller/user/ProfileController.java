@@ -1,18 +1,15 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
-import org.example.backend.common.security.LoginUser;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.args.ChangePasswordArgs;
-import org.example.backend.model.args.UpdateAvatarArgs;
-import org.example.backend.model.args.UpdateProfileArgs;
+import org.example.backend.model.request.ChangePasswordArgs;
+import org.example.backend.model.request.UpdateAvatarArgs;
+import org.example.backend.model.request.UpdateProfileArgs;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.view.AvatarUploadUrlView;
-import org.example.backend.model.view.ProfileView;
+import org.example.backend.model.response.AvatarUploadUrlView;
+import org.example.backend.model.response.ProfileView;
 import org.example.backend.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

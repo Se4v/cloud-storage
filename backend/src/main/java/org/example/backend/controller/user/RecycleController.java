@@ -2,9 +2,9 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.args.DeleteEntryArgs;
-import org.example.backend.model.args.RestoreEntryArgs;
-import org.example.backend.model.view.RecycleView;
+import org.example.backend.model.request.DeleteEntryArgs;
+import org.example.backend.model.request.RestoreEntryArgs;
+import org.example.backend.model.response.RecycleView;
 import org.example.backend.service.RecycleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

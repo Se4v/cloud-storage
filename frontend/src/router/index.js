@@ -17,12 +17,18 @@ import DriveStat from "@/views/admin/DriveStat.vue";
 import TrafficStat from "@/views/admin/TrafficStat.vue";
 import MemberManage from "@/views/admin/MemberManage.vue";
 import Notice from "@/views/Notice.vue";
+import SharedFile from "@/views/SharedFile.vue";
 
 const routes = [
     {
         path: '/login',
         name: 'Login',
         component: Login
+    },
+    {
+        path: '/shared',
+        name: 'shareFile',
+        component: SharedFile
     },
     {
         path: '/drive',

@@ -1,0 +1,15 @@
+package org.example.backend.model.response;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class RoleView {
+    private Long id;
+    private String name;
+    private String code;
+    private String type;
+    private String createTime;
+    private Boolean isEnabled;
+}

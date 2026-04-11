@@ -2,9 +2,9 @@ package org.example.backend.controller.user;
 
 import org.example.backend.common.Result;
 import org.example.backend.common.util.SecurityUtil;
-import org.example.backend.model.args.*;
+import org.example.backend.model.request.*;
 import org.example.backend.model.entity.Entry;
-import org.example.backend.model.view.*;
+import org.example.backend.model.response.*;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.EnterpriseService;
 import org.example.backend.service.UploadService;
@@ -14,7 +14,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.nio.charset.StandardCharsets;

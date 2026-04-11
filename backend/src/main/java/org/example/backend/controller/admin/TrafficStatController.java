@@ -1,9 +1,9 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.view.FileTypeDistributionView;
-import org.example.backend.model.view.TrafficOverviewView;
-import org.example.backend.model.view.TrendStatisticsView;
+import org.example.backend.model.response.FileTypeDistributionView;
+import org.example.backend.model.response.TrafficOverviewView;
+import org.example.backend.model.response.TrendStatisticsView;
 import org.example.backend.service.TrafficStatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

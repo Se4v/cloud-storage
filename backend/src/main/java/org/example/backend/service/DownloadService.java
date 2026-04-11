@@ -9,7 +9,7 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.mapper.TrafficMapper;
-import org.example.backend.model.args.DownloadArgs;
+import org.example.backend.model.request.DownloadArgs;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Traffic;

@@ -6,9 +6,9 @@ import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.TrafficMapper;
 import org.example.backend.model.entity.Config;
-import org.example.backend.model.view.FileTypeDistributionView;
-import org.example.backend.model.view.TrafficOverviewView;
-import org.example.backend.model.view.TrendStatisticsView;
+import org.example.backend.model.response.FileTypeDistributionView;
+import org.example.backend.model.response.TrafficOverviewView;
+import org.example.backend.model.response.TrendStatisticsView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

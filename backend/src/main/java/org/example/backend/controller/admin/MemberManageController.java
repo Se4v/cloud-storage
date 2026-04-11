@@ -1,14 +1,14 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.Result;
-import org.example.backend.model.args.CreateMemberArgs;
-import org.example.backend.model.args.DeleteMemberArgs;
-import org.example.backend.model.args.UpdateMemberArgs;
+import org.example.backend.model.request.CreateMemberArgs;
+import org.example.backend.model.request.DeleteMemberArgs;
+import org.example.backend.model.request.UpdateMemberArgs;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.view.MemberNodeView;
-import org.example.backend.model.view.MemberRoleView;
-import org.example.backend.model.view.MemberView;
+import org.example.backend.model.response.MemberNodeView;
+import org.example.backend.model.response.MemberRoleView;
+import org.example.backend.model.response.MemberView;
 import org.example.backend.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

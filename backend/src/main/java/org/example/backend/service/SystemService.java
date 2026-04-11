@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.ConfigMapper;
-import org.example.backend.model.args.UpdateSystemConfigArgs;
+import org.example.backend.model.request.UpdateSystemConfigArgs;
 import org.example.backend.model.entity.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
