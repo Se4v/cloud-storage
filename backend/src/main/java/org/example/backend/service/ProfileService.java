@@ -1,6 +1,6 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
@@ -12,7 +12,6 @@ import org.example.backend.model.entity.User;
 import org.example.backend.model.request.ChangePasswordArgs;
 import org.example.backend.model.request.UpdateProfileArgs;
 import org.example.backend.model.response.AvatarUploadUrlView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,12 +23,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class ProfileService {
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private MinioAsyncClient minioClient;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
+    private final MinioAsyncClient minioClient;
+    private final PasswordEncoder passwordEncoder;
+
+    public ProfileService(UserMapper userMapper, MinioAsyncClient minioClient, PasswordEncoder passwordEncoder) {
+        this.userMapper = userMapper;
+        this.minioClient = minioClient;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     private static final String AVATAR_BUCKET = "avatars";
     private static final long AVATAR_MAX_SIZE = 5 * 1024 * 1024;
@@ -99,10 +101,10 @@ public class ProfileService {
         if (user == null) throw new BusinessException("用户不存在");
 
         // 更新头像信息
-        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(User::getAvatar, args.getObjectName()).eq(User::getId, userId);
-
-        int count = userMapper.update(updateWrapper);
+        int count = userMapper.update(
+                Wrappers.<User>lambdaUpdate()
+                        .set(User::getAvatar, args.getObjectName())
+                        .eq(User::getId, user.getId()));
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
@@ -119,12 +121,11 @@ public class ProfileService {
         if (user == null) throw new BusinessException("<UNK>");
 
         // 更新用户信息
-        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(User::getEmail, args.getEmail())
-                .set(User::getMobile, args.getMobile())
-                .eq(User::getId, user);
-
-        int count = userMapper.update(updateWrapper);
+        int count = userMapper.update(
+                Wrappers.<User>lambdaUpdate()
+                        .set(User::getEmail, args.getEmail())
+                        .set(User::getMobile, args.getMobile())
+                        .eq(User::getId, user.getId()));
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
@@ -143,11 +144,10 @@ public class ProfileService {
         }
 
         // 更新密码
-        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(User::getPassword, passwordEncoder.encode(args.getNewPassword()))
-                .eq(User::getId, user);
-
-        int count = userMapper.update(updateWrapper);
+        int count = userMapper.update(
+                Wrappers.<User>lambdaUpdate()
+                        .set(User::getPassword, passwordEncoder.encode(args.getNewPassword()))
+                        .eq(User::getId, user.getId()));
         if (count != 1) throw new BusinessException("修改密码失败");
     }
 

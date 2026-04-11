@@ -6,9 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.backend.common.security.LoginUser;
 import org.example.backend.common.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,10 +20,13 @@ import java.util.Set;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public JwtFilter(RedisTemplate<String, Object> redisTemplate, JwtUtil jwtUtil) {
+        this.redisTemplate = redisTemplate;
+        this.jwtUtil = jwtUtil;
+    }
 
     private static final String KEY_AUTH_USER = "auth:user:";
 

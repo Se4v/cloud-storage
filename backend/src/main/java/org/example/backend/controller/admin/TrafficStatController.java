@@ -5,7 +5,6 @@ import org.example.backend.model.response.FileTypeDistributionView;
 import org.example.backend.model.response.TrafficOverviewView;
 import org.example.backend.model.response.TrendStatisticsView;
 import org.example.backend.service.TrafficStatService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,8 +14,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/traffic")
 public class TrafficStatController {
-    @Autowired
-    private TrafficStatService trafficStatService;
+    private final TrafficStatService trafficStatService;
+
+    public TrafficStatController(TrafficStatService trafficStatService) {
+        this.trafficStatService = trafficStatService;
+    }
 
     @GetMapping("/overview")
     public Result<?> getTrafficOverview() {

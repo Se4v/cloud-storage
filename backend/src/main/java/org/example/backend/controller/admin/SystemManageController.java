@@ -4,7 +4,6 @@ import org.example.backend.common.Result;
 import org.example.backend.model.request.UpdateSystemConfigArgs;
 import org.example.backend.model.response.SystemConfigView;
 import org.example.backend.service.SystemService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,8 +12,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/system")
 public class SystemManageController {
-    @Autowired
-    private SystemService systemService;
+    private final SystemService systemService;
+
+    public SystemManageController(SystemService systemService) {
+        this.systemService = systemService;
+    }
 
     @GetMapping
     public Result<SystemConfigView> getSystemConfigs() {

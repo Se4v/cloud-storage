@@ -5,7 +5,6 @@ import org.example.backend.model.response.DriveDetailView;
 import org.example.backend.model.response.DriveOverviewView;
 import org.example.backend.model.response.DriveUsageBreakdownView;
 import org.example.backend.service.DriveStatService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,8 +14,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/drive-stat")
 public class DriveStatController {
-    @Autowired
-    private DriveStatService driveStatService;
+    private final DriveStatService driveStatService;
+
+    public DriveStatController(DriveStatService driveStatService) {
+        this.driveStatService = driveStatService;
+    }
 
     @GetMapping("/overview")
     public Result<?> getDriveOverview() {

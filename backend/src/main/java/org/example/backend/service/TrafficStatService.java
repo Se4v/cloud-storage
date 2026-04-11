@@ -1,6 +1,6 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -9,7 +9,6 @@ import org.example.backend.model.entity.Config;
 import org.example.backend.model.response.FileTypeDistributionView;
 import org.example.backend.model.response.TrafficOverviewView;
 import org.example.backend.model.response.TrendStatisticsView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -21,21 +20,25 @@ import java.util.Map;
 
 @Service
 public class TrafficStatService {
-    @Autowired
-    private ConfigMapper configMapper;
-    @Autowired
-    private DriveMapper driveMapper;
-    @Autowired
-    private TrafficMapper trafficMapper;
-    @Autowired
-    private EntryMapper entryMapper;
+    private final ConfigMapper configMapper;
+    private final DriveMapper driveMapper;
+    private final TrafficMapper trafficMapper;
+    private final EntryMapper entryMapper;
+
+    public TrafficStatService(ConfigMapper configMapper, DriveMapper driveMapper,
+            TrafficMapper trafficMapper, EntryMapper entryMapper) {
+        this.configMapper = configMapper;
+        this.driveMapper = driveMapper;
+        this.trafficMapper = trafficMapper;
+        this.entryMapper = entryMapper;
+    }
 
     private static final DecimalFormat df = new DecimalFormat("0.0");
 
     public TrafficOverviewView getTrafficOverview() {
-        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getConfigKey, "total_quota");
-        Config config = configMapper.selectOne(configQuery);
+        Config config = configMapper.selectOne(
+                Wrappers.<Config>lambdaQuery()
+                        .eq(Config::getConfigKey, "total_quota"));
         Long totalQuota = Long.parseLong(config.getConfigValue());
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();

@@ -10,7 +10,6 @@ import org.example.backend.service.DownloadService;
 import org.example.backend.service.DriveService;
 import org.example.backend.service.PersonalService;
 import org.example.backend.service.UploadService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +21,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/personal")
 public class PersonalController {
-    @Autowired
-    private PersonalService personalService;
-    @Autowired
-    private UploadService uploadService;
-    @Autowired
-    private DownloadService downloadService;
-    @Autowired
-    private DriveService driveService;
+    private final PersonalService personalService;
+    private final UploadService uploadService;
+    private final DownloadService downloadService;
+    private final DriveService driveService;
+
+    public PersonalController(PersonalService personalService, UploadService uploadService,
+                              DownloadService downloadService, DriveService driveService) {
+        this.personalService = personalService;
+        this.uploadService = uploadService;
+        this.downloadService = downloadService;
+        this.driveService = driveService;
+    }
 
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody InitUploadArgs args) {

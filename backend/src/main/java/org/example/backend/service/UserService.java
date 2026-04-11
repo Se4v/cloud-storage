@@ -1,7 +1,6 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.*;
@@ -11,7 +10,6 @@ import org.example.backend.model.request.DeleteUserArgs;
 import org.example.backend.model.request.UpdateUserArgs;
 import org.example.backend.model.entity.*;
 import org.example.backend.model.response.UserView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,18 +19,22 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private ConfigMapper configMapper;
-    @Autowired
-    private DriveMapper driveMapper;
-    @Autowired
-    private RoleMapper roleMapper;
-    @Autowired
-    private UserRoleMapper userRoleMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
+    private final ConfigMapper configMapper;
+    private final DriveMapper driveMapper;
+    private final RoleMapper roleMapper;
+    private final UserRoleMapper userRoleMapper;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserMapper userMapper, ConfigMapper configMapper, DriveMapper driveMapper,
+                       RoleMapper roleMapper, UserRoleMapper userRoleMapper, PasswordEncoder passwordEncoder) {
+        this.userMapper = userMapper;
+        this.configMapper = configMapper;
+        this.driveMapper = driveMapper;
+        this.roleMapper = roleMapper;
+        this.userRoleMapper = userRoleMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     private static final int ENABLED = 1;
     private static final int DISABLED = 0;
@@ -45,17 +47,17 @@ public class UserService {
     @Transactional
     public void createUser(CreateUserArgs args) {
         // 检查用户名是否已存在
-        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(User::getUsername, args.getUsername())
-                .eq(User::getDeleted, UNDELETED);
-        User existUser = userMapper.selectOne(userQuery);
+        User existUser = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery()
+                        .eq(User::getUsername, args.getUsername())
+                        .eq(User::getDeleted, UNDELETED));
         if (existUser != null) throw new BusinessException("用户名已存在");
 
         // 调用配置表
-        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getIsEnabled, ENABLED)
-                .eq(Config::getConfigKey, "default_password");
-        Config config = configMapper.selectOne(configQuery);
+        Config config = configMapper.selectOne(
+                Wrappers.<Config>lambdaQuery()
+                        .eq(Config::getConfigKey, "default_password")
+                        .eq(Config::getIsEnabled, ENABLED));
 
         // 创建用户
         User user = User.builder()
@@ -86,12 +88,10 @@ public class UserService {
      */
     @Transactional
     public void deleteUsers(DeleteUserArgs args) {
-        if (args.getUserIds() == null || args.getUserIds().isEmpty()) throw new BusinessException("请选择要删除的用户");
-
-        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.in(User::getId, args.getUserIds()).set(User::getDeleted, DELETED);
-
-        int count = userMapper.update(updateWrapper);
+        int count = userMapper.update(
+                Wrappers.<User>lambdaUpdate()
+                        .set(User::getDeleted, DELETED)
+                        .in(User::getId, args.getUserIds()));
         if (count != args.getUserIds().size()) throw new BusinessException("删除用户失败");
     }
 
@@ -100,14 +100,13 @@ public class UserService {
      */
     @Transactional
     public void updateUser(UpdateUserArgs args) {
-        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(args.getRealName() != null, User::getRealName, args.getRealName())
-                .set(args.getMobile() != null, User::getMobile, args.getMobile())
-                .set(args.getEmail() != null, User::getEmail, args.getEmail())
-                .set(args.getIsEnabled() != null, User::getEnabled, Boolean.TRUE.equals(args.getIsEnabled()) ? ENABLED : DISABLED)
-                .eq(User::getId, args.getId());
-
-        int count = userMapper.update(updateWrapper);
+        int count = userMapper.update(
+                Wrappers.<User>lambdaUpdate()
+                        .set(User::getRealName, args.getRealName())
+                        .set(User::getMobile, args.getMobile())
+                        .set(User::getEmail, args.getEmail())
+                        .set(User::getEnabled, Boolean.TRUE.equals(args.getIsEnabled()) ? ENABLED : DISABLED)
+                        .eq(User::getId, args.getId()));
         if (count != 1) throw new BusinessException("更新用户失败");
     }
 
@@ -116,22 +115,26 @@ public class UserService {
      */
     public List<UserView> listAllUsers() {
         // 查询用户
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getDeleted, UNDELETED).orderByDesc(User::getCreatedAt);
-        List<User> users = userMapper.selectList(queryWrapper);
-        if (users == null || users.isEmpty()) return new ArrayList<>();
-        List<Long> userIds = users.stream().map(User::getId).toList();
+        List<User> users = userMapper.selectList(
+                Wrappers.<User>lambdaQuery()
+                        .eq(User::getDeleted, UNDELETED));
+        if (users == null || users.isEmpty()) return List.of();
+        List<Long> userIds = users.stream()
+                .map(User::getId)
+                .toList();
 
         // 查询用户配额
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getDriveType, 1).in(Drive::getUserId, userIds);
-        List<Drive> drives = driveMapper.selectList(driveQuery);
-        Map<Long, Long> driveMap = drives.stream().collect(Collectors.toMap(Drive::getUserId, Drive::getTotalQuota));
+        List<Drive> drives = driveMapper.selectList(
+                Wrappers.<Drive>lambdaQuery()
+                        .eq(Drive::getDriveType, 1)
+                        .in(Drive::getUserId, userIds));
+        Map<Long, Long> driveMap = drives.stream()
+                .collect(Collectors.toMap(Drive::getUserId, Drive::getTotalQuota));
 
         // 查询用户全局角色
-        LambdaQueryWrapper<UserRole> userRoleQuery = new LambdaQueryWrapper<>();
-        userRoleQuery.in(UserRole::getUserId, userIds);
-        List<UserRole> userRoles = userRoleMapper.selectList(userRoleQuery);
+        List<UserRole> userRoles = userRoleMapper.selectList(
+                Wrappers.<UserRole>lambdaQuery()
+                        .in(UserRole::getRoleId, userIds));
         Map<Long, List<Long>> userRoleMap = userRoles.stream()
                 .collect(Collectors.groupingBy(
                         UserRole::getUserId,
@@ -162,9 +165,9 @@ public class UserService {
         List<Long> targetRoleIds = args.getRoleIds() == null ? List.of() : args.getRoleIds() ;
 
         // 查询该用户当前已绑定的角色
-        LambdaQueryWrapper<UserRole> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(UserRole::getUserId, userId);
-        List<UserRole> existingUserRoles = userRoleMapper.selectList(userQuery);
+        List<UserRole> existingUserRoles = userRoleMapper.selectList(
+                Wrappers.<UserRole>lambdaQuery()
+                        .eq(UserRole::getUserId, userId));
 
         // 提取已有的角色ID集合
         Set<Long> existingRoleIds = existingUserRoles.stream()
@@ -201,9 +204,10 @@ public class UserService {
 
         // 删除角色关联
         if (!deleteRoleIds.isEmpty()) {
-            LambdaQueryWrapper<UserRole> deleteQuery = new LambdaQueryWrapper<>();
-            deleteQuery.eq(UserRole::getUserId, userId).in(UserRole::getRoleId, deleteRoleIds);
-            int deleteCount = userRoleMapper.delete(deleteQuery);
+            int deleteCount = userRoleMapper.delete(
+                    Wrappers.<UserRole>lambdaQuery()
+                            .eq(UserRole::getUserId, userId)
+                            .in(UserRole::getRoleId, deleteRoleIds));
             if (deleteCount != deleteRoleIds.size()) throw new BusinessException("<UNK>");
         }
     }
@@ -211,32 +215,33 @@ public class UserService {
     @Transactional
     public void resetPassword(Long userId) {
         // 查询用户
-        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(User::getId, userId)
-                .eq(User::getDeleted, 0)
-                .eq(User::getEnabled, 1);
-        User user = userMapper.selectOne(userQuery);
+        User user = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery()
+                        .eq(User::getId, userId)
+                        .eq(User::getDeleted, 0)
+                        .eq(User::getEnabled, 1));
         if (user == null) throw new BusinessException("<UNK>");
 
         // 调用配置表
-        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getIsEnabled, ENABLED)
-                .eq(Config::getConfigKey, "default_password");
-        Config config = configMapper.selectOne(configQuery);
+        Config config = configMapper.selectOne(
+                Wrappers.<Config>lambdaQuery()
+                        .eq(Config::getIsEnabled, ENABLED)
+                        .eq(Config::getConfigKey, "default_password"));
 
         // 重置密码
-        LambdaUpdateWrapper<User> userUpdate = new LambdaUpdateWrapper<>();
-        userUpdate.set(User::getPassword, passwordEncoder.encode(config.getConfigValue()))
-                .eq(User::getId, userId);
-        int count = userMapper.update(userUpdate);
+        int count = userMapper.update(
+                Wrappers.<User>lambdaUpdate()
+                        .set(User::getPassword, passwordEncoder.encode(config.getConfigValue()))
+                        .eq(User::getId, userId));
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
     public List<Role> listGlobalRole() {
-        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Role::getType, 1)
-                .eq(Role::getEnabled, ENABLED)
-                .eq(Role::getDeleted, UNDELETED);
-        return roleMapper.selectList(queryWrapper);
+        List<Role> systemRoles = roleMapper.selectList(
+                Wrappers.<Role>lambdaQuery()
+                        .eq(Role::getType, 1)
+                        .eq(Role::getEnabled, ENABLED)
+                        .eq(Role::getDeleted, UNDELETED));
+        return systemRoles;
     }
 }

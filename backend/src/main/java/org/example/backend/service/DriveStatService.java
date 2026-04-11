@@ -1,6 +1,6 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.model.entity.Config;
@@ -8,7 +8,6 @@ import org.example.backend.model.entity.Drive;
 import org.example.backend.model.response.DriveDetailView;
 import org.example.backend.model.response.DriveOverviewView;
 import org.example.backend.model.response.DriveUsageBreakdownView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,15 +15,19 @@ import java.util.Map;
 
 @Service
 public class DriveStatService {
-    @Autowired
-    private ConfigMapper configMapper;
-    @Autowired
-    private DriveMapper driveMapper;
+    private final ConfigMapper configMapper;
+    private final DriveMapper driveMapper;
+
+    public DriveStatService(ConfigMapper configMapper, DriveMapper driveMapper) {
+        this.configMapper = configMapper;
+        this.driveMapper = driveMapper;
+    }
 
     public DriveOverviewView getDriveOverview() {
-        LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();
-        configQuery.eq(Config::getConfigKey, "total_quota");
-        Config config = configMapper.selectOne(configQuery);
+        Config config = configMapper.selectOne(
+                Wrappers.<Config>lambdaQuery()
+                        .eq(Config::getConfigKey, "total_quota")
+                        .eq(Config::getIsEnabled, 1));
         Long totalQuota = Long.parseLong(config.getConfigValue());
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();
@@ -63,9 +66,9 @@ public class DriveStatService {
     }
 
     public List<DriveDetailView> getEnterpriseDriveDetails() {
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getDriveType, 2);
-        List<Drive> drives = driveMapper.selectList(driveQuery);
+        List<Drive> drives = driveMapper.selectList(
+                Wrappers.<Drive>lambdaQuery()
+                        .eq(Drive::getDriveType, 2));
 
         List<DriveDetailView> views = drives.stream()
                 .map(drive -> {
@@ -83,9 +86,9 @@ public class DriveStatService {
     }
 
     public List<DriveDetailView> getPersonalDriveDetails() {
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getDriveType, 1);
-        List<Drive> drives = driveMapper.selectList(driveQuery);
+        List<Drive> drives = driveMapper.selectList(
+                Wrappers.<Drive>lambdaQuery()
+                        .eq(Drive::getDriveType, 1));
 
         List<DriveDetailView> views = drives.stream()
                 .map(drive -> {

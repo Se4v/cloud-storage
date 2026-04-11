@@ -15,7 +15,6 @@ import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.response.FolderTreeView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,21 +25,23 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class EnterpriseService {
-    @Autowired
-    private EntryMapper entryMapper;
-    @Autowired
-    private DriveMapper driveMapper;
-    @Autowired
-    private StorageMapper storageMapper;
-    @Autowired
-    private ShareMapper shareMapper;
-    @Autowired
-    private MinioAsyncClient minioClient;
+    private final EntryMapper entryMapper;
+    private final DriveMapper driveMapper;
+    private final StorageMapper storageMapper;
+    private final ShareMapper shareMapper;
+    private final MinioAsyncClient minioClient;
 
-    private static final int ENTERPRISE_DRIVE = 2;
+    public EnterpriseService(EntryMapper entryMapper, DriveMapper driveMapper, StorageMapper storageMapper,
+                             ShareMapper shareMapper, MinioAsyncClient minioClient) {
+        this.entryMapper = entryMapper;
+        this.driveMapper = driveMapper;
+        this.storageMapper = storageMapper;
+        this.shareMapper = shareMapper;
+        this.minioClient = minioClient;
+    }
+
     private static final int UNDELETED = 1;
     private static final int DELETED = 2;
-    private static final int FILE = 1;
     private static final int FOLDER = 2;
     private static final int EXPIRE_DAYS = 15;
     private static final List<String> PREVIEW_EXT = Arrays.asList(

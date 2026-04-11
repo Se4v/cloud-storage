@@ -1,7 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.MemberMapper;
@@ -16,7 +16,6 @@ import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.User;
 import org.example.backend.model.response.NodeView;
 import org.example.backend.model.response.OrgTreeView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,29 +24,34 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrgService {
-    @Autowired
-    private MemberMapper memberMapper;
-    @Autowired
-    private NodeMapper nodeMapper;
-    @Autowired
-    private DriveMapper driveMapper;
-    @Autowired
-    private UserMapper userMapper;
+    private final MemberMapper memberMapper;
+    private final NodeMapper nodeMapper;
+    private final DriveMapper driveMapper;
+    private final UserMapper userMapper;
+
+    public OrgService(MemberMapper memberMapper, NodeMapper nodeMapper,
+                      DriveMapper driveMapper, UserMapper userMapper) {
+        this.memberMapper = memberMapper;
+        this.nodeMapper = nodeMapper;
+        this.driveMapper = driveMapper;
+        this.userMapper = userMapper;
+    }
 
     private static final int DELETED = 1;
 
     public List<OrgTreeView> getOrgTree(Long userId) {
-        LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Member::getUserId, userId);
-        List<Member> members = memberMapper.selectList(queryWrapper);
+        List<Member> members = memberMapper.selectList(
+                Wrappers.<Member>lambdaQuery()
+                        .eq(Member::getUserId, userId));
 
         List<Long> childNodeIds = members.stream().map(Member::getNodeId).toList();
         List<Node> nodeList = nodeMapper.selectNodeWithParents(childNodeIds);
         List<Long> allNodeIds = nodeList.stream().map(Node::getId).toList();
 
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getDriveType, 2).in(Drive::getNodeId, allNodeIds);
-        List<Drive> driveList = driveMapper.selectList(driveQuery);
+        List<Drive> driveList = driveMapper.selectList(
+                Wrappers.<Drive>lambdaQuery()
+                        .eq(Drive::getDriveType, 2)
+                        .in(Drive::getNodeId, allNodeIds));
         Map<Long, Long> driveMap = driveList.stream().collect(Collectors.toMap(Drive::getNodeId, Drive::getId));
 
         // 构建节点ID到节点的映射
@@ -95,9 +99,11 @@ public class OrgService {
         }
 
         // 校验同一父节点下名称是否重复
-        LambdaQueryWrapper<Node> parentQuery = new LambdaQueryWrapper<>();
-        parentQuery.eq(Node::getParentId, args.getParentId()).eq(Node::getNodeName, args.getName());
-        if (nodeMapper.selectCount(parentQuery) > 0) throw new BusinessException("同一父节点下已存在相同名称的部门");
+        long sameName = nodeMapper.selectCount(
+                Wrappers.<Node>lambdaQuery()
+                        .eq(Node::getParentId, args.getParentId())
+                        .eq(Node::getNodeName, args.getName()));
+        if (sameName > 0) throw new BusinessException("同一父节点下已存在相同名称的部门");
 
         // 创建节点
         Node node = Node.builder()
@@ -120,7 +126,6 @@ public class OrgService {
             adminId = admin.getId();
         }
 
-
         // 创建企业空间
         Drive drive = Drive.builder()
                 .driveName(args.getName())
@@ -139,14 +144,17 @@ public class OrgService {
         List<Long> nodeIds = args.getNodeIds();
 
         // 校验是否存在子节点
-        LambdaQueryWrapper<Node> childQuery = new LambdaQueryWrapper<>();
-        childQuery.in(Node::getParentId, nodeIds);
-        if (nodeMapper.selectCount(childQuery) > 0) throw new BusinessException("请先删除该节点下的所有子节点");
+        long childCount = nodeMapper.selectCount(
+                Wrappers.<Node>lambdaQuery()
+                        .in(Node::getParentId, nodeIds));
+        if (childCount > 0) throw new BusinessException("请先删除该节点下的所有子节点");
 
         // 删除节点
-        LambdaUpdateWrapper<Node> nodeWrapper = new LambdaUpdateWrapper<>();
-        nodeWrapper.set(Node::getIsDeleted, DELETED).in(Node::getId, nodeIds);
-        if (nodeMapper.update(nodeWrapper) != nodeIds.size()) throw new BusinessException("删除节点失败");
+        int updateCount = nodeMapper.update(
+                Wrappers.<Node>lambdaUpdate()
+                        .set(Node::getIsDeleted, DELETED)
+                        .in(Node::getId, nodeIds));
+        if (updateCount != nodeIds.size()) throw new BusinessException("删除节点失败");
     }
 
     @Transactional
@@ -158,9 +166,10 @@ public class OrgService {
         // 校验父节点是否合法
         if (args.getParentId() >= 0) {
             if (args.getParentId().equals(args.getId())) throw new BusinessException("不能设置自己为父节点");
-            LambdaQueryWrapper<Node> childrenQuery = new LambdaQueryWrapper<>();
-            childrenQuery.eq(Node::getParentId, args.getId()).eq(Node::getIsDeleted, 0);
-            List<Node> children = nodeMapper.selectList(childrenQuery);
+            List<Node> children = nodeMapper.selectList(
+                    Wrappers.<Node>lambdaQuery()
+                            .eq(Node::getParentId, args.getId())
+                            .eq(Node::getIsDeleted, 0));
             Map<Long, Node> childrenMap = children.stream().collect(Collectors.toMap(Node::getId, node -> node));
             if (childrenMap.containsKey(args.getParentId())) throw new BusinessException("不能设置自己的子节点为父节点");
         }
@@ -169,68 +178,79 @@ public class OrgService {
         if (!args.getName().equals(existingNode.getNodeName())) {
             Long parentId = Objects.equals(args.getParentId(), existingNode.getParentId())
                     ? existingNode.getParentId() : args.getParentId();
-            LambdaQueryWrapper<Node> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(Node::getParentId, parentId).eq(Node::getNodeName, args.getName()).ne(Node::getId, args.getId());
-            if (nodeMapper.selectCount(queryWrapper) > 0) throw new BusinessException("同一父节点下已存在相同名称的节点");
+            long sameName = nodeMapper.selectCount(
+                    Wrappers.<Node>lambdaQuery()
+                            .eq(Node::getParentId, parentId)
+                            .eq(Node::getNodeName, args.getName())
+                            .ne(Node::getId, args.getId()));
+            if (sameName > 0) throw new BusinessException("同一父节点下已存在相同名称的节点");
         }
 
         // 更新组织节点
-        LambdaUpdateWrapper<Node> nodeUpdate = new LambdaUpdateWrapper<>();
-        nodeUpdate.set(Node::getNodeName, args.getName())
-                .set(Node::getNodeType, args.getType())
-                .set(Node::getParentId, args.getParentId())
-                .set(Node::getIsEnabled, args.getIsEnabled())
-                .eq(Node::getId, args.getId());
-        if (nodeMapper.update(nodeUpdate) != 1) throw new BusinessException("更新节点失败");
+        int nodeUpdateCount = nodeMapper.update(
+                Wrappers.<Node>lambdaUpdate()
+                        .set(Node::getNodeName, args.getName())
+                        .set(Node::getNodeType, args.getType())
+                        .set(Node::getParentId, args.getParentId())
+                        .set(Node::getIsEnabled, args.getIsEnabled())
+                        .eq(Node::getId, args.getId()));
+        if (nodeUpdateCount != 1) throw new BusinessException("更新节点失败");
 
         // 校验节点管理员是否存在
         Long adminId;
         if (args.getAdminUsername().isBlank()) {
             adminId = 0L;
         } else {
-            LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-            userQuery.eq(User::getUsername, args.getAdminUsername());
-            User admin = userMapper.selectOne(userQuery);
+            User admin = userMapper.selectOne(
+                    Wrappers.<User>lambdaQuery()
+                            .eq(User::getUsername, args.getAdminUsername()));
             if (admin == null) throw new BusinessException("该用户不存在");
             adminId = admin.getId();
         }
 
         // 更新
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.eq(Drive::getNodeId, args.getId());
-        Drive drive = driveMapper.selectOne(driveQuery);
+        Drive drive = driveMapper.selectOne(
+                Wrappers.<Drive>lambdaQuery()
+                        .eq(Drive::getNodeId, args.getId()));
         if (drive == null) throw new BusinessException("节点对应的存储空间不存在");
         if (drive.getUsedQuota() > args.getStorageQuota()) throw new BusinessException("");
 
-        LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
-        driveUpdate.set(Drive::getDriveName, args.getName())
-                .set(Drive::getTotalQuota, args.getStorageQuota())
-                .set(Drive::getUserId, adminId)
-                .eq(Drive::getNodeId, drive.getNodeId());
-        if (driveMapper.update(driveUpdate) != 1) throw new BusinessException("更新节点-空间失败");
+        int driveUpdateCount = driveMapper.update(
+                Wrappers.<Drive>lambdaUpdate()
+                        .set(Drive::getDriveName, args.getName())
+                        .set(Drive::getTotalQuota, args.getStorageQuota())
+                        .set(Drive::getUserId, adminId)
+                        .eq(Drive::getNodeId, drive.getNodeId()));
+        if (driveUpdateCount != 1) throw new BusinessException("更新节点-空间失败");
     }
 
     public List<NodeView> listAllOrgNodes() {
         // 查询组织节点
-        LambdaQueryWrapper<Node> nodeQuery = new LambdaQueryWrapper<>();
-        nodeQuery.eq(Node::getIsDeleted, 0);
-        List<Node> nodeList = nodeMapper.selectList(nodeQuery);
+        List<Node> nodeList = nodeMapper.selectList(
+                Wrappers.<Node>lambdaQuery()
+                        .eq(Node::getIsDeleted, 0));
         if (nodeList == null || nodeList.isEmpty()) return List.of();
         Map<Long, String> parentNodeMap = nodeList.stream().collect(Collectors.toMap(Node::getId, Node::getNodeName));
 
         // 查询空间
-        List<Long> nodeIdList = nodeList.stream().map(Node::getId).toList();
-        LambdaQueryWrapper<Drive> driveQuery = new LambdaQueryWrapper<>();
-        driveQuery.in(Drive::getNodeId, nodeIdList);
-        List<Drive> driveList = driveMapper.selectList(driveQuery);
-        Map<Long, Drive> driveMap = driveList.stream().collect(Collectors.toMap(Drive::getNodeId, drive -> drive));
+        List<Long> nodeIdList = nodeList.stream()
+                .map(Node::getId)
+                .toList();
+        List<Drive> driveList = driveMapper.selectList(
+                Wrappers.<Drive>lambdaQuery()
+                        .in(Drive::getNodeId, nodeIdList));
+        Map<Long, Drive> driveMap = driveList.stream()
+                .collect(Collectors.toMap(Drive::getNodeId, drive -> drive));
 
         // 查询用户
-        Set<Long> adminIdList = driveList.stream().map(Drive::getUserId).collect(Collectors.toSet());
-        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.in(User::getId, adminIdList);
-        List<User> userList = userMapper.selectList(userQuery);
-        Map<Long, String> userMap = userList.stream().collect(Collectors.toMap(User::getId, User::getUsername));
+        Set<Long> adminIdList = driveList.stream()
+                .map(Drive::getUserId)
+                .collect(Collectors.toSet());
+        List<User> userList = userMapper.selectList(
+                Wrappers.<User>lambdaQuery()
+                        .in(User::getId, adminIdList));
+        Map<Long, String> userMap = userList.stream()
+                .collect(Collectors.toMap(User::getId, User::getUsername));
 
         List<NodeView> nodeViewList = nodeList.stream()
                 .map(node -> {

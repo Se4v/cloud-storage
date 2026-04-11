@@ -7,7 +7,6 @@ import org.example.backend.model.request.MarkNoticeReadArgs;
 import org.example.backend.model.entity.Notice;
 import org.example.backend.model.response.NoticeView;
 import org.example.backend.service.NoticeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +14,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notice")
 public class NoticeController {
-    @Autowired
-    private NoticeService noticeService;
+    private final NoticeService noticeService;
+
+    public NoticeController(NoticeService noticeService) {
+        this.noticeService = noticeService;
+    }
 
     @GetMapping("/unread")
     public Result<?> listUnreadNotices() {

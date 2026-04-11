@@ -9,7 +9,6 @@ import org.example.backend.model.request.AssignPermissionArgs;
 import org.example.backend.model.request.CreateRoleArgs;
 import org.example.backend.model.request.UpdateRoleArgs;
 import org.example.backend.model.entity.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,18 +19,21 @@ import java.util.stream.Collectors;
 
 @Service
 public class RoleService {
-    @Autowired
-    private RoleMapper roleMapper;
-    @Autowired
-    private MemberMapper memberMapper;
-    @Autowired
-    private UserRoleMapper userRoleMapper;
-    @Autowired
-    private PermissionMapper permissionMapper;
-    @Autowired
-    private RolePermissionMapper rolePermissionMapper;
+    private final RoleMapper roleMapper;
+    private final MemberMapper memberMapper;
+    private final UserRoleMapper userRoleMapper;
+    private final PermissionMapper permissionMapper;
+    private final RolePermissionMapper rolePermissionMapper;
 
-    private static final int ENABLED = 1;
+    public RoleService(RoleMapper roleMapper, MemberMapper memberMapper, UserRoleMapper userRoleMapper,
+                       PermissionMapper permissionMapper, RolePermissionMapper rolePermissionMapper) {
+        this.roleMapper = roleMapper;
+        this.memberMapper = memberMapper;
+        this.userRoleMapper = userRoleMapper;
+        this.permissionMapper = permissionMapper;
+        this.rolePermissionMapper = rolePermissionMapper;
+    }
+
     private static final int DELETED = 1;
 
     /**

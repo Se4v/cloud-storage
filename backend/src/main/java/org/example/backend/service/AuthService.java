@@ -1,13 +1,12 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.security.LoginUser;
 import org.example.backend.common.util.JwtUtil;
 import org.example.backend.mapper.*;
 import org.example.backend.model.entity.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,21 +20,25 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class AuthService {
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final JwtUtil jwtUtil;
+
+    public AuthService(UserMapper userMapper, PasswordEncoder passwordEncoder,
+                       RedisTemplate<String, Object> redisTemplate, JwtUtil jwtUtil) {
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.redisTemplate = redisTemplate;
+        this.jwtUtil = jwtUtil;
+    }
 
     private static final String KEY_AUTH_USER = "auth:user:";
 
     public String login(String username, String password) {
-        LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
-        userQuery.eq(User::getUsername, username);
-        User user = userMapper.selectOne(userQuery);
+        User user = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery()
+                        .eq(User::getUsername, username));
         if (user == null || user.getEnabled() == 0) return null;
 
         if (!passwordEncoder.matches(password, user.getPassword())) {

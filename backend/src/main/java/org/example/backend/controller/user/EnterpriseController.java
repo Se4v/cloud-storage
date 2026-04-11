@@ -8,7 +8,6 @@ import org.example.backend.model.response.*;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.EnterpriseService;
 import org.example.backend.service.UploadService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,12 +22,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/enterprise")
 public class EnterpriseController {
-    @Autowired
-    private EnterpriseService enterpriseService;
-    @Autowired
-    private UploadService uploadService;
-    @Autowired
-    private DownloadService downloadService;
+    private final EnterpriseService enterpriseService;
+    private final UploadService uploadService;
+    private final DownloadService downloadService;
+
+    public EnterpriseController(EnterpriseService enterpriseService, UploadService uploadService,
+                                DownloadService downloadService) {
+        this.enterpriseService = enterpriseService;
+        this.uploadService = uploadService;
+        this.downloadService = downloadService;
+    }
 
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/init-upload")

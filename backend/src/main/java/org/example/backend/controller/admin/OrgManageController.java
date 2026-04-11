@@ -6,7 +6,6 @@ import org.example.backend.model.request.DeleteNodeArgs;
 import org.example.backend.model.request.UpdateNodeArgs;
 import org.example.backend.model.response.NodeView;
 import org.example.backend.service.OrgService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,8 +13,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/org")
 public class OrgManageController {
-    @Autowired
-    private OrgService orgService;
+    private final OrgService orgService;
+
+    public OrgManageController(OrgService orgService) {
+        this.orgService = orgService;
+    }
 
     @PostMapping("/create")
     public Result<Void> createOrgNode(@RequestBody CreateNodeArgs args) {

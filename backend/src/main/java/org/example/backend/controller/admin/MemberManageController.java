@@ -10,7 +10,6 @@ import org.example.backend.model.response.MemberNodeView;
 import org.example.backend.model.response.MemberRoleView;
 import org.example.backend.model.response.MemberView;
 import org.example.backend.service.MemberService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,8 +17,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/member")
 public class MemberManageController {
-    @Autowired
-    private MemberService memberService;
+    private final MemberService memberService;
+
+    public MemberManageController(MemberService memberService) {
+        this.memberService = memberService;
+    }
 
     @PostMapping("/create")
     public Result<Void> createMember(@RequestBody CreateMemberArgs args) {

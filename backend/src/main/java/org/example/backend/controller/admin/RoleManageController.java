@@ -9,7 +9,6 @@ import org.example.backend.model.entity.Role;
 import org.example.backend.model.response.PermissionView;
 import org.example.backend.model.response.RoleView;
 import org.example.backend.service.RoleService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
@@ -18,8 +17,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/role")
 public class RoleManageController {
-    @Autowired
-    private RoleService roleService;
+    private final RoleService roleService;
+
+    public RoleManageController(RoleService roleService) {
+        this.roleService = roleService;
+    }
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 

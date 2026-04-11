@@ -1,7 +1,7 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.model.request.DeleteLinkArgs;
@@ -23,9 +23,10 @@ public class ShareService {
 
     public List<Share> listLinks(Long userId) {
         // 查询分享链接列表
-        LambdaQueryWrapper<Share> shareQuery = new LambdaQueryWrapper<>();
-        shareQuery.eq(Share::getUserId, userId).eq(Share::getIsDeleted, UNDELETED);
-        List<Share> shareList = shareMapper.selectList(shareQuery);
+        List<Share> shareList = shareMapper.selectList(
+                Wrappers.<Share>lambdaQuery()
+                        .eq(Share::getUserId, userId)
+                        .eq(Share::getIsDeleted, UNDELETED));
 
         if (shareList == null || shareList.isEmpty()) return List.of();
 
@@ -58,12 +59,11 @@ public class ShareService {
     public void deleteLinks(DeleteLinkArgs args, Long userId) {
         List<Long> linkIds = args.getLinkIds();
 
-        LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.set(Share::getIsDeleted, DELETED)
-                .eq(Share::getUserId, userId)
-                .in(Share::getId, linkIds);
-
-        int count = shareMapper.update(wrapper);
+        int count = shareMapper.update(
+                Wrappers.<Share>lambdaUpdate()
+                        .set(Share::getIsDeleted, DELETED)
+                        .eq(Share::getUserId, userId)
+                        .in(Share::getId, linkIds));
         if (count != linkIds.size()) throw new BusinessException("删除分享链接失败");
     }
 }

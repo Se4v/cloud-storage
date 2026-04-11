@@ -6,7 +6,6 @@ import org.example.backend.model.request.DeleteEntryArgs;
 import org.example.backend.model.request.RestoreEntryArgs;
 import org.example.backend.model.response.RecycleView;
 import org.example.backend.service.RecycleService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,8 +13,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/recycle")
 public class RecycleController {
-    @Autowired
-    private RecycleService recycleService;
+    private final RecycleService recycleService;
+
+    public RecycleController(RecycleService recycleService) {
+        this.recycleService = recycleService;
+    }
 
     @GetMapping
     public Result<?> listEntries() {

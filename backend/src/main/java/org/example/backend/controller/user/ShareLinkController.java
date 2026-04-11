@@ -7,7 +7,6 @@ import org.example.backend.model.request.UpdateLinkArgs;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.response.ShareView;
 import org.example.backend.service.ShareService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +14,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/link")
 public class ShareLinkController {
-    @Autowired
-    private ShareService shareService;
+    private final ShareService shareService;
+
+    public ShareLinkController(ShareService shareService) {
+        this.shareService = shareService;
+    }
 
     @GetMapping
     public Result<?> listLinks() {

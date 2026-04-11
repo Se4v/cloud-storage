@@ -4,7 +4,6 @@ import org.example.backend.common.Result;
 import org.example.backend.model.entity.Log;
 import org.example.backend.model.response.LogView;
 import org.example.backend.service.LogService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,8 +13,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/log")
 public class LogManageController {
-    @Autowired
-    private LogService logService;
+    private final LogService logService;
+
+    public LogManageController(LogService logService) {
+        this.logService = logService;
+    }
 
     @GetMapping("/all")
     public Result<List<LogView>> listAllLogs() {

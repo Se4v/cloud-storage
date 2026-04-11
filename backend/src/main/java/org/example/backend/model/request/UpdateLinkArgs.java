@@ -15,7 +15,6 @@ public class UpdateLinkArgs {
     private String linkName;
     @NotNull
     private Integer linkType;
-    @NotBlank
     private String accessCode;
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

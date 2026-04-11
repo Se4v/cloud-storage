@@ -6,7 +6,6 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.model.request.UpdateSystemConfigArgs;
 import org.example.backend.model.entity.Config;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,8 +17,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class SystemService {
-    @Autowired
     private ConfigMapper configMapper;
+
+    public SystemService(ConfigMapper configMapper) {
+        this.configMapper = configMapper;
+    }
 
     public Map<String, String> getSystemConfigs() {
         LambdaQueryWrapper<Config> configQuery = new LambdaQueryWrapper<>();

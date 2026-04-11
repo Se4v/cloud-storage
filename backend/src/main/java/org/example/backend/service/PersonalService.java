@@ -1,7 +1,5 @@
 package org.example.backend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
@@ -15,7 +13,6 @@ import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.response.FolderTreeView;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,19 +23,21 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class PersonalService {
-    @Autowired
-    private EntryMapper entryMapper;
-    @Autowired
-    private StorageMapper storageMapper;
-    @Autowired
-    private ShareMapper shareMapper;
-    @Autowired
-    private MinioAsyncClient minioClient;
+    private final EntryMapper entryMapper;
+    private final StorageMapper storageMapper;
+    private final ShareMapper shareMapper;
+    private final MinioAsyncClient minioClient;
 
-    private static final int PERSONAL_DRIVE = 1;
+    public PersonalService(EntryMapper entryMapper, StorageMapper storageMapper,
+                           ShareMapper shareMapper, MinioAsyncClient minioClient) {
+        this.entryMapper = entryMapper;
+        this.storageMapper = storageMapper;
+        this.shareMapper = shareMapper;
+        this.minioClient = minioClient;
+    }
+
     private static final int UNDELETED = 1;
     private static final int DELETED = 2;
-    private static final int FILE = 1;
     private static final int FOLDER = 2;
     private static final int EXPIRE_DAYS = 15;
     private static final List<String> PREVIEW_EXT = Arrays.asList(
@@ -51,24 +50,24 @@ public class PersonalService {
     );
 
     public List<Entry> listEntries(Long driveId, Long parentId, Long userId) {
-        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.eq(Entry::getUserId, userId)
-                .eq(Entry::getParentId, parentId)
-                .eq(Entry::getDriveId, driveId)
-                .eq(Entry::getStatus, UNDELETED);
-        List<Entry> entries = entryMapper.selectList(entryQuery);
+        List<Entry> entries = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getParentId, parentId)
+                        .eq(Entry::getDriveId, driveId)
+                        .eq(Entry::getStatus, UNDELETED));
         if (entries == null || entries.isEmpty()) return List.of();
 
         return entries;
     }
 
     public List<FolderTreeView> listFolders(Long driveId, Long userId) {
-        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.eq(Entry::getUserId, userId)
-                .eq(Entry::getDriveId, driveId)
-                .eq(Entry::getEntryType, FOLDER)
-                .eq(Entry::getStatus, UNDELETED);
-        List<Entry> entries = entryMapper.selectList(entryQuery);
+        List<Entry> entries = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getDriveId, driveId)
+                        .eq(Entry::getEntryType, FOLDER)
+                        .eq(Entry::getStatus, UNDELETED));
         if (entries == null || entries.isEmpty()) {
             // 返回只有个人空间根节点的列表
             FolderTreeView personalRoot = new FolderTreeView();
@@ -113,13 +112,13 @@ public class PersonalService {
     public void createFolder(CreateFolderArgs args, Long userId) {
         // 校验目录是否存在且属于自己
         if (args.getParentId() > 0) {
-            LambdaQueryWrapper<Entry> parentQuery = new LambdaQueryWrapper<>();
-            parentQuery.eq(Entry::getId, args.getParentId())
-                    .eq(Entry::getDriveId, args.getDriveId())
-                    .eq(Entry::getUserId, userId)
-                    .eq(Entry::getEntryType, FOLDER)
-                    .eq(Entry::getStatus, UNDELETED);
-            Entry parent = entryMapper.selectOne(parentQuery);
+            Entry parent = entryMapper.selectOne(
+                    Wrappers.<Entry>lambdaQuery()
+                            .eq(Entry::getId, args.getParentId())
+                            .eq(Entry::getDriveId, args.getDriveId())
+                            .eq(Entry::getUserId, userId)
+                            .eq(Entry::getEntryType, FOLDER)
+                            .eq(Entry::getStatus, UNDELETED));
             if (parent == null) throw new BusinessException("<UNK>");
         }
 
@@ -149,34 +148,33 @@ public class PersonalService {
     public void moveEntries(MoveEntryArgs args, Long userId) {
         // 校验当前文件夹是否存在且属于自己
         if (args.getTargetId() > 0) {
-            LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-            entryQuery.eq(Entry::getId, args.getTargetId())
-                    .eq(Entry::getDriveId, args.getDriveId())
-                    .eq(Entry::getUserId, userId)
-                    .eq(Entry::getEntryType, FOLDER)
-                    .eq(Entry::getStatus, UNDELETED);
-            Entry entry = entryMapper.selectOne(entryQuery);
+            Entry entry = entryMapper.selectOne(
+                    Wrappers.<Entry>lambdaQuery()
+                            .eq(Entry::getId, args.getTargetId())
+                            .eq(Entry::getDriveId, args.getDriveId())
+                            .eq(Entry::getUserId, userId)
+                            .eq(Entry::getEntryType, FOLDER)
+                            .eq(Entry::getStatus, UNDELETED));
             if (entry == null) throw new BusinessException("Entry does not exist");
         }
 
-        LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(Entry::getParentId, args.getTargetId())
+        int count = entryMapper.update(Wrappers.<Entry>lambdaUpdate()
+                .set(Entry::getParentId, args.getTargetId())
                 .eq(Entry::getUserId, userId)
-                .in(Entry::getId, args.getIds());
-        int count = entryMapper.update(updateWrapper);
+                .in(Entry::getId, args.getIds()));
         if (count != args.getIds().size()) throw new BusinessException("Move entry failed");
     }
 
     @Transactional
     public void copyEntry(CopyEntryArgs args, Long userId) {
         if (args.getTargetId() > 0) {
-            LambdaQueryWrapper<Entry> parentQuery = new LambdaQueryWrapper<>();
-            parentQuery.eq(Entry::getId, args.getTargetId())
-                    .eq(Entry::getDriveId, args.getDriveId())
-                    .eq(Entry::getUserId, userId)
-                    .eq(Entry::getEntryType, FOLDER)
-                    .eq(Entry::getStatus, UNDELETED);
-            Entry parent = entryMapper.selectOne(parentQuery);
+            Entry parent = entryMapper.selectOne(
+                    Wrappers.<Entry>lambdaQuery()
+                            .eq(Entry::getId, args.getTargetId())
+                            .eq(Entry::getDriveId, args.getDriveId())
+                            .eq(Entry::getUserId, userId)
+                            .eq(Entry::getEntryType, FOLDER)
+                            .eq(Entry::getStatus, UNDELETED));
             if (parent == null) throw new BusinessException("<UNK>");
         }
 
@@ -184,11 +182,11 @@ public class PersonalService {
         if (entry == null) throw new BusinessException("Entry does not exist");
 
         // 目标目录下是否有同名文件
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getDriveId, args.getDriveId())
-                .eq(Entry::getParentId, entry.getParentId())
-                .eq(Entry::getEntryName, entry.getEntryName());
-        Entry sameNameEntry = entryMapper.selectOne(queryWrapper);
+        Entry sameNameEntry = entryMapper.selectOne(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getParentId, entry.getParentId())
+                        .eq(Entry::getEntryName, entry.getEntryName()));
         String entryName = sameNameEntry == null ?
                 entry.getEntryName() :
                 entry.getEntryName() + "-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
@@ -208,57 +206,59 @@ public class PersonalService {
         int count = entryMapper.insert(copyEntry);
         if (count != 1) throw new BusinessException("Move entry failed");
 
-        LambdaUpdateWrapper<Storage> storageUpdate = new LambdaUpdateWrapper<>();
-        storageUpdate.setIncrBy(Storage::getRefCount, 1).eq(Storage::getId, entry.getStorageId());
-        int storageCount = storageMapper.update(storageUpdate);
+        int storageCount = storageMapper.update(
+                Wrappers.<Storage>lambdaUpdate()
+                        .setIncrBy(Storage::getRefCount, 1)
+                        .eq(Storage::getId, entry.getStorageId()));
         if (storageCount != 1) throw new BusinessException("Move entry failed");
     }
 
     @Transactional
     public void renameEntry(RenameEntryArgs args, Long userId) {
-        LambdaQueryWrapper<Entry> entryQuery = new LambdaQueryWrapper<>();
-        entryQuery.eq(Entry::getId, args.getId())
-                .eq(Entry::getDriveId, args.getDriveId())
-                .eq(Entry::getUserId, userId)
-                .eq(Entry::getStatus, UNDELETED);
-        Entry existedEntry = entryMapper.selectOne(entryQuery);
+        Entry existedEntry = entryMapper.selectOne(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getId, args.getId())
+                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getStatus, UNDELETED));
         if (existedEntry == null) throw new BusinessException("Entry does not exist");
 
         // 新文件名校验
         if (!validateFileName(args.getNewEntryName())) throw new BusinessException("Invalid file name");
 
         // 目标父目录下是否存在同名条目
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getDriveId, args.getDriveId())
-                .eq(Entry::getParentId, existedEntry.getParentId())
-                .eq(Entry::getEntryName, args.getNewEntryName());
-        Entry sameNameEntry = entryMapper.selectOne(queryWrapper);
+        Entry sameNameEntry = entryMapper.selectOne(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getParentId, existedEntry.getParentId())
+                        .eq(Entry::getEntryName, args.getNewEntryName()));
         if (sameNameEntry != null) throw new BusinessException("Folder already exists");
 
         // 重命名
-        LambdaUpdateWrapper<Entry> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(Entry::getEntryName, args.getNewEntryName()).eq(Entry::getId, args.getId());
-        int count = entryMapper.update(updateWrapper);
+        int count = entryMapper.update(
+                Wrappers.<Entry>lambdaUpdate()
+                        .set(Entry::getEntryName, args.getNewEntryName())
+                        .eq(Entry::getId, args.getId()));
         if (count != 1) throw new BusinessException("Rename entry failed");
     }
 
     @Transactional
     public void deleteEntries(DeleteEntryArgs args, Long userId) {
         // 查询要删除的条目
-        LambdaQueryWrapper<Entry> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Entry::getStatus, UNDELETED)
-                .in(Entry::getId, args.getIds());
-        List<Entry> entries = entryMapper.selectList(queryWrapper);
+        List<Entry> entries = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getStatus, UNDELETED)
+                        .in(Entry::getId, args.getIds()));
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
-        LambdaUpdateWrapper<Entry> entryUpdate = new LambdaUpdateWrapper<>();
-        entryUpdate.set(Entry::getStatus, DELETED)
-                .set(Entry::getDeleterId, userId)
-                .set(Entry::getDeletedAt, LocalDateTime.now())
-                .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
-                .eq(Entry::getUserId, userId)
-                .in(Entry::getId, args.getIds());
-        int count = entryMapper.update(entryUpdate);
+        int count = entryMapper.update(
+                Wrappers.<Entry>lambdaUpdate()
+                        .set(Entry::getStatus, DELETED)
+                        .set(Entry::getDeleterId, userId)
+                        .set(Entry::getDeletedAt, LocalDateTime.now())
+                        .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
+                        .eq(Entry::getUserId, userId)
+                        .in(Entry::getId, args.getIds()));
         if (count != entries.size()) throw new BusinessException("Delete entry failed");
     }
 

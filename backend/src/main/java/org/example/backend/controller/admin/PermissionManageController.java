@@ -4,7 +4,6 @@ import org.example.backend.common.Result;
 import org.example.backend.model.entity.Permission;
 import org.example.backend.model.response.PermissionView;
 import org.example.backend.service.PermissionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,8 +13,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/perm")
 public class PermissionManageController {
-    @Autowired
-    private PermissionService permissionService;
+    private final PermissionService permissionService;
+
+    public PermissionManageController(PermissionService permissionService) {
+        this.permissionService = permissionService;
+    }
 
     @GetMapping("/all")
     public Result<List<PermissionView>> listALlPermissions() {

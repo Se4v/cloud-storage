@@ -9,7 +9,6 @@ import org.example.backend.model.entity.Role;
 import org.example.backend.model.response.RoleView;
 import org.example.backend.model.response.UserView;
 import org.example.backend.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +16,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user")
 public class UserManageController {
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserManageController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("/create")
     public Result<Void> createUser(@RequestBody CreateUserArgs args) {

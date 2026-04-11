@@ -9,14 +9,16 @@ import org.example.backend.model.entity.User;
 import org.example.backend.model.response.AvatarUploadUrlView;
 import org.example.backend.model.response.ProfileView;
 import org.example.backend.service.ProfileService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/profile")
 public class ProfileController {
-    @Autowired
-    private ProfileService profileService;
+    private final ProfileService profileService;
+
+    public ProfileController(ProfileService profileService) {
+        this.profileService = profileService;
+    }
 
     /**
      * 获取头像链接
