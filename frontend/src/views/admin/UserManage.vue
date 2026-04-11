@@ -73,129 +73,116 @@
 
     <!-- 数据表格 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-slate-50 border-b border-slate-200">
-          <tr>
-            <th class="px-6 py-3.5 font-semibold text-slate-700 w-10">
-              <input
-                  type="checkbox"
-                  :checked="isAllSelected"
-                  @change="toggleSelectAll"
-                  class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-            </th>
-            <th class="px-6 py-3.5 font-semibold text-slate-700">用户</th>
-            <th class="px-6 py-3.5 font-semibold text-slate-700">联系方式</th>
-            <th class="px-6 py-3.5 font-semibold text-slate-700">空间配额</th>
-            <th class="px-6 py-3.5 font-semibold text-slate-700">状态</th>
-            <th class="px-6 py-3.5 font-semibold text-slate-700 text-right">操作</th>
-          </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-          <tr
-              v-for="user in paginatedTableData"
-              :key="user.id"
-              class="hover:bg-slate-50/50 transition-colors"
-          >
-            <td class="px-6 py-4">
-              <input
-                  type="checkbox"
-                  v-model="selectedUsers"
-                  :value="user.id"
-                  class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex flex-col">
-                <span class="font-medium text-slate-900">{{ user.username }}</span>
-                <span class="text-xs text-slate-500 mt-0.5">{{ user.realName || '-' }}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex flex-col">
-                <span class="text-slate-900">{{ user.mobile || '-' }}</span>
-                <span class="text-xs text-slate-500 mt-0.5">{{ user.email || '-' }}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <span class="text-slate-700 font-medium">{{ formatStorage(user.storageQuota) }}</span>
-            </td>
-            <td class="px-6 py-4">
-                <span
-                    :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                    user.isEnabled
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-red-50 text-red-700 border-red-200'
-                  ]"
-                >
-                  <span
-                      :class="[
-                      'w-1.5 h-1.5 rounded-full mr-1.5',
-                      user.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
-                    ]"
-                  ></span>
-                  {{ user.isEnabled ? '启用' : '禁用' }}
-                </span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-1">
-                <button
-                    @click="handleEdit(user)"
-                    class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                    title="编辑"
-                >
-                  <el-icon :size="16"><Edit /></el-icon>
-                </button>
-                <button
-                    @click="openRoleDrawer(user)"
-                    class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors"
-                    title="分配角色"
-                >
-                  <el-icon :size="16"><UserFilled /></el-icon>
-                </button>
-                <el-dropdown trigger="click">
-                  <button
-                      class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                  >
-                    <el-icon :size="16"><MoreFilled /></el-icon>
-                  </button>
-                  <template #dropdown>
-                    <el-dropdown-menu class="min-w-[120px]">
-                      <el-dropdown-item @click="handleResetPassword(user)" class="text-slate-700">
-                        <el-icon class="mr-2"><Lock /></el-icon>
-                        重置密码
-                      </el-dropdown-item>
-                      <el-dropdown-item divided @click="handleDelete(user)" class="text-red-600">
-                        <el-icon class="mr-2"><Delete /></el-icon>
-                        删除用户
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </div>
-            </td>
-          </tr>
+      <el-table
+        v-loading="loading"
+        :data="paginatedTableData"
+        row-key="id"
+        @selection-change="handleSelectionChange"
+        class="w-full"
+        header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
+        row-class-name="hover:bg-slate-50/50 transition-colors"
+      >
+        <el-table-column type="selection" width="48" align="center" />
 
-          <!-- 空状态 -->
-          <tr v-if="tableData.length === 0">
-            <td colspan="6" class="px-6 py-12 text-center">
-              <div class="flex flex-col items-center justify-center text-slate-400">
-                <el-icon :size="48" class="mb-2 opacity-50"><User /></el-icon>
-                <p class="text-sm">暂无用户数据</p>
+        <el-table-column label="用户" min-width="160">
+          <template #default="{ row }">
+            <div class="flex flex-col">
+              <span class="font-medium text-slate-900">{{ row.username }}</span>
+              <span class="text-xs text-slate-500 mt-0.5">{{ row.realName || '-' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="联系方式" min-width="160">
+          <template #default="{ row }">
+            <div class="flex flex-col">
+              <span class="text-slate-900">{{ row.mobile || '-' }}</span>
+              <span class="text-xs text-slate-500 mt-0.5">{{ row.email || '-' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="空间配额" min-width="100">
+          <template #default="{ row }">
+            <span class="text-slate-700 font-medium">{{ formatStorage(row.storageQuota) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="状态" min-width="100">
+          <template #default="{ row }">
+            <span
+              :class="[
+                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                row.isEnabled
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-red-50 text-red-700 border-red-200'
+              ]"
+            >
+              <span
+                :class="[
+                  'w-1.5 h-1.5 rounded-full mr-1.5',
+                  row.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
+                ]"
+              ></span>
+              {{ row.isEnabled ? '启用' : '禁用' }}
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="140" fixed="right" align="right">
+          <template #default="{ row }">
+            <div class="flex items-center justify-end gap-1">
+              <button
+                @click="handleEdit(row)"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                title="编辑"
+              >
+                <el-icon :size="16"><Edit /></el-icon>
+              </button>
+              <button
+                @click="openRoleDrawer(row)"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                title="分配角色"
+              >
+                <el-icon :size="16"><UserFilled /></el-icon>
+              </button>
+              <el-dropdown trigger="click">
                 <button
-                    @click="handleAddUser"
-                    class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                 >
-                  添加用户
+                  <el-icon :size="16"><MoreFilled /></el-icon>
                 </button>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
+                <template #dropdown>
+                  <el-dropdown-menu class="min-w-[120px]">
+                    <el-dropdown-item @click="handleResetPassword(row)" class="text-slate-700">
+                      <el-icon class="mr-2"><Lock /></el-icon>
+                      重置密码
+                    </el-dropdown-item>
+                    <el-dropdown-item divided @click="handleDelete(row)" class="text-red-600">
+                      <el-icon class="mr-2"><Delete /></el-icon>
+                      删除用户
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 空状态 -->
+        <template #empty>
+          <div class="flex flex-col items-center justify-center text-slate-400 py-12">
+            <el-icon :size="48" class="mb-2 opacity-50"><User /></el-icon>
+            <p class="text-sm">暂无用户数据</p>
+            <button
+              @click="handleAddUser"
+              class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              添加用户
+            </button>
+          </div>
+        </template>
+      </el-table>
 
       <!-- 分页 -->
       <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
@@ -203,13 +190,13 @@
           共 <span class="font-medium text-slate-900">{{ filteredTableData.length }}</span> 条记录
         </span>
         <el-pagination
-            v-model:current-page="currentPage"
-            :page-size="10"
-            :total="total"
-            layout="prev, pager, next"
-            background
-            class="!gap-2"
-            @current-change="handleCurrentChange"
+          v-model:current-page="currentPage"
+          :page-size="10"
+          :total="total"
+          layout="prev, pager, next"
+          background
+          class="!gap-2"
+          @current-change="handleCurrentChange"
         />
       </div>
     </div>
@@ -481,6 +468,11 @@ const isAllSelected = computed(() => {
   return paginatedTableData.value.length > 0 && 
     paginatedTableData.value.every(user => selectedUsers.value.includes(user.id))
 })
+
+// 处理表格选择变化
+const handleSelectionChange = (selection) => {
+  selectedUsers.value = selection.map(item => item.id)
+}
 
 const toggleSelectAll = () => {
   if (isAllSelected.value) {

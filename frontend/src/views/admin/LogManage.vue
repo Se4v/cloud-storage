@@ -113,84 +113,82 @@
 
     <!-- 数据表格 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th class="px-6 py-3.5 font-semibold text-slate-700">用户名</th>
-              <th class="px-6 py-3.5 font-semibold text-slate-700">操作类型</th>
-              <th class="px-6 py-3.5 font-semibold text-slate-700">操作详情</th>
-              <th class="px-6 py-3.5 font-semibold text-slate-700">操作时间</th>
-              <th class="px-6 py-3.5 font-semibold text-slate-700">状态</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr
-              v-for="log in tableData"
-              :key="log.id"
-              class="hover:bg-slate-50/50 transition-colors"
-            >
-              <td class="px-6 py-4">
-                <span class="font-medium text-slate-900">{{ log.username }}</span>
-              </td>
-              <td class="px-6 py-4">
-                <span
-                  :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                    getOperationTypeClass(log.operationType)
-                  ]"
-                >
-                  {{ getOperationTypeLabel(log.operationType) }}
-                </span>
-              </td>
-              <td class="px-6 py-4">
-                <div class="max-w-md">
-                  <p class="text-slate-700 truncate" :title="log.detail">{{ log.detail }}</p>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex flex-col">
-                  <span class="text-slate-900">{{ log.operationTime }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span
-                  :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                    log.success
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-red-50 text-red-700 border-red-200'
-                  ]"
-                >
-                  <span
-                    :class="[
-                      'w-1.5 h-1.5 rounded-full mr-1.5',
-                      log.success ? 'bg-emerald-500' : 'bg-red-500'
-                    ]"
-                  ></span>
-                  {{ log.success ? '成功' : '失败' }}
-                </span>
-              </td>
-            </tr>
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        row-key="id"
+        class="w-full"
+        header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
+        row-class-name="hover:bg-slate-50/50 transition-colors"
+      >
+        <el-table-column label="用户名" min-width="120">
+          <template #default="{ row }">
+            <span class="font-medium text-slate-900">{{ row.username }}</span>
+          </template>
+        </el-table-column>
 
-            <!-- 空状态 -->
-            <tr v-if="tableData.length === 0">
-              <td colspan="5" class="px-6 py-12 text-center">
-                <div class="flex flex-col items-center justify-center text-slate-400">
-                  <el-icon :size="48" class="mb-2 opacity-50"><Document /></el-icon>
-                  <p class="text-sm">暂无日志数据</p>
-                  <button
-                    @click="handleReset"
-                    class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    重置筛选条件
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <el-table-column label="操作类型" min-width="100">
+          <template #default="{ row }">
+            <span
+              :class="[
+                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                getOperationTypeClass(row.operationType)
+              ]"
+            >
+              {{ getOperationTypeLabel(row.operationType) }}
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作详情" min-width="280">
+          <template #default="{ row }">
+            <div class="max-w-md">
+              <p class="text-slate-700 truncate" :title="row.detail">{{ row.detail }}</p>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作时间" min-width="160">
+          <template #default="{ row }">
+            <span class="text-slate-900">{{ row.operationTime }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="状态" min-width="100">
+          <template #default="{ row }">
+            <span
+              :class="[
+                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                row.success
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-red-50 text-red-700 border-red-200'
+              ]"
+            >
+              <span
+                :class="[
+                  'w-1.5 h-1.5 rounded-full mr-1.5',
+                  row.success ? 'bg-emerald-500' : 'bg-red-500'
+                ]"
+              ></span>
+              {{ row.success ? '成功' : '失败' }}
+            </span>
+          </template>
+        </el-table-column>
+
+        <!-- 空状态 -->
+        <template #empty>
+          <div class="flex flex-col items-center justify-center text-slate-400 py-12">
+            <el-icon :size="48" class="mb-2 opacity-50"><Document /></el-icon>
+            <p class="text-sm">暂无日志数据</p>
+            <button
+              @click="handleReset"
+              class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              重置筛选条件
+            </button>
+          </div>
+        </template>
+      </el-table>
 
       <!-- 分页 -->
       <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
@@ -276,9 +274,11 @@ const getOperationTypeClass = (type) => {
 
 // 表格数据
 const tableData = ref([])
+const loading = ref(false)
 
 // 加载数据
 const loadData = async () => {
+  loading.value = true
   try {
     // 构建查询参数
     const params = {
@@ -317,6 +317,8 @@ const loadData = async () => {
   } catch (error) {
     console.error('获取日志列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取日志列表失败')
+  } finally {
+    loading.value = false
   }
 }
 

@@ -51,65 +51,50 @@
 
     <!-- 数据列表 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div v-if="loading" class="py-16 text-center">
-        <el-icon :size="32" class="text-slate-400 is-loading"><Loading /></el-icon>
-        <p class="text-sm text-slate-500 mt-2">加载中...</p>
-      </div>
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left">
-          <thead>
-          <tr class="border-b border-slate-200 bg-slate-50/50">
-            <th class="px-6 py-4 font-semibold text-slate-700">
-              权限信息
-            </th>
-            <th class="px-6 py-4 font-semibold text-slate-700">
-              权限代码
-            </th>
-            <th class="px-6 py-4 font-semibold text-slate-700">
-              类型
-            </th>
-          </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-          <tr
-              v-for="permission in filteredPermissions"
-              :key="permission.id"
-              class="hover:bg-slate-50/80 transition-colors"
-          >
-            <!-- 名称 -->
-            <td class="px-6 py-4">
-              <div class="text-sm font-medium text-slate-900">{{ permission.name }}</div>
-            </td>
+      <el-table
+        v-loading="loading"
+        :data="filteredPermissions"
+        row-key="id"
+        class="w-full"
+        header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
+        row-class-name="hover:bg-slate-50/80 transition-colors"
+      >
+        <el-table-column label="权限信息" min-width="200">
+          <template #default="{ row }">
+            <div class="text-sm font-medium text-slate-900">{{ row.name }}</div>
+          </template>
+        </el-table-column>
 
-            <!-- 代码 -->
-            <td class="px-6 py-4">
-              <code class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-mono rounded border border-slate-200">
-                {{ permission.code }}
-              </code>
-            </td>
+        <el-table-column label="权限代码" min-width="200">
+          <template #default="{ row }">
+            <code class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-mono rounded border border-slate-200">
+              {{ row.code }}
+            </code>
+          </template>
+        </el-table-column>
 
-            <!-- 类型 -->
-            <td class="px-6 py-4">
-                <span :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                  getTypeStyle(permission.type)
-                ]">
-                  {{ getTypeLabel(permission.type) }}
-                </span>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
+        <el-table-column label="类型" min-width="120">
+          <template #default="{ row }">
+            <span :class="[
+              'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+              getTypeStyle(row.type)
+            ]">
+              {{ getTypeLabel(row.type) }}
+            </span>
+          </template>
+        </el-table-column>
 
-      <!-- 空状态 -->
-      <div v-if="filteredPermissions.length === 0" class="py-16 text-center">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-          <el-icon :size="24"><Search /></el-icon>
-        </div>
-        <h3 class="text-sm font-medium text-slate-900 mb-1">未找到权限</h3>
-        <p class="text-sm text-slate-500">尝试调整搜索关键词或筛选条件</p>
-      </div>
+        <!-- 空状态 -->
+        <template #empty>
+          <div class="py-16 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+              <el-icon :size="24"><Search /></el-icon>
+            </div>
+            <h3 class="text-sm font-medium text-slate-900 mb-1">未找到权限</h3>
+            <p class="text-sm text-slate-500">尝试调整搜索关键词或筛选条件</p>
+          </div>
+        </template>
+      </el-table>
 
       <!-- 分页 -->
       <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
@@ -117,12 +102,12 @@
           共 <span class="font-medium text-slate-900">{{ filteredPermissions.length }}</span> 条记录
         </span>
         <el-pagination
-            v-model:current-page="currentPage"
-            :page-size="10"
-            :total="filteredPermissions.length"
-            layout="prev, pager, next"
-            background
-            class="!gap-2"
+          v-model:current-page="currentPage"
+          :page-size="10"
+          :total="filteredPermissions.length"
+          layout="prev, pager, next"
+          background
+          class="!gap-2"
         />
       </div>
     </div>
