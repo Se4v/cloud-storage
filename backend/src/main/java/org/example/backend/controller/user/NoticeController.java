@@ -5,7 +5,7 @@ import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.notice.NoticeDeletionReq;
 import org.example.backend.model.request.notice.NoticeReadMarkReq;
 import org.example.backend.model.entity.Notice;
-import org.example.backend.model.response.notice.NoticeView;
+import org.example.backend.model.response.notice.NoticeResp;
 import org.example.backend.service.NoticeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +25,8 @@ public class NoticeController {
         Long currentUserId = SecurityUtil.getUserId();
         List<Notice> notices = noticeService.listUnreadNotices(currentUserId);
 
-        List<NoticeView> resp = notices.stream()
-                .map(notice -> NoticeView.builder()
+        List<NoticeResp> resp = notices.stream()
+                .map(notice -> NoticeResp.builder()
                         .id(notice.getId())
                         .title(notice.getTitle())
                         .content(notice.getContent())
@@ -44,8 +44,8 @@ public class NoticeController {
         Long currentUserId = SecurityUtil.getUserId();
         List<Notice> notices = noticeService.listNotices(currentUserId);
 
-        List<NoticeView> resp = notices.stream()
-                .map(notice -> NoticeView.builder()
+        List<NoticeResp> resp = notices.stream()
+                .map(notice -> NoticeResp.builder()
                         .id(notice.getId())
                         .title(notice.getTitle())
                         .content(notice.getContent())

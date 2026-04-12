@@ -13,8 +13,8 @@ import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.response.org.NodeView;
-import org.example.backend.model.response.org.OrgTreeView;
+import org.example.backend.model.response.org.OrgNodeResp;
+import org.example.backend.model.response.org.OrgNodeTreeResp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +38,7 @@ public class OrgService {
 
     private static final int DELETED = 1;
 
-    public List<OrgTreeView> getOrgTree(Long userId) {
+    public List<OrgNodeTreeResp> getOrgTree(Long userId) {
         List<Member> members = memberMapper.selectList(
                 Wrappers.<Member>lambdaQuery()
                         .eq(Member::getUserId, userId));
@@ -62,30 +62,30 @@ public class OrgService {
                 .toList();
         
         // 递归构建树形结构
-        List<OrgTreeView> orgTree = rootNodes.stream()
+        List<OrgNodeTreeResp> orgTree = rootNodes.stream()
                 .map(node -> buildOrgTree(node, nodeMap, driveMap))
                 .toList();
         
         return orgTree;
     }
 
-    private OrgTreeView buildOrgTree(Node node, Map<Long, Node> nodeMap, Map<Long, Long> driveMap) {
+    private OrgNodeTreeResp buildOrgTree(Node node, Map<Long, Node> nodeMap, Map<Long, Long> driveMap) {
         // 获取子节点
         List<Node> children = nodeMap.values().stream()
                 .filter(n -> node.getId().equals(n.getParentId()))
                 .toList();
         
         // 递归构建子节点树
-        List<OrgTreeView> childViews = children.stream()
+        List<OrgNodeTreeResp> resp = children.stream()
                 .map(child -> buildOrgTree(child, nodeMap, driveMap))
                 .toList();
         
-        return OrgTreeView.builder()
+        return OrgNodeTreeResp.builder()
                 .id(node.getId())
                 .driveId(driveMap.get(node.getId()))
                 .name(node.getNodeName())
                 .type(node.getNodeType())
-                .children(childViews)
+                .children(resp)
                 .build();
     }
 
@@ -223,7 +223,7 @@ public class OrgService {
         if (driveUpdateCount != 1) throw new BusinessException("更新节点-空间失败");
     }
 
-    public List<NodeView> listAllOrgNodes() {
+    public List<OrgNodeResp> listAllOrgNodes() {
         // 查询组织节点
         List<Node> nodeList = nodeMapper.selectList(
                 Wrappers.<Node>lambdaQuery()
@@ -251,14 +251,14 @@ public class OrgService {
         Map<Long, String> userMap = userList.stream()
                 .collect(Collectors.toMap(User::getId, User::getUsername));
 
-        List<NodeView> nodeViewList = nodeList.stream()
+        List<OrgNodeResp> resp = nodeList.stream()
                 .map(node -> {
                     String parentName = parentNodeMap.getOrDefault(node.getParentId(), "根节点");
                     Drive drive = driveMap.get(node.getId());
                     Long storageQuota = drive.getTotalQuota();
                     String adminUsername = userMap.getOrDefault(drive.getUserId(), "");
 
-                    return NodeView.builder()
+                    return OrgNodeResp.builder()
                             .id(node.getId())
                             .name(node.getNodeName())
                             .type(node.getNodeType())
@@ -271,6 +271,6 @@ public class OrgService {
                 })
                 .toList();
 
-        return nodeViewList;
+        return resp;
     }
 }

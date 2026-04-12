@@ -1,4 +1,3 @@
--- 组织节点表
 CREATE TABLE `org_node` (
     `id`            bigint unsigned NOT NULL COMMENT '节点ID',
     `node_name`     varchar(64) NOT NULL DEFAULT '' COMMENT '节点名称',
@@ -14,7 +13,6 @@ CREATE TABLE `org_node` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='组织节点表';
 
 
--- 组织成员表
 CREATE TABLE `org_member` (
     `id`            bigint unsigned NOT NULL COMMENT '成员记录ID',
     `node_id`       bigint unsigned NOT NULL DEFAULT 0 COMMENT '组织节点ID(部门/团队)',
@@ -29,7 +27,6 @@ CREATE TABLE `org_member` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='组织成员表';
 
 
--- 空间表
 CREATE TABLE `sys_drive` (
     `id`             bigint unsigned NOT NULL COMMENT '空间ID',
     `drive_name`     varchar(64) NOT NULL DEFAULT '' COMMENT '空间名称',
@@ -47,7 +44,6 @@ CREATE TABLE `sys_drive` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间表';
 
 
--- 文件存储表
 CREATE TABLE `file_storage` (
     `id`                bigint unsigned NOT NULL COMMENT '物理文件记录ID',
     `original_name`     varchar(255) NOT NULL DEFAULT '' COMMENT '文件原始上传名称',
@@ -66,7 +62,6 @@ CREATE TABLE `file_storage` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件存储表';
 
 
--- 文件条目表
 CREATE TABLE `file_entry` (
     `id`            bigint unsigned NOT NULL COMMENT '条目ID',
     `drive_id`      bigint unsigned NOT NULL DEFAULT 0 COMMENT '空间ID',
@@ -90,7 +85,6 @@ CREATE TABLE `file_entry` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件条目表';
 
 
--- 分享表
 CREATE TABLE `file_share` (
     `id`                bigint unsigned NOT NULL COMMENT '分享记录ID',
     `drive_id`          bigint unsigned NOT NULL DEFAULT 0 COMMENT '空间ID',
@@ -111,7 +105,6 @@ CREATE TABLE `file_share` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享表';
 
 
--- 用户表
 CREATE TABLE `sys_user` (
     `id`            bigint unsigned NOT NULL COMMENT '用户ID',
     `username`      varchar(64) NOT NULL DEFAULT '' COMMENT '账号',
@@ -130,7 +123,6 @@ CREATE TABLE `sys_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 
--- 角色表
 CREATE TABLE `sys_role` (
     `id`            bigint unsigned NOT NULL COMMENT '角色ID',
     `name`          varchar(64) NOT NULL DEFAULT '' COMMENT '角色名称',
@@ -146,7 +138,6 @@ CREATE TABLE `sys_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
 
 
--- 权限表
 CREATE TABLE `sys_perm` (
     `id`            bigint unsigned NOT NULL COMMENT '权限ID',
     `name`          varchar(64) NOT NULL DEFAULT '' COMMENT '权限名称',
@@ -159,7 +150,6 @@ CREATE TABLE `sys_perm` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限表';
 
 
--- 用户-角色关联表
 CREATE TABLE `sys_user_role` (
     `id`            bigint unsigned NOT NULL COMMENT '用户-角色关联ID',
     `user_id`       bigint unsigned NOT NULL DEFAULT 0 COMMENT '用户ID',
@@ -172,7 +162,6 @@ CREATE TABLE `sys_user_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户-角色关联表';
 
 
--- 角色-权限关联表
 CREATE TABLE `sys_role_perm` (
     `id`            bigint unsigned NOT NULL COMMENT '角色-权限关联ID',
     `role_id`       bigint unsigned NOT NULL DEFAULT 0 COMMENT '角色ID',
@@ -185,7 +174,6 @@ CREATE TABLE `sys_role_perm` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色-权限关联表';
 
 
--- 通知表
 CREATE TABLE `sys_notice` (
     `id`            bigint unsigned NOT NULL COMMENT '通知记录ID',
     `title`         varchar(128) NOT NULL DEFAULT '' COMMENT '通知标题',
@@ -202,22 +190,23 @@ CREATE TABLE `sys_notice` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知表';
 
 
--- 日志表
 CREATE TABLE `sys_log` (
     `id`                bigint unsigned NOT NULL COMMENT '日志记录ID',
+    `org_node_id`       bigint unsigned NOT NULL DEFAULT 0 COMMENT '部门ID',
     `user_id`           bigint unsigned NOT NULL DEFAULT 0 COMMENT '用户ID',
     `username`          varchar(64) NOT NULL DEFAULT '' COMMENT '用户名称',
     `real_name`         varchar(64) NOT NULL DEFAULT '' COMMENT '真实姓名',
-    `request_uri`       varchar(128) NOT NULL DEFAULT '' COMMENT '请求路径',
+    `module`            varchar(64) NOT NULL DEFAULT '' COMMENT '功能模块: 文件管理/分享大厅/用户管理',
     `action`            varchar(32) NOT NULL DEFAULT '' COMMENT '操作: UPLOAD/DOWNLOAD/LOGIN/DELETE',
     `target_type`       varchar(32) NOT NULL DEFAULT '' COMMENT '对象类型: FILE/USER/SHARE/SYSTEM',
     `target_id`         bigint unsigned NOT NULL DEFAULT 0 COMMENT '对象ID',
     `target_name`       varchar(255) NOT NULL DEFAULT '' COMMENT '对象名称',
-    `detail`            varchar(255) NOT NULL DEFAULT '' COMMENT '操作详情',
+    `request_uri`       varchar(128) NOT NULL DEFAULT '' COMMENT '请求路径',
+    `detail`            json NULL COMMENT '操作详情(JSON格式)',
     `status`            tinyint unsigned NOT NULL DEFAULT 1 COMMENT '状态:0-失败; 1-成功',
-    `error_msg`         varchar(255) NOT NULL DEFAULT '' COMMENT '错误信息',
-    `client_ip`         varchar(64) NOT NULL DEFAULT '' COMMENT 'IP地址', 
-    `user_agent`        varchar(255) NOT NULL DEFAULT '' COMMENT '设备信息',
+    `error_msg`         text NULL DEFAULT '' COMMENT '错误信息',
+    `client_ip`         varchar(64) NOT NULL DEFAULT '' COMMENT 'IP地址',
+    `cost_time`         bigint unsigned NOT NULL DEFAULT 0 COMMENT '执行耗时(毫秒)',
     `created_at`        datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日志表';

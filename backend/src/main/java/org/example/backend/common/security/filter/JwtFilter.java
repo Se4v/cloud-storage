@@ -60,6 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
             loginUser.setSuperAdmin(true);
         }
 
+        // 获取自己管辖的部门
         List<Long> manageNodeIds = new ArrayList<>();
         if (loginUser.getOrgRoles() != null) {
             manageNodeIds = loginUser.getOrgRoles().entrySet().stream()

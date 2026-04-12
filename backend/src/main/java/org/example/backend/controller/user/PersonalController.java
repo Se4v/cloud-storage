@@ -5,7 +5,7 @@ import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.request.file.*;
-import org.example.backend.model.response.drive.PersonalDriveUsageView;
+import org.example.backend.model.response.drive.PersonalDriveUsageResp;
 import org.example.backend.model.response.file.*;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.DriveService;
@@ -155,7 +155,7 @@ public class PersonalController {
     public Result<?> getPersonalDriveUsage() {
         Long currentUserId = SecurityUtil.getUserId();
         Drive drive = driveService.getPersonalDriveUsage(currentUserId);
-        PersonalDriveUsageView resp = PersonalDriveUsageView.builder()
+        PersonalDriveUsageResp resp = PersonalDriveUsageResp.builder()
                 .usedQuota(drive.getUsedQuota())
                 .totalQuota(drive.getTotalQuota())
                 .build();

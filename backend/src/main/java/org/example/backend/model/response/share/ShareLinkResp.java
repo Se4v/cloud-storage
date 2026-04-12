@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class ShareView {
+public class ShareLinkResp {
     @NotNull
     private Long id;
     @NotNull

@@ -5,9 +5,9 @@ import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.model.entity.Config;
 import org.example.backend.model.entity.Drive;
-import org.example.backend.model.response.drive.DriveDetailView;
-import org.example.backend.model.response.stat.DriveOverviewView;
-import org.example.backend.model.response.stat.DriveUsageBreakdownView;
+import org.example.backend.model.response.drive.DriveDetailResp;
+import org.example.backend.model.response.stat.DriveOverviewResp;
+import org.example.backend.model.response.stat.DriveUsageBreakdownResp;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class DriveStatService {
         this.driveMapper = driveMapper;
     }
 
-    public DriveOverviewView getDriveOverview() {
+    public DriveOverviewResp getDriveOverview() {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getConfigKey, "total_quota")
@@ -35,16 +35,16 @@ public class DriveStatService {
         Long allocatedQuota = usedQuota - Long.parseLong(quotaSums.get("sumUsedQuota").toString());
         Long remainingQuota = totalQuota - usedQuota;
 
-        DriveOverviewView view = DriveOverviewView.builder()
+        DriveOverviewResp resp = DriveOverviewResp.builder()
                 .totalQuota(totalQuota)
                 .allocatedQuota(allocatedQuota)
                 .usedQuota(usedQuota)
                 .remainingQuota(remainingQuota)
                 .build();
-        return view;
+        return resp;
     }
 
-    public DriveUsageBreakdownView getDriveUsageBreakdown() {
+    public DriveUsageBreakdownResp getDriveUsageBreakdown() {
         List<Map<String, Object>> result = driveMapper.selectQuotaSumByType();
 
         Long enterpriseQuota = 0L;
@@ -58,22 +58,22 @@ public class DriveStatService {
             }
         }
 
-        DriveUsageBreakdownView view = DriveUsageBreakdownView.builder()
+        DriveUsageBreakdownResp resp = DriveUsageBreakdownResp.builder()
                 .enterpriseQuota(enterpriseQuota)
                 .personalQuota(personalQuota)
                 .build();
-        return view;
+        return resp;
     }
 
-    public List<DriveDetailView> getEnterpriseDriveDetails() {
+    public List<DriveDetailResp> getEnterpriseDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery()
                         .eq(Drive::getDriveType, 2));
 
-        List<DriveDetailView> views = drives.stream()
+        List<DriveDetailResp> resp = drives.stream()
                 .map(drive -> {
                     Long remainingQuota = drive.getTotalQuota() - drive.getUsedQuota();
-                    return DriveDetailView.builder()
+                    return DriveDetailResp.builder()
                             .name(drive.getDriveName())
                             .allocatedQuota(drive.getTotalQuota())
                             .usedQuota(drive.getUsedQuota())
@@ -82,18 +82,18 @@ public class DriveStatService {
                 })
                 .toList();
 
-        return views;
+        return resp;
     }
 
-    public List<DriveDetailView> getPersonalDriveDetails() {
+    public List<DriveDetailResp> getPersonalDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery()
                         .eq(Drive::getDriveType, 1));
 
-        List<DriveDetailView> views = drives.stream()
+        List<DriveDetailResp> resp = drives.stream()
                 .map(drive -> {
                     Long remainingQuota = drive.getTotalQuota() - drive.getUsedQuota();
-                    return DriveDetailView.builder()
+                    return DriveDetailResp.builder()
                             .name(drive.getDriveName())
                             .allocatedQuota(drive.getTotalQuota())
                             .usedQuota(drive.getUsedQuota())
@@ -102,7 +102,7 @@ public class DriveStatService {
                 })
                 .toList();
 
-        return views;
+        return resp;
     }
 
 }

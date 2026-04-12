@@ -1,9 +1,9 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.model.response.drive.DriveDetailView;
-import org.example.backend.model.response.stat.DriveOverviewView;
-import org.example.backend.model.response.stat.DriveUsageBreakdownView;
+import org.example.backend.model.response.drive.DriveDetailResp;
+import org.example.backend.model.response.stat.DriveOverviewResp;
+import org.example.backend.model.response.stat.DriveUsageBreakdownResp;
 import org.example.backend.service.DriveStatService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,25 +22,25 @@ public class DriveStatController {
 
     @GetMapping("/overview")
     public Result<?> getDriveOverview() {
-        DriveOverviewView resp = driveStatService.getDriveOverview();
+        DriveOverviewResp resp = driveStatService.getDriveOverview();
         return Result.success(resp);
     }
 
     @GetMapping("/breakdown")
     public Result<?> getDriveUsageBreakdown() {
-        DriveUsageBreakdownView resp = driveStatService.getDriveUsageBreakdown();
+        DriveUsageBreakdownResp resp = driveStatService.getDriveUsageBreakdown();
         return Result.success(resp);
     }
 
     @GetMapping("/enterprise")
     public Result<?> getEnterpriseDriveDetails() {
-        List<DriveDetailView> resp = driveStatService.getEnterpriseDriveDetails();
+        List<DriveDetailResp> resp = driveStatService.getEnterpriseDriveDetails();
         return Result.success(resp);
     }
 
     @GetMapping("/personal")
     public Result<?> getPersonalDriveDetails() {
-        List<DriveDetailView> resp = driveStatService.getPersonalDriveDetails();
+        List<DriveDetailResp> resp = driveStatService.getPersonalDriveDetails();
         return Result.success(resp);
     }
 }

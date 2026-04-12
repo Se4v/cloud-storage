@@ -7,7 +7,7 @@ import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.request.user.ProfileUpdateReq;
 import org.example.backend.model.entity.User;
 import org.example.backend.model.response.user.AvatarUploadUrlView;
-import org.example.backend.model.response.user.ProfileView;
+import org.example.backend.model.response.user.ProfileResp;
 import org.example.backend.service.ProfileService;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,7 +65,7 @@ public class ProfileController {
         Long currentUserId = SecurityUtil.getUserId();
         User user = profileService.getProfile(currentUserId);
 
-        ProfileView resp = ProfileView.builder()
+        ProfileResp resp = ProfileResp.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .realName(user.getRealName())

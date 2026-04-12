@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class RoleView {
+public class RoleResp {
     private Long id;
     private String name;
     private String code;

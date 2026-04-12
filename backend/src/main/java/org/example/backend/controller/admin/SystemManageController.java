@@ -2,7 +2,7 @@ package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.sys.SystemConfigUpdateReq;
-import org.example.backend.model.response.config.SystemConfigView;
+import org.example.backend.model.response.config.SystemConfigResp;
 import org.example.backend.service.SystemService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +19,7 @@ public class SystemManageController {
     }
 
     @GetMapping
-    public Result<SystemConfigView> getSystemConfigs() {
+    public Result<SystemConfigResp> getSystemConfigs() {
         Map<String, String> configMap = systemService.getSystemConfigs();
 
         String loginFailThreshold = configMap.getOrDefault("login_fail_threshold", "0");
@@ -29,7 +29,7 @@ public class SystemManageController {
         String storageWarningThreshold = configMap.getOrDefault("storage_warning_threshold", "0");
         List<String> fileTypeBlacklist = List.of(configMap.getOrDefault("file_type_blacklist", "").split(","));
 
-        SystemConfigView resp = SystemConfigView.builder()
+        SystemConfigResp resp = SystemConfigResp.builder()
                 .loginFailThreshold(loginFailThreshold)
                 .defaultPassword(defaultPassword)
                 .defaultStorageQuota(defaultStorageQuota)

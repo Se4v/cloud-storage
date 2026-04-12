@@ -7,10 +7,10 @@ import java.util.List;
 
 @Data
 @Builder
-public class OrgTreeView {
+public class OrgNodeTreeResp {
     private Long id;
     private Long driveId;
     private String name;
     private Integer type;
-    private List<OrgTreeView> children;
+    private List<OrgNodeTreeResp> children;
 }

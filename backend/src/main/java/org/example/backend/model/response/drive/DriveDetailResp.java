@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DriveDetailView {
+public class DriveDetailResp {
     private String name;
     private Long allocatedQuota;
     private Long usedQuota;

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DriveUsageBreakdownView {
+public class DriveUsageBreakdownResp {
     private Long enterpriseQuota;
     private Long personalQuota;
 }

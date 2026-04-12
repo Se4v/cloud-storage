@@ -11,7 +11,7 @@ import org.example.backend.model.request.user.UserCreationReq;
 import org.example.backend.model.request.user.UserDeletionReq;
 import org.example.backend.model.request.user.UserUpdateReq;
 import org.example.backend.model.entity.*;
-import org.example.backend.model.response.user.UserView;
+import org.example.backend.model.response.user.UserResp;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -118,7 +118,7 @@ public class UserService {
     /**
      * 查询所有未删除的用户
      */
-    public List<UserView> listAllUsers() {
+    public List<UserResp> listAllUsers() {
         // 筛选部门管理查看的数据
         List<Long> manageUserIds = null;
         if (!SecurityUtil.isSuperAdmin()) {
@@ -156,8 +156,8 @@ public class UserService {
                 ));
 
         // 转换
-        List<UserView> userViews = users.stream()
-                .map(user -> UserView.builder()
+        List<UserResp> resp = users.stream()
+                .map(user -> UserResp.builder()
                         .id(user.getId())
                         .username(user.getUsername())
                         .realName(user.getRealName())
@@ -169,7 +169,7 @@ public class UserService {
                         .build())
                 .toList();
 
-        return userViews;
+        return resp;
     }
 
     @Transactional

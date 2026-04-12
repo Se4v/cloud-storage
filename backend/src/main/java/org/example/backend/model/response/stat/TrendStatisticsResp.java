@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class TrendStatisticsView {
+public class TrendStatisticsResp {
     @JsonFormat(pattern = "MM/dd", timezone = "GMT+8")
     private LocalDateTime date;
     private Long upload;

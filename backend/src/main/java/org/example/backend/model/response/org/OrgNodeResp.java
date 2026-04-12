@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class NodeView {
+public class OrgNodeResp {
     @NotNull
     private Long id;
     @NotNull

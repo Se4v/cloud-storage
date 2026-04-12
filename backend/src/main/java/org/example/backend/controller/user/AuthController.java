@@ -17,14 +17,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public Result<?> login(@RequestBody AuthReq req) {
-        String token = authService.login(req.getUsername(), req.getPassword());
+        String token = authService.login(req);
         return Result.success(token);
     }
 
     @GetMapping("/logout")
     public Result<?> logout() {
-        String token = SecurityUtil.getToken();
-        authService.logout(token);
+        authService.logout();
         return Result.success();
     }
 }

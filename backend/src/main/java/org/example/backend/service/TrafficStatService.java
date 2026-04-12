@@ -6,9 +6,9 @@ import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.TrafficMapper;
 import org.example.backend.model.entity.Config;
-import org.example.backend.model.response.stat.FileTypeDistributionView;
-import org.example.backend.model.response.stat.TrafficOverviewView;
-import org.example.backend.model.response.stat.TrendStatisticsView;
+import org.example.backend.model.response.stat.FileTypeDistributionResp;
+import org.example.backend.model.response.stat.TrafficOverviewResp;
+import org.example.backend.model.response.stat.TrendStatisticsResp;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -35,7 +35,7 @@ public class TrafficStatService {
 
     private static final DecimalFormat df = new DecimalFormat("0.0");
 
-    public TrafficOverviewView getTrafficOverview() {
+    public TrafficOverviewResp getTrafficOverview() {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getConfigKey, "total_quota")
@@ -57,62 +57,62 @@ public class TrafficStatService {
             }
         }
 
-        TrafficOverviewView view = TrafficOverviewView.builder()
+        TrafficOverviewResp resp = TrafficOverviewResp.builder()
                 .totalQuota(totalQuota)
                 .usedQuota(usedQuota)
                 .totalUpload(totalUpload)
                 .totalDownload(totalDownload)
                 .build();
 
-        return view;
+        return resp;
     }
 
-    public List<TrendStatisticsView> getTrendStatistics() {
+    public List<TrendStatisticsResp> getTrendStatistics() {
         List<Map<String, Object>> result = trafficMapper.selectLast7DaysTraffic();
         if (result == null || result.isEmpty()) return List.of();
 
-        List<TrendStatisticsView> views = new ArrayList<>();
+        List<TrendStatisticsResp> resp = new ArrayList<>();
         for (Map<String, Object> map : result) {
             Long upload = Long.parseLong(map.getOrDefault("uploadSum", "0").toString());
             Long download = Long.parseLong(map.getOrDefault("downloadSum", "0").toString());
             LocalDate localDate = LocalDate.parse(map.get("statDate").toString());
             LocalDateTime localDateTime = localDate.atStartOfDay();
 
-            TrendStatisticsView view = TrendStatisticsView.builder()
+            TrendStatisticsResp item = TrendStatisticsResp.builder()
                     .date(localDateTime)
                     .upload(upload)
                     .download(download)
                     .fullDate(localDateTime)
                     .build();
 
-            views.add(view);
+            resp.add(item);
         }
 
-        return views;
+        return resp;
     }
 
-    public List<FileTypeDistributionView> getFileTypeDistribution() {
+    public List<FileTypeDistributionResp> getFileTypeDistribution() {
         List<Map<String, Object>> result = entryMapper.selectFileCategoryStats();
         if (result == null || result.isEmpty()) return List.of();
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();
         Long usedQuota = Long.parseLong(quotaSums.get("sumUsedQuota").toString());
 
-        List<FileTypeDistributionView> views = new ArrayList<>();
+        List<FileTypeDistributionResp> resp = new ArrayList<>();
         for (Map<String, Object> map : result) {
             Long size = Long.parseLong(map.getOrDefault("totalSize", "0").toString());
             String name = map.get("category").toString();
             String percent = df.format((double) size / usedQuota);
 
-            FileTypeDistributionView view = FileTypeDistributionView.builder()
+            FileTypeDistributionResp item = FileTypeDistributionResp.builder()
                     .name(name)
                     .size(size)
                     .percent(percent)
                     .build();
 
-            views.add(view);
+            resp.add(item);
         }
 
-        return views;
+        return resp;
     }
 }

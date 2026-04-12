@@ -227,7 +227,8 @@ const handleLogin = async () => {
     // 调用后端登录接口
     const response = await axios.post('http://localhost:8080/api/auth/login', {
       username: loginForm.username,
-      password: loginForm.password
+      password: loginForm.password,
+      loginType: loginType.value
     })
 
     // 后端返回 Result<String>，token 在 data 中

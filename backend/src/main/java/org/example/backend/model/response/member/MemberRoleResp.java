@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MemberRoleView {
+public class MemberRoleResp {
     private Long id;
     private String name;
 }

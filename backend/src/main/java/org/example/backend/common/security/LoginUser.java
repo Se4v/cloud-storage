@@ -10,6 +10,7 @@ import java.util.Map;
 public class LoginUser {
     private Long userId;
     private String username;
+    private String realName;
     private List<String> systemRoles;
     private List<String> systemPermissions;
     private Map<Long, List<String>> orgRoles;

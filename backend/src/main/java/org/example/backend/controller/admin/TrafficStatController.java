@@ -1,9 +1,9 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.model.response.stat.FileTypeDistributionView;
-import org.example.backend.model.response.stat.TrafficOverviewView;
-import org.example.backend.model.response.stat.TrendStatisticsView;
+import org.example.backend.model.response.stat.FileTypeDistributionResp;
+import org.example.backend.model.response.stat.TrafficOverviewResp;
+import org.example.backend.model.response.stat.TrendStatisticsResp;
 import org.example.backend.service.TrafficStatService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,19 +22,19 @@ public class TrafficStatController {
 
     @GetMapping("/overview")
     public Result<?> getTrafficOverview() {
-        TrafficOverviewView resp = trafficStatService.getTrafficOverview();
+        TrafficOverviewResp resp = trafficStatService.getTrafficOverview();
         return Result.success(resp);
     }
 
     @GetMapping("/trend")
     public Result<?> getTrendStatistics() {
-        List<TrendStatisticsView> resp = trafficStatService.getTrendStatistics();
+        List<TrendStatisticsResp> resp = trafficStatService.getTrendStatistics();
         return Result.success(resp);
     }
 
     @GetMapping("/distribution")
     public Result<?> getFileTypeDistribution() {
-        List<FileTypeDistributionView> resp = trafficStatService.getFileTypeDistribution();
+        List<FileTypeDistributionResp> resp = trafficStatService.getFileTypeDistribution();
         return Result.success(resp);
     }
 }

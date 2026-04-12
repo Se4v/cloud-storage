@@ -7,8 +7,8 @@ import org.example.backend.model.request.role.RoleDeletionReq;
 import org.example.backend.model.request.role.RoleUpdateReq;
 import org.example.backend.model.entity.Permission;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.response.perm.PermissionView;
-import org.example.backend.model.response.role.RoleView;
+import org.example.backend.model.response.perm.PermResp;
+import org.example.backend.model.response.role.RoleResp;
 import org.example.backend.service.RoleService;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,8 +44,8 @@ public class RoleManageController {
     @GetMapping("/all")
     public Result<?> listAllRoles() {
         List<Role> roleList = roleService.listAllRoles();
-        List<RoleView> resp = roleList.stream()
-                .map(role -> RoleView.builder()
+        List<RoleResp> resp = roleList.stream()
+                .map(role -> RoleResp.builder()
                         .id(role.getId())
                         .name(role.getName())
                         .code(role.getCode())
@@ -66,8 +66,8 @@ public class RoleManageController {
     @GetMapping("/perm")
     public Result<?> listPermissions() {
         List<Permission> permissionList = roleService.listPermissions();
-        List<PermissionView> resp = permissionList.stream()
-                .map(permission -> PermissionView.builder()
+        List<PermResp> resp = permissionList.stream()
+                .map(permission -> PermResp.builder()
                         .id(permission.getId())
                         .name(permission.getName())
                         .build())

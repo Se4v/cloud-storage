@@ -5,7 +5,7 @@ import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.share.LinkDeletionReq;
 import org.example.backend.model.request.share.LinkUpdateReq;
 import org.example.backend.model.entity.Share;
-import org.example.backend.model.response.share.ShareView;
+import org.example.backend.model.response.share.ShareLinkResp;
 import org.example.backend.service.ShareService;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +25,8 @@ public class ShareLinkController {
         Long currentUserId = SecurityUtil.getUserId();
         List<Share> shareList = shareService.listLinks(currentUserId);
 
-        List<ShareView> resp = shareList.stream()
-                .map(share -> ShareView.builder()
+        List<ShareLinkResp> resp = shareList.stream()
+                .map(share -> ShareLinkResp.builder()
                         .id(share.getId())
                         .fileType(share.getEntryType())
                         .linkName(share.getLinkName())

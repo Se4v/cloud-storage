@@ -21,8 +21,7 @@ public class LogManageController {
 
     @GetMapping("/all")
     public Result<?> listAllLogs() {
-        List<Log> logList = logService.listAllLogs();
-        List<LogView> resp = logList.stream()
+        List<LogView> resp = logService.listAllLogs().stream()
                 .map(log -> LogView.builder()
                         .id(log.getId())
                         .username(log.getUsername())

@@ -4,14 +4,18 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("sys_log")
 public class Log implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -19,6 +23,10 @@ public class Log implements Serializable {
     /** 日志记录ID */
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
+
+    /** 组织节点ID */
+    @TableField("org_node_id")
+    private Long orgNodeId;
 
     /** 用户ID */
     @TableField("user_id")
@@ -32,9 +40,9 @@ public class Log implements Serializable {
     @TableField("real_name")
     private String realName;
 
-    /** 请求路径 */
-    @TableField("request_uri")
-    private String requestUri;
+    /** 功能模块 */
+    @TableField("module")
+    private String module;
 
     /** 操作: UPLOAD/DOWNLOAD/LOGIN/DELETE */
     @TableField("action")
@@ -51,6 +59,10 @@ public class Log implements Serializable {
     /** 对象名称 */
     @TableField("target_name")
     private String targetName;
+
+    /** 请求路径 */
+    @TableField("request_uri")
+    private String requestUri;
 
     /** 操作详情 */
     @TableField("detail")
@@ -69,8 +81,8 @@ public class Log implements Serializable {
     private String clientIp;
 
     /** 设备信息 */
-    @TableField("user_agent")
-    private String userAgent;
+    @TableField("cost_time")
+    private Long costTime;
 
     /** 创建时间 */
     @TableField("created_at")

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class NoticeView {
+public class NoticeResp {
     private Long id;
     private String title;
     private String content;

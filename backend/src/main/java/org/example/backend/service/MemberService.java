@@ -14,7 +14,7 @@ import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.Role;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.response.member.MemberView;
+import org.example.backend.model.response.member.MemberResp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,7 +98,7 @@ public class MemberService {
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
-    public List<MemberView> listAllMembers() {
+    public List<MemberResp> listAllMembers() {
         List<Long> manageNodeIds = null;
         if (!SecurityUtil.isSuperAdmin()) {
             manageNodeIds = SecurityUtil.getManageNodeIds();
@@ -159,12 +159,12 @@ public class MemberService {
             );
         }
 
-        List<MemberView> memberViews = members.stream()
+        List<MemberResp> resp = members.stream()
                 .map(member -> {
                     User user = userMap.get(member.getUserId());
                     Role role = roleMap.get(member.getRoleId());
                     Node node = nodeMap.get(member.getNodeId());
-                    return MemberView.builder()
+                    return MemberResp.builder()
                             .id(member.getId())
                             .username(user != null ? user.getUsername() : "")
                             .realName(user != null ? user.getRealName() : "")
@@ -174,7 +174,7 @@ public class MemberService {
                 })
                 .toList();
 
-        return memberViews;
+        return resp;
     }
 
     public List<Role> listOrgRoles() {

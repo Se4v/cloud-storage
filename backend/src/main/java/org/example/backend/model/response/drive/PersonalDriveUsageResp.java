@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PersonalDriveUsageView {
+public class PersonalDriveUsageResp {
     private Long usedQuota;
     private Long totalQuota;
 }

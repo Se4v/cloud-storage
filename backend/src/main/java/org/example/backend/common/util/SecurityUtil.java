@@ -21,6 +21,14 @@ public class SecurityUtil {
         return getLoginUser().getUserId();
     }
 
+    public static String getUsername() {
+        return getLoginUser().getUsername();
+    }
+
+    public static String getRealName() {
+        return getLoginUser().getRealName();
+    }
+
     public static String getToken() {
         return getLoginUser().getToken();
     }

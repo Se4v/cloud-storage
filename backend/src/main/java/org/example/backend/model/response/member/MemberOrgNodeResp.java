@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MemberNodeView {
+public class MemberOrgNodeResp {
     private Long id;
     private String name;
 }

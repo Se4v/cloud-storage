@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PermissionView {
+public class PermResp {
     private Long id;
     private String name;
     private String code;

@@ -9,4 +9,6 @@ public class AuthReq {
     private String username;
     @NotBlank
     private String password;
+    @NotBlank
+    private String loginType;
 }

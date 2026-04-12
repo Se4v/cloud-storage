@@ -8,6 +8,8 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.result.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -26,9 +28,10 @@ import javax.naming.AuthenticationException;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /* ================= 业务自定义异常 ================= */
 
     /**
@@ -36,7 +39,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletRequest request) {
-        log.warn("业务异常 - URI: [{}], 错误码: {}, 错误信息: {}", request.getRequestURI(), e.getCode(), e.getMessage());
+        logger.warn("业务异常 - URI: [{}], 错误码: {}, 错误信息: {}", request.getRequestURI(), e.getCode(), e.getMessage());
         return Result.fail(e.getCode(), e.getMessage());
     }
 
@@ -51,7 +54,7 @@ public class GlobalExceptionHandler {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-        log.warn("参数绑定失败 - URI: [{}], 错误: {}", request.getRequestURI(), message);
+        logger.warn("参数绑定失败 - URI: [{}], 错误: {}", request.getRequestURI(), message);
         return Result.fail(400, message);
     }
 
@@ -64,7 +67,7 @@ public class GlobalExceptionHandler {
         String message = e.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
-        log.warn("约束校验失败 - URI: [{}], 错误: {}", request.getRequestURI(), message);
+        logger.warn("约束校验失败 - URI: [{}], 错误: {}", request.getRequestURI(), message);
         return Result.fail(400, message);
     }
 
@@ -76,7 +79,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public Result<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException e,
                                                                       HttpServletRequest request) {
-        log.warn("缺少请求参数 - URI: [{}], 参数名: {}", request.getRequestURI(), e.getParameterName());
+        logger.warn("缺少请求参数 - URI: [{}], 参数名: {}", request.getRequestURI(), e.getParameterName());
         return Result.fail(400, "缺少必要参数: " + e.getParameterName());
     }
 
@@ -86,7 +89,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public Result<Void> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e,
                                                                   HttpServletRequest request) {
-        log.warn("参数类型不匹配 - URI: [{}], 参数名: {}, 错误: {}", request.getRequestURI(), e.getName(), e.getMessage());
+        logger.warn("参数类型不匹配 - URI: [{}], 参数名: {}, 错误: {}", request.getRequestURI(), e.getName(), e.getMessage());
         return Result.fail(400, "参数 [" + e.getName() + "] 类型不匹配");
     }
 
@@ -96,7 +99,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public Result<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException e,
                                                               HttpServletRequest request) {
-        log.warn("请求参数不可读(JSON格式错误) - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("请求参数不可读(JSON格式错误) - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(400, "请求参数格式错误或JSON解析失败");
     }
 
@@ -106,25 +109,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Result<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e,
                                                                      HttpServletRequest request) {
-        log.warn("请求方法不支持 - URI: [{}], 方法: {}", request.getRequestURI(), e.getMethod());
+        logger.warn("请求方法不支持 - URI: [{}], 方法: {}", request.getRequestURI(), e.getMethod());
         return Result.fail(405, "请求方法不支持: " + e.getMethod());
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public Result<Void> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e, HttpServletRequest request) {
-        log.warn("不支持的媒体类型 - URI: [{}], 类型: {}", request.getRequestURI(), e.getContentType());
+        logger.warn("不支持的媒体类型 - URI: [{}], 类型: {}", request.getRequestURI(), e.getContentType());
         return Result.fail(415, "不支持的 Content-Type: " + e.getContentType());
     }
 
     @ExceptionHandler(HttpMessageNotWritableException.class)
     public void handleDownloadException(HttpMessageNotWritableException ex, HttpServletResponse response) {
-        log.error("响应写入失败 (通常发生在文件下载) - 错误: {}", ex.getMessage());
+        logger.error("响应写入失败 (通常发生在文件下载) - 错误: {}", ex.getMessage());
         try {
             response.setStatus(500);
             response.setContentType("text/plain;charset=UTF-8");
             response.getWriter().write("Download Error: 服务端响应写入失败");
         } catch (IOException e) {
-            log.error("处理下载异常时发生IO错误", e);
+            logger.error("处理下载异常时发生IO错误", e);
         }
     }
 
@@ -135,7 +138,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Void> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
-        log.warn("权限不足 - URI:[{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("权限不足 - URI:[{}], 错误: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(403, "权限不足，禁止访问");
     }
 
@@ -144,7 +147,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AuthenticationException.class)
     public Result<Void> handleAuthenticationException(AuthenticationException e, HttpServletRequest request) {
-        log.warn("认证失败 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("认证失败 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(401, "未登录或认证失败");
     }
 
@@ -153,7 +156,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(JwtException.class)
     public Result<Void> handleJwtException(JwtException e, HttpServletRequest request) {
-        log.warn("JWT令牌异常 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("JWT令牌异常 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(401, "Token 无效或已过期");
     }
 
@@ -164,7 +167,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DuplicateKeyException.class)
     public Result<Void> handleDuplicateKeyException(DuplicateKeyException e, HttpServletRequest request) {
-        log.warn("数据库唯一约束冲突 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("数据库唯一约束冲突 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
         // 可以根据 e.getMessage() 提取具体重复字段，这里做通用返回
         return Result.fail(409, "数据违反唯一性约束，该记录已存在");
     }
@@ -174,7 +177,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Result<Void> handleDataIntegrityViolationException(DataIntegrityViolationException e, HttpServletRequest request) {
-        log.warn("数据完整性约束违反 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("数据完整性约束违反 - URI: [{}], 错误: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(400, "提交的数据不合法，违反数据库约束");
     }
 
@@ -185,7 +188,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public Result<Void> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
-        log.warn("文件上传超限 - URI: [{}]", request.getRequestURI());
+        logger.warn("文件上传超限 - URI: [{}]", request.getRequestURI());
         return Result.fail(413, "上传文件大小超过系统允许的限制");
     }
 
@@ -194,7 +197,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MinioException.class)
     public Result<Void> handleMinioException(MinioException e, HttpServletRequest request) {
-        log.error("MinIO 文件存储异常 - URI: [{}]", request.getRequestURI(), e);
+        logger.error("MinIO 文件存储异常 - URI: [{}]", request.getRequestURI(), e);
         return Result.fail(500, "文件存储服务异常");
     }
 
@@ -205,7 +208,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NullPointerException.class)
     public Result<Void> handleNullPointerException(NullPointerException e, HttpServletRequest request) {
-        log.error("空指针异常 - URI: [{}]", request.getRequestURI(), e);
+        logger.error("空指针异常 - URI: [{}]", request.getRequestURI(), e);
         return Result.fail(500, "系统内部错误");
     }
 
@@ -214,7 +217,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<Void> handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request) {
-        log.warn("非法参数异常 - URI:[{}], 错误: {}", request.getRequestURI(), e.getMessage());
+        logger.warn("非法参数异常 - URI:[{}], 错误: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(400, e.getMessage());
     }
 
@@ -223,7 +226,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e, HttpServletRequest request) {
-        log.error("系统异常 - URI: [{}]", request.getRequestURI(), e);
+        logger.error("系统异常 - URI: [{}]", request.getRequestURI(), e);
         return Result.fail(500, "系统繁忙，请稍后重试");
     }
 }

@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DriveOverviewView {
+public class TrafficOverviewResp {
     private Long totalQuota;
-    private Long allocatedQuota;
     private Long usedQuota;
-    private Long remainingQuota;
+    private Long totalUpload;
+    private Long totalDownload;
 }

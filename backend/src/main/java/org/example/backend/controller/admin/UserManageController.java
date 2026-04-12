@@ -7,8 +7,8 @@ import org.example.backend.model.request.user.UserCreationReq;
 import org.example.backend.model.request.user.UserDeletionReq;
 import org.example.backend.model.request.user.UserUpdateReq;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.response.role.RoleView;
-import org.example.backend.model.response.user.UserView;
+import org.example.backend.model.response.role.RoleResp;
+import org.example.backend.model.response.user.UserResp;
 import org.example.backend.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +43,7 @@ public class UserManageController {
 
     @GetMapping("/all")
     public Result<?> listAllUsers() {
-        List<UserView> resp = userService.listAllUsers();
+        List<UserResp> resp = userService.listAllUsers();
         return Result.success(resp);
     }
 
@@ -62,8 +62,8 @@ public class UserManageController {
     @GetMapping("/role")
     public Result<?> listSystemRole() {
         List<Role> roleList = userService.listSystemRole();
-        List<RoleView> resp = roleList.stream()
-                .map(role -> RoleView.builder()
+        List<RoleResp> resp = roleList.stream()
+                .map(role -> RoleResp.builder()
                         .id(role.getId())
                         .name(role.getName())
                         .build()).toList();

@@ -3,17 +3,13 @@ package org.example.backend.model.response.user;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @Builder
-public class UserView {
-    private Long id;
+public class ProfileResp {
+    private Long userId;
     private String username;
     private String realName;
+    private String avatar;
     private String mobile;
     private String email;
-    private Integer isEnabled;
-    private Long storageQuota;
-    private List<Long> roles;
 }
