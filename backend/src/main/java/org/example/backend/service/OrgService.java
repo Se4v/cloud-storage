@@ -28,6 +28,8 @@ public class OrgService {
     private final DriveMapper driveMapper;
     private final UserMapper userMapper;
 
+    private static final int DELETED = 1;
+
     public OrgService(MemberMapper memberMapper, NodeMapper nodeMapper,
                       DriveMapper driveMapper, UserMapper userMapper) {
         this.memberMapper = memberMapper;
@@ -35,8 +37,6 @@ public class OrgService {
         this.driveMapper = driveMapper;
         this.userMapper = userMapper;
     }
-
-    private static final int DELETED = 1;
 
     public List<OrgNodeTreeResp> getOrgTree(Long userId) {
         List<Member> members = memberMapper.selectList(

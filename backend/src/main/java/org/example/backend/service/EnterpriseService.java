@@ -31,15 +31,6 @@ public class EnterpriseService {
     private final ShareMapper shareMapper;
     private final MinioAsyncClient minioClient;
 
-    public EnterpriseService(EntryMapper entryMapper, DriveMapper driveMapper, StorageMapper storageMapper,
-                             ShareMapper shareMapper, MinioAsyncClient minioClient) {
-        this.entryMapper = entryMapper;
-        this.driveMapper = driveMapper;
-        this.storageMapper = storageMapper;
-        this.shareMapper = shareMapper;
-        this.minioClient = minioClient;
-    }
-
     private static final int UNDELETED = 1;
     private static final int DELETED = 2;
     private static final int FOLDER = 2;
@@ -52,6 +43,15 @@ public class EnterpriseService {
             // 文本格式
             "txt", "md", "json", "xml", "csv", "html", "htm"
     );
+
+    public EnterpriseService(EntryMapper entryMapper, DriveMapper driveMapper, StorageMapper storageMapper,
+                             ShareMapper shareMapper, MinioAsyncClient minioClient) {
+        this.entryMapper = entryMapper;
+        this.driveMapper = driveMapper;
+        this.storageMapper = storageMapper;
+        this.shareMapper = shareMapper;
+        this.minioClient = minioClient;
+    }
 
     public List<Entry> listEntries(Long driveId, Long parentId, Long orgId) {
         if (!isMemberOfOrganization(driveId, orgId)) throw new BusinessException("未授权操作");

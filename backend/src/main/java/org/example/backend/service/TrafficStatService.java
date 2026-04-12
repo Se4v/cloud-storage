@@ -25,6 +25,8 @@ public class TrafficStatService {
     private final TrafficMapper trafficMapper;
     private final EntryMapper entryMapper;
 
+    private static final DecimalFormat df = new DecimalFormat("0.0");
+
     public TrafficStatService(ConfigMapper configMapper, DriveMapper driveMapper,
             TrafficMapper trafficMapper, EntryMapper entryMapper) {
         this.configMapper = configMapper;
@@ -32,8 +34,6 @@ public class TrafficStatService {
         this.trafficMapper = trafficMapper;
         this.entryMapper = entryMapper;
     }
-
-    private static final DecimalFormat df = new DecimalFormat("0.0");
 
     public TrafficOverviewResp getTrafficOverview() {
         Config config = configMapper.selectOne(

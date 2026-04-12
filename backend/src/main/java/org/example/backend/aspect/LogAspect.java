@@ -10,7 +10,6 @@ import org.example.backend.common.annotation.OperationLog;
 import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.entity.Log;
 import org.example.backend.service.LogService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -28,13 +27,16 @@ import java.util.*;
 @Aspect
 @Component
 public class LogAspect {
-    private LogService logService;
-    @Autowired
-    private ObjectMapper objectMapper;
-    // SpEL 解析器
+    private final LogService logService;
+    private final ObjectMapper objectMapper;
+
     private final SpelExpressionParser parser = new SpelExpressionParser();
-    // 方法参数名发现器
     private final DefaultParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+
+    public LogAspect(LogService logService, ObjectMapper objectMapper) {
+        this.logService = logService;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * 环绕通知
@@ -76,7 +78,7 @@ public class LogAspect {
 
             // 6. 记录耗时，准备入库
             log.setCostTime(System.currentTimeMillis() - startTime);
-            // sysLogService.save(sysLog);
+            logService.saveLogAsync(log);
 
             // 7. 【切记】清理 ThreadLocal，防止内存泄漏或数据串线
             LogContextHolder.clear();

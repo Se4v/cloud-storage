@@ -63,19 +63,6 @@ public class UploadService {
     private final DriveMapper driveMapper;
     private final TrafficMapper trafficMapper;
 
-    public UploadService(RedissonClient redissonClient, MinioConfig minioConfig, RedisTemplate<String, Object> redisTemplate,
-                         MinioAsyncClient minioAsyncClient, StorageMapper storageMapper, EntryMapper entryMapper,
-                         DriveMapper driveMapper, TrafficMapper trafficMapper) {
-        this.redissonClient = redissonClient;
-        this.minioConfig = minioConfig;
-        this.redisTemplate = redisTemplate;
-        this.minioAsyncClient = minioAsyncClient;
-        this.storageMapper = storageMapper;
-        this.entryMapper = entryMapper;
-        this.driveMapper = driveMapper;
-        this.trafficMapper = trafficMapper;
-    }
-
     private static final String TASK_KEY_PREFIX = "upload:task:";
     private static final String CHUNKS_KEY_PREFIX = "upload:chunks:";
     private static final String LOCK_KEY_PREFIX = "upload:lock:";
@@ -102,6 +89,19 @@ public class UploadService {
     private static final long LOCK_WAIT_SECONDS = 10;
     private static final long LOCK_LEASE_SECONDS = 30;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
+    public UploadService(RedissonClient redissonClient, MinioConfig minioConfig, RedisTemplate<String, Object> redisTemplate,
+                         MinioAsyncClient minioAsyncClient, StorageMapper storageMapper, EntryMapper entryMapper,
+                         DriveMapper driveMapper, TrafficMapper trafficMapper) {
+        this.redissonClient = redissonClient;
+        this.minioConfig = minioConfig;
+        this.redisTemplate = redisTemplate;
+        this.minioAsyncClient = minioAsyncClient;
+        this.storageMapper = storageMapper;
+        this.entryMapper = entryMapper;
+        this.driveMapper = driveMapper;
+        this.trafficMapper = trafficMapper;
+    }
 
     public InitUploadView initUpload(InitUploadArgs args, Long userId) {
         List<InitUploadView.View> viewList = new ArrayList<>();

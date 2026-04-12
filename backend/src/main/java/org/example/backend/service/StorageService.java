@@ -23,13 +23,13 @@ public class StorageService {
     private final StorageMapper storageMapper;
     private final MinioClient minioClient;
 
+    private static final int BATCH_SIZE = 1000;
+    private static final Logger logger = LoggerFactory.getLogger(StorageService.class);
+
     public StorageService(StorageMapper storageMapper, MinioClient minioClient) {
         this.storageMapper = storageMapper;
         this.minioClient = minioClient;
     }
-
-    private static final int BATCH_SIZE = 1000;
-    private static final Logger logger = LoggerFactory.getLogger(StorageService.class);
 
     @Transactional
     public void cleanStorageFile(List<Storage> storageList) {

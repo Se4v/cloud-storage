@@ -29,6 +29,11 @@ public class UserService {
     private final UserRoleMapper userRoleMapper;
     private final PasswordEncoder passwordEncoder;
 
+    private static final int ENABLED = 1;
+    private static final int DISABLED = 0;
+    private static final int UNDELETED = 0;
+    private static final int DELETED = 1;
+
     public UserService(UserMapper userMapper, MemberMapper memberMapper, ConfigMapper configMapper,
                        DriveMapper driveMapper, RoleMapper roleMapper, UserRoleMapper userRoleMapper,
                        PasswordEncoder passwordEncoder) {
@@ -40,11 +45,6 @@ public class UserService {
         this.userRoleMapper = userRoleMapper;
         this.passwordEncoder = passwordEncoder;
     }
-
-    private static final int ENABLED = 1;
-    private static final int DISABLED = 0;
-    private static final int UNDELETED = 0;
-    private static final int DELETED = 1;
 
     /**
      * 创建用户

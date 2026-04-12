@@ -28,6 +28,11 @@ public class AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final JwtUtil jwtUtil;
 
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
+    private static final String TYPE_LOGIN_ADMIN = "admin";
+    private static final String KEY_AUTH_USER = "auth:user:";
+    private static final String KEY_AUTH_TOKEN = "auth:token:";
+
     public AuthService(UserMapper userMapper, PasswordEncoder passwordEncoder,
                        RedisTemplate<String, Object> redisTemplate, JwtUtil jwtUtil) {
         this.userMapper = userMapper;
@@ -35,10 +40,6 @@ public class AuthService {
         this.redisTemplate = redisTemplate;
         this.jwtUtil = jwtUtil;
     }
-    private static final String ROLE_ADMIN = "ROLE_ADMIN";
-    private static final String TYPE_LOGIN_ADMIN = "admin";
-    private static final String KEY_AUTH_USER = "auth:user:";
-    private static final String KEY_AUTH_TOKEN = "auth:token:";
 
     public String login(AuthReq req) {
         // 防止重复登录

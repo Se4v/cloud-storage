@@ -28,6 +28,19 @@ public class PersonalService {
     private final ShareMapper shareMapper;
     private final MinioAsyncClient minioClient;
 
+    private static final int UNDELETED = 1;
+    private static final int DELETED = 2;
+    private static final int FOLDER = 2;
+    private static final int EXPIRE_DAYS = 15;
+    private static final List<String> PREVIEW_EXT = Arrays.asList(
+            // 图像格式
+            "jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico",
+            // 文档格式
+            "pdf",
+            // 文本格式
+            "txt", "md", "json", "xml", "csv", "html", "htm"
+    );
+
     public PersonalService(EntryMapper entryMapper, StorageMapper storageMapper,
                            ShareMapper shareMapper, MinioAsyncClient minioClient) {
         this.entryMapper = entryMapper;
@@ -35,19 +48,6 @@ public class PersonalService {
         this.shareMapper = shareMapper;
         this.minioClient = minioClient;
     }
-
-    private static final int UNDELETED = 1;
-    private static final int DELETED = 2;
-    private static final int FOLDER = 2;
-    private static final int EXPIRE_DAYS = 15;
-    private static final List<String> PREVIEW_EXT = Arrays.asList(
-        // 图像格式
-        "jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico",
-        // 文档格式
-        "pdf",
-        // 文本格式
-        "txt", "md", "json", "xml", "csv", "html", "htm"
-    );
 
     public List<Entry> listEntries(Long driveId, Long parentId, Long userId) {
         List<Entry> entries = entryMapper.selectList(

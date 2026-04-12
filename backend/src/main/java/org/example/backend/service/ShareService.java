@@ -15,12 +15,12 @@ import java.util.List;
 public class ShareService {
     private final ShareMapper shareMapper;
 
+    private static final int DELETED = 1;
+    private static final int UNDELETED = 0;
+
     public ShareService(ShareMapper shareMapper) {
         this.shareMapper = shareMapper;
     }
-
-    private static final int DELETED = 1;
-    private static final int UNDELETED = 0;
 
     public List<Share> listLinks(Long userId) {
         // 查询分享链接列表

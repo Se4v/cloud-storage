@@ -66,8 +66,7 @@ public class FileCleanupJob {
         logger.info("定时任务启动：开始清理未使用物理文件...");
 
         List<Storage> storages = storageMapper.selectList(
-                Wrappers.<Storage>lambdaQuery()
-                        .eq(Storage::getRefCount, 0));
+                Wrappers.<Storage>lambdaQuery().eq(Storage::getRefCount, 0));
 
         if (CollectionUtils.isEmpty(storages)) {
             logger.info("定时任务完成：没有需要清理物理文件。");

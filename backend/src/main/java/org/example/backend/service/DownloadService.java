@@ -33,6 +33,10 @@ public class DownloadService {
     private final StorageMapper storageMapper;
     private final TrafficMapper trafficMapper;
 
+    private static final int TYPE_FILE = 1;
+    private static final int TYPE_FOLDER = 2;
+    private static final int STATUS_UNDELETED = 1;
+
     public DownloadService(MinioClient minioClient, EntryMapper entryMapper,
                            StorageMapper storageMapper, TrafficMapper trafficMapper) {
         this.minioClient = minioClient;
@@ -40,10 +44,6 @@ public class DownloadService {
         this.storageMapper = storageMapper;
         this.trafficMapper = trafficMapper;
     }
-
-    private static final int TYPE_FILE = 1;
-    private static final int TYPE_FOLDER = 2;
-    private static final int STATUS_UNDELETED = 1;
 
     public StreamingResponseBody download(FileDownloadReq req, Long userId) {
         return outputStream -> {

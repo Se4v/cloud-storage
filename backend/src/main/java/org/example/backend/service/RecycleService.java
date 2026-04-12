@@ -23,17 +23,17 @@ public class RecycleService {
     private final StorageMapper storageMapper;
     private final DriveMapper driveMapper;
 
-    public RecycleService(EntryMapper entryMapper, StorageMapper storageMapper, DriveMapper driveMapper) {
-        this.entryMapper = entryMapper;
-        this.storageMapper = storageMapper;
-        this.driveMapper = driveMapper;
-    }
-
     private static final int FILE = 1;
     private static final int FOLDER = 2;
     private static final int UNDELETED = 1;
     private static final int DELETED = 2;
     private static final int PERMANENTLY_DELETED = 3;
+
+    public RecycleService(EntryMapper entryMapper, StorageMapper storageMapper, DriveMapper driveMapper) {
+        this.entryMapper = entryMapper;
+        this.storageMapper = storageMapper;
+        this.driveMapper = driveMapper;
+    }
 
     /**
      * 查询用户回收站中的条目

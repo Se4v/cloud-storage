@@ -15,12 +15,12 @@ import java.util.List;
 public class NoticeService {
     private final NoticeMapper noticeMapper;
 
+    private static final int UNREAD = 0;
+    private static final int UNDELETED = 0;
+
     public NoticeService(NoticeMapper noticeMapper) {
         this.noticeMapper = noticeMapper;
     }
-
-    private static final int UNREAD = 0;
-    private static final int UNDELETED = 0;
 
     public List<Notice> listUnreadNotices(Long userId) {
         List<Notice> unreadNotices = noticeMapper.selectList(

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class LogView {
+public class LogResp {
     private Long id;
     private String username;
     private String realName;

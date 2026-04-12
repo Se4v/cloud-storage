@@ -27,14 +27,14 @@ public class ProfileService {
     private final MinioAsyncClient minioClient;
     private final PasswordEncoder passwordEncoder;
 
+    private static final String AVATAR_BUCKET = "avatars";
+    private static final long AVATAR_MAX_SIZE = 5 * 1024 * 1024;
+
     public ProfileService(UserMapper userMapper, MinioAsyncClient minioClient, PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.minioClient = minioClient;
         this.passwordEncoder = passwordEncoder;
     }
-
-    private static final String AVATAR_BUCKET = "avatars";
-    private static final long AVATAR_MAX_SIZE = 5 * 1024 * 1024;
 
     public String getAvatar(Long userId) {
         // 判断用户是否存在

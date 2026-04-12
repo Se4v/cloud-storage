@@ -25,6 +25,8 @@ public class RoleService {
     private final PermissionMapper permissionMapper;
     private final RolePermissionMapper rolePermissionMapper;
 
+    private static final int DELETED = 1;
+
     public RoleService(RoleMapper roleMapper, MemberMapper memberMapper, UserRoleMapper userRoleMapper,
                        PermissionMapper permissionMapper, RolePermissionMapper rolePermissionMapper) {
         this.roleMapper = roleMapper;
@@ -33,8 +35,6 @@ public class RoleService {
         this.permissionMapper = permissionMapper;
         this.rolePermissionMapper = rolePermissionMapper;
     }
-
-    private static final int DELETED = 1;
 
     /**
      * 创建角色

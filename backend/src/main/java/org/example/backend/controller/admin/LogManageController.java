@@ -1,8 +1,7 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.model.entity.Log;
-import org.example.backend.model.response.log.LogView;
+import org.example.backend.model.response.log.LogResp;
 import org.example.backend.service.LogService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +20,8 @@ public class LogManageController {
 
     @GetMapping("/all")
     public Result<?> listAllLogs() {
-        List<LogView> resp = logService.listAllLogs().stream()
-                .map(log -> LogView.builder()
+        List<LogResp> resp = logService.listAllLogs().stream()
+                .map(log -> LogResp.builder()
                         .id(log.getId())
                         .username(log.getUsername())
                         .realName(log.getRealName())
