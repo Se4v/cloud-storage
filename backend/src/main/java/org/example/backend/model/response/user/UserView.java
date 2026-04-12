@@ -13,7 +13,7 @@ public class UserView {
     private String realName;
     private String mobile;
     private String email;
-    private Boolean isEnabled;
+    private Integer isEnabled;
     private Long storageQuota;
     private List<Long> roles;
 }

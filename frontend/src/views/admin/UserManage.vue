@@ -50,8 +50,8 @@
               class="h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
           >
             <option value="">全部状态</option>
-            <option value="true">启用</option>
-            <option value="false">禁用</option>
+            <option value="1">启用</option>
+            <option value="0">禁用</option>
           </select>
 
           <button
@@ -113,7 +113,7 @@
             <span
               :class="[
                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                row.isEnabled
+                row.isEnabled === 1
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-red-50 text-red-700 border-red-200'
               ]"
@@ -121,10 +121,10 @@
               <span
                 :class="[
                   'w-1.5 h-1.5 rounded-full mr-1.5',
-                  row.isEnabled ? 'bg-emerald-500' : 'bg-red-500'
+                  row.isEnabled === 1 ? 'bg-emerald-500' : 'bg-red-500'
                 ]"
               ></span>
-              {{ row.isEnabled ? '启用' : '禁用' }}
+              {{ row.isEnabled === 1 ? '启用' : '禁用' }}
             </span>
           </template>
         </el-table-column>
@@ -356,7 +356,7 @@
               <input
                   type="radio"
                   v-model="userForm.isEnabled"
-                  :value="true"
+                  :value="1"
                   class="text-blue-600 focus:ring-blue-500 border-slate-300"
               />
               <span class="text-sm text-slate-700">启用</span>
@@ -365,7 +365,7 @@
               <input
                   type="radio"
                   v-model="userForm.isEnabled"
-                  :value="false"
+                  :value="0"
                   class="text-blue-600 focus:ring-blue-500 border-slate-300"
               />
               <span class="text-sm text-slate-700">禁用</span>
@@ -512,8 +512,8 @@ const filteredTableData = computed(() => {
   
   // 按状态筛选
   if (filterStatus.value !== '') {
-    const isEnabled = filterStatus.value === 'true'
-    data = data.filter(item => item.isEnabled === isEnabled)
+    const statusValue = parseInt(filterStatus.value)
+    data = data.filter(item => item.isEnabled === statusValue)
   }
   
   return data
@@ -590,7 +590,7 @@ const userForm = reactive({
   mobile: '',
   email: '',
   storageQuota: 10,
-  isEnabled: true
+  isEnabled: 1
 })
 
 const handleAddUser = () => {
@@ -602,7 +602,7 @@ const handleAddUser = () => {
     mobile: '',
     email: '',
     storageQuota: 10,
-    isEnabled: true
+    isEnabled: 1
   })
   userDialogVisible.value = true
 }

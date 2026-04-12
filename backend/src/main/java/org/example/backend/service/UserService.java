@@ -125,8 +125,7 @@ public class UserService {
             List<Long> manageNodeIds = SecurityUtil.getManageNodeIds();
             if (manageNodeIds.isEmpty()) return List.of();
             List<Member> members = memberMapper.selectList(
-                    Wrappers.<Member>lambdaQuery()
-                            .in(Member::getNodeId, manageNodeIds));
+                    Wrappers.<Member>lambdaQuery().in(Member::getNodeId, manageNodeIds));
             manageUserIds = members.stream().map(Member::getNodeId).toList();
         }
 
@@ -164,7 +163,7 @@ public class UserService {
                         .realName(user.getRealName())
                         .mobile(user.getMobile())
                         .email(user.getEmail())
-                        .isEnabled(user.getEnabled() == 1)
+                        .isEnabled(user.getEnabled())
                         .storageQuota(driveMap.getOrDefault(user.getId(), null))
                         .roles(userRoleMap.getOrDefault(user.getId(), List.of()))
                         .build())
