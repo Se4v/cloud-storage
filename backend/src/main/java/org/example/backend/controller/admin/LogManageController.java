@@ -2,7 +2,7 @@ package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
 import org.example.backend.model.entity.Log;
-import org.example.backend.model.response.LogView;
+import org.example.backend.model.response.log.LogView;
 import org.example.backend.service.LogService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +20,7 @@ public class LogManageController {
     }
 
     @GetMapping("/all")
-    public Result<List<LogView>> listAllLogs() {
+    public Result<?> listAllLogs() {
         List<Log> logList = logService.listAllLogs();
         List<LogView> resp = logList.stream()
                 .map(log -> LogView.builder()

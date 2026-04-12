@@ -5,9 +5,9 @@ import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.model.entity.Config;
 import org.example.backend.model.entity.Drive;
-import org.example.backend.model.response.DriveDetailView;
-import org.example.backend.model.response.DriveOverviewView;
-import org.example.backend.model.response.DriveUsageBreakdownView;
+import org.example.backend.model.response.drive.DriveDetailView;
+import org.example.backend.model.response.stat.DriveOverviewView;
+import org.example.backend.model.response.stat.DriveUsageBreakdownView;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

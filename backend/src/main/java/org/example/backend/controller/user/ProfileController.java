@@ -6,8 +6,8 @@ import org.example.backend.model.request.user.PasswordChangeReq;
 import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.request.user.ProfileUpdateReq;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.response.AvatarUploadUrlView;
-import org.example.backend.model.response.ProfileView;
+import org.example.backend.model.response.user.AvatarUploadUrlView;
+import org.example.backend.model.response.user.ProfileView;
 import org.example.backend.service.ProfileService;
 import org.springframework.web.bind.annotation.*;
 

@@ -4,7 +4,7 @@ import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.request.file.*;
-import org.example.backend.model.response.*;
+import org.example.backend.model.response.file.*;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.EnterpriseService;
 import org.example.backend.service.UploadService;

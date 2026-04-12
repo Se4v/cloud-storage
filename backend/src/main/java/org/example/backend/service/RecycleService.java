@@ -9,7 +9,7 @@ import org.example.backend.model.request.file.DeleteEntryArgs;
 import org.example.backend.model.request.file.RestoreEntryArgs;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
-import org.example.backend.model.response.RecycleView;
+import org.example.backend.model.response.file.RecycleView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

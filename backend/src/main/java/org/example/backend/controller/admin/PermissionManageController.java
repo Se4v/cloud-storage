@@ -2,7 +2,7 @@ package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
 import org.example.backend.model.entity.Permission;
-import org.example.backend.model.response.PermissionView;
+import org.example.backend.model.response.perm.PermissionView;
 import org.example.backend.service.PermissionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

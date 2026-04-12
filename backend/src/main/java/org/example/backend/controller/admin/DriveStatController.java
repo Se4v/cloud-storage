@@ -1,9 +1,9 @@
 package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.model.response.DriveDetailView;
-import org.example.backend.model.response.DriveOverviewView;
-import org.example.backend.model.response.DriveUsageBreakdownView;
+import org.example.backend.model.response.drive.DriveDetailView;
+import org.example.backend.model.response.stat.DriveOverviewView;
+import org.example.backend.model.response.stat.DriveUsageBreakdownView;
 import org.example.backend.service.DriveStatService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

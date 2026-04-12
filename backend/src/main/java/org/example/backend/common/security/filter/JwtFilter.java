@@ -14,9 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -29,6 +27,8 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private static final String KEY_AUTH_USER = "auth:user:";
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
+    private static final String ROLE_MANAGER = "ROLE_MANAGER";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -55,10 +55,25 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         loginUser.setToken(token);
 
+        // 判断是否是超级管理员
+        if (loginUser.getSystemRoles() != null && loginUser.getSystemRoles().contains(ROLE_ADMIN)) {
+            loginUser.setSuperAdmin(true);
+        }
+
+        List<Long> manageNodeIds = new ArrayList<>();
+        if (loginUser.getOrgRoles() != null) {
+            manageNodeIds = loginUser.getOrgRoles().entrySet().stream()
+                    .filter(entry -> entry.getValue().contains(ROLE_MANAGER)) // 1. 筛选包含管理员角色的条目
+                    .map(Map.Entry::getKey)                                  // 2. 提取节点 ID
+                    .toList();
+        }
+        loginUser.setManageNodeIds(manageNodeIds);
+
         Set<String> authorities = new HashSet<>();
         if (loginUser.getSystemPermissions() != null) {
             authorities.addAll(loginUser.getSystemPermissions());
         }
+
         // 判断是企业空间还是个人空间
         if (requestURI.startsWith("/api/enterprise")) {
             // 访问企业空间

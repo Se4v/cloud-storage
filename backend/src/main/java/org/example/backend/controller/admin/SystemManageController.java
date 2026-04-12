@@ -2,7 +2,7 @@ package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.sys.SystemConfigUpdateReq;
-import org.example.backend.model.response.SystemConfigView;
+import org.example.backend.model.response.config.SystemConfigView;
 import org.example.backend.service.SystemService;
 import org.springframework.web.bind.annotation.*;
 

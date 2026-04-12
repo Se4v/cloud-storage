@@ -6,9 +6,9 @@ import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.TrafficMapper;
 import org.example.backend.model.entity.Config;
-import org.example.backend.model.response.FileTypeDistributionView;
-import org.example.backend.model.response.TrafficOverviewView;
-import org.example.backend.model.response.TrendStatisticsView;
+import org.example.backend.model.response.stat.FileTypeDistributionView;
+import org.example.backend.model.response.stat.TrafficOverviewView;
+import org.example.backend.model.response.stat.TrendStatisticsView;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -38,7 +38,8 @@ public class TrafficStatService {
     public TrafficOverviewView getTrafficOverview() {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getConfigKey, "total_quota"));
+                        .eq(Config::getConfigKey, "total_quota")
+                        .eq(Config::getIsEnabled, 1));
         Long totalQuota = Long.parseLong(config.getConfigValue());
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();

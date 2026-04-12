@@ -13,8 +13,8 @@ import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.response.NodeView;
-import org.example.backend.model.response.OrgTreeView;
+import org.example.backend.model.response.org.NodeView;
+import org.example.backend.model.response.org.OrgTreeView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

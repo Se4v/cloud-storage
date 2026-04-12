@@ -6,9 +6,9 @@ import org.example.backend.model.request.member.MemberDeletionReq;
 import org.example.backend.model.request.member.MemberUpdateReq;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.response.MemberNodeView;
-import org.example.backend.model.response.MemberRoleView;
-import org.example.backend.model.response.MemberView;
+import org.example.backend.model.response.member.MemberNodeView;
+import org.example.backend.model.response.member.MemberRoleView;
+import org.example.backend.model.response.member.MemberView;
 import org.example.backend.service.MemberService;
 import org.springframework.web.bind.annotation.*;
 

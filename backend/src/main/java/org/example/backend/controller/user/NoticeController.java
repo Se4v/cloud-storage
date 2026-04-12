@@ -5,7 +5,7 @@ import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.notice.NoticeDeletionReq;
 import org.example.backend.model.request.notice.NoticeReadMarkReq;
 import org.example.backend.model.entity.Notice;
-import org.example.backend.model.response.NoticeView;
+import org.example.backend.model.response.notice.NoticeView;
 import org.example.backend.service.NoticeService;
 import org.springframework.web.bind.annotation.*;
 

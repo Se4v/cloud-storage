@@ -4,7 +4,7 @@ import org.example.backend.common.result.Result;
 import org.example.backend.model.request.notice.NodeCreationReq;
 import org.example.backend.model.request.org.OrgNodeDeletionReq;
 import org.example.backend.model.request.org.OrgNodeUpdateReq;
-import org.example.backend.model.response.NodeView;
+import org.example.backend.model.response.org.NodeView;
 import org.example.backend.service.OrgService;
 import org.springframework.web.bind.annotation.*;
 

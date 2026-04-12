@@ -2,12 +2,13 @@ package org.example.backend.controller.admin;
 
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.role.SystemRoleAssignmentReq;
+import org.example.backend.model.request.user.PasswordResetReq;
 import org.example.backend.model.request.user.UserCreationReq;
 import org.example.backend.model.request.user.UserDeletionReq;
 import org.example.backend.model.request.user.UserUpdateReq;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.response.RoleView;
-import org.example.backend.model.response.UserView;
+import org.example.backend.model.response.role.RoleView;
+import org.example.backend.model.response.user.UserView;
 import org.example.backend.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,20 +48,20 @@ public class UserManageController {
     }
 
     @PostMapping("/assign")
-    public Result<?> assignGlobalRole(@RequestBody SystemRoleAssignmentReq req) {
-        userService.assignGlobalRole(req);
+    public Result<?> assignSystemRole(@RequestBody SystemRoleAssignmentReq req) {
+        userService.assignSystemRole(req);
         return Result.success();
     }
 
     @PostMapping("/reset")
-    public Result<?> resetPassword(Long id) {
-        userService.resetPassword(id);
+    public Result<?> resetPassword(@RequestBody PasswordResetReq req) {
+        userService.resetPassword(req);
         return Result.success();
     }
 
     @GetMapping("/role")
-    public Result<?> listGlobalRole() {
-        List<Role> roleList = userService.listGlobalRole();
+    public Result<?> listSystemRole() {
+        List<Role> roleList = userService.listSystemRole();
         List<RoleView> resp = roleList.stream()
                 .map(role -> RoleView.builder()
                         .id(role.getId())

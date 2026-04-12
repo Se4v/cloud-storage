@@ -754,10 +754,7 @@ const handleResetPassword = async (row) => {
         dangerouslyUseHTMLString: true
       }
     )
-    const res = await axios.post(`${API_BASE_URL}/api/user/reset`, null, {
-      ...getAuthConfig(),
-      params: { id: row.id }
-    })
+    const res = await axios.post(`${API_BASE_URL}/api/user/reset`, { userId: row.id }, getAuthConfig())
     if (res.data.code === 200) {
       ElMessage.success('密码重置成功')
     } else {

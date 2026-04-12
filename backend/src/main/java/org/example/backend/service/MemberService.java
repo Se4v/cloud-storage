@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.NodeMapper;
 import org.example.backend.mapper.RoleMapper;
@@ -13,7 +14,7 @@ import org.example.backend.model.entity.Member;
 import org.example.backend.model.entity.Node;
 import org.example.backend.model.entity.Role;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.response.MemberView;
+import org.example.backend.model.response.member.MemberView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,9 +99,15 @@ public class MemberService {
     }
 
     public List<MemberView> listAllMembers() {
+        List<Long> manageNodeIds = null;
+        if (!SecurityUtil.isSuperAdmin()) {
+            manageNodeIds = SecurityUtil.getManageNodeIds();
+        }
+
         List<Member> members = memberMapper.selectList(
                 Wrappers.<Member>lambdaQuery()
-                        .eq(Member::getDeleted, 0));
+                        .eq(Member::getDeleted, 0)
+                        .in(manageNodeIds != null && !manageNodeIds.isEmpty(), Member::getNodeId, manageNodeIds));
         if (members == null || members.isEmpty()) return List.of();
 
         Set<Long> userIds = new HashSet<>();

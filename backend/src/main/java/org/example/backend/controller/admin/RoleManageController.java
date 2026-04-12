@@ -7,8 +7,8 @@ import org.example.backend.model.request.role.RoleDeletionReq;
 import org.example.backend.model.request.role.RoleUpdateReq;
 import org.example.backend.model.entity.Permission;
 import org.example.backend.model.entity.Role;
-import org.example.backend.model.response.PermissionView;
-import org.example.backend.model.response.RoleView;
+import org.example.backend.model.response.perm.PermissionView;
+import org.example.backend.model.response.role.RoleView;
 import org.example.backend.service.RoleService;
 import org.springframework.web.bind.annotation.*;
 

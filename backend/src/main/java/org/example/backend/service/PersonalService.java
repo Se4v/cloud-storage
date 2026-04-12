@@ -12,7 +12,7 @@ import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.request.file.*;
-import org.example.backend.model.response.FolderTreeView;
+import org.example.backend.model.response.file.FolderTreeView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

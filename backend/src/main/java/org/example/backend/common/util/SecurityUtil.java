@@ -4,6 +4,8 @@ import org.example.backend.common.security.LoginUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.List;
+
 public class SecurityUtil {
     // 获取当前登录的完整用户信息
     public static LoginUser getLoginUser() {
@@ -25,5 +27,13 @@ public class SecurityUtil {
 
     public static Long getOrgId() {
         return getLoginUser().getOrgId();
+    }
+
+    public static boolean isSuperAdmin() {
+        return getLoginUser().isSuperAdmin();
+    }
+
+    public static List<Long> getManageNodeIds() {
+        return getLoginUser().getManageNodeIds();
     }
 }

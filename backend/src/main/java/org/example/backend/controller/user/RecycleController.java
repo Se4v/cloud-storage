@@ -4,7 +4,7 @@ import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.file.DeleteEntryArgs;
 import org.example.backend.model.request.file.RestoreEntryArgs;
-import org.example.backend.model.response.RecycleView;
+import org.example.backend.model.response.file.RecycleView;
 import org.example.backend.service.RecycleService;
 import org.springframework.web.bind.annotation.*;
 
