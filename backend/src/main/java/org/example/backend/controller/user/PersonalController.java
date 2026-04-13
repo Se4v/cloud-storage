@@ -36,35 +36,35 @@ public class PersonalController {
     }
 
     @PostMapping("/init-upload")
-    public Result<?> initUpload(@RequestBody InitUploadArgs args) {
+    public Result<?> initUpload(@RequestBody UploadInitReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        InitUploadView resp = uploadService.initUpload(args, currentUserId);
+        UploadInitResp resp = uploadService.initUpload(req, currentUserId);
         return Result.success(resp);
     }
 
     @PostMapping("/simple-upload")
-    public Result<?> simpleUpload(@RequestBody SimpleUploadArgs args) {
+    public Result<?> directUpload(@RequestBody DirectUploadReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        SimpleUploadView resp = uploadService.simpleUpload(args, currentUserId);
+        DirectUploadResp resp = uploadService.directUpload(req, currentUserId);
         return Result.success(resp);
     }
 
     @PostMapping("/upload-chunk")
-    public Result<?> uploadChunk(@RequestBody UploadChunkArgs args) {
+    public Result<?> uploadChunk(@RequestBody ChunkUploadReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        UploadChunkView resp = uploadService.uploadChunk(args, currentUserId);
+        ChunkUploadResp resp = uploadService.uploadChunk(req, currentUserId);
         return Result.success(resp);
     }
 
     @PostMapping("/merge-chunks")
-    public Result<?> mergeChunks(@RequestBody MergeChunksArgs args) {
+    public Result<?> mergeChunks(@RequestBody ChunkMergeReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        MergeChunksView resp = uploadService.mergeChunks(args, currentUserId);
+        ChunkMergeResp resp = uploadService.mergeChunks(req, currentUserId);
         return Result.success(resp);
     }
 
     @PostMapping("/download")
-    public ResponseEntity<StreamingResponseBody> download(@RequestBody FileDownloadReq req) {
+    public ResponseEntity<StreamingResponseBody> download(@RequestBody EntryDownloadReq req) {
         Long currentUserId = SecurityUtil.getUserId();
 
         String fileName = downloadService.getDownloadFileName(req);
@@ -85,7 +85,7 @@ public class PersonalController {
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
         Long currentUserId = SecurityUtil.getUserId();
         List<Entry> entries = personalService.listEntries(driveId, parentId, currentUserId);
-        List<EntryView> resp = entries.stream().map(entry -> EntryView.builder()
+        List<EntryResp> resp = entries.stream().map(entry -> EntryResp.builder()
                 .id(entry.getId())
                 .name(entry.getEntryName())
                 .type(entry.getEntryType())
@@ -98,49 +98,49 @@ public class PersonalController {
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
         Long currentUserId = SecurityUtil.getUserId();
-        List<FolderTreeView> resp = personalService.listFolders(driveId, currentUserId);
+        List<FolderTreeResp> resp = personalService.listFolders(driveId, currentUserId);
         return Result.success(resp);
     }
 
     @PostMapping("/create")
-    public Result<?> createFolder(@RequestBody CreateFolderArgs args) {
+    public Result<?> createFolder(@RequestBody FolderCreationReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        personalService.createFolder(args, currentUserId);
+        personalService.createFolder(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/move")
-    public Result<?> moveEntries(@RequestBody MoveEntryArgs args) {
+    public Result<?> moveEntries(@RequestBody EntryMoveReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        personalService.moveEntries(args, currentUserId);
+        personalService.moveEntries(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/copy")
-    public Result<?> copyEntry(@RequestBody CopyEntryArgs args) {
+    public Result<?> copyEntry(@RequestBody EntryCopyReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        personalService.copyEntry(args, currentUserId);
+        personalService.copyEntry(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/rename")
-    public Result<?> renameEntry(@RequestBody RenameEntryArgs args) {
+    public Result<?> renameEntry(@RequestBody EntryRenameReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        personalService.renameEntry(args, currentUserId);
+        personalService.renameEntry(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<?> deleteEntries(@RequestBody DeleteEntryArgs args) {
+    public Result<?> deleteEntries(@RequestBody EntryDeletionReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        personalService.deleteEntries(args, currentUserId);
+        personalService.deleteEntries(req, currentUserId);
         return Result.success();
     }
 
     @PostMapping("/share")
-    public Result<?> shareEntry(@RequestBody ShareEntryArgs args) {
+    public Result<?> shareEntry(@RequestBody EntryShareReq req) {
         Long currentUserId = SecurityUtil.getUserId();
-        personalService.shareEntry(args, currentUserId);
+        personalService.shareEntry(req, currentUserId);
         return Result.success();
     }
 

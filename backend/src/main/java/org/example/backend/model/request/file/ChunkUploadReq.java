@@ -7,12 +7,12 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class UploadChunkArgs {
+public class ChunkUploadReq {
     @NotEmpty
-    private List<Arg> argList;
+    private List<Item> items;
 
     @Data
-    public static class Arg {
+    public static class Item {
         @NotBlank
         private String sha256;
         @NotBlank

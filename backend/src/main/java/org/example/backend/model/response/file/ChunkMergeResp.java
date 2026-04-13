@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class SimpleUploadView {
-    private String entryName;
+public class ChunkMergeResp {
     private String sha256;
     private Boolean success;
 }

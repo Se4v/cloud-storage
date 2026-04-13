@@ -4,10 +4,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
-public class CopyEntryArgs {
+public class EntryMoveReq {
     @NotNull
-    private Long id;
+    private List<Long> ids;
     @NotNull
     private Long driveId;
     @NotNull

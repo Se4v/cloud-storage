@@ -1,24 +1,24 @@
-package org.example.backend.model.response.file;
+package org.example.backend.model.request.file;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-@Builder
-public class EntryView {
+public class EntryShareReq {
     @NotNull
     private Long id;
     @NotNull
-    private String name;
+    private Long driveId;
+    @NotBlank
+    private String linkName;
     @NotNull
-    private Integer type;
-    @NotNull
-    private Long size;
+    private Integer linkType;
+    private String accessCode;
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime createTime;
+    private LocalDateTime expireTime;
 }

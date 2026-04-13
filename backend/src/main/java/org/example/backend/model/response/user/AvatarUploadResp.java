@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AvatarUploadUrlView {
+public class AvatarUploadResp {
     @NotNull
     private String uploadUrl;
     @NotNull

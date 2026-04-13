@@ -1,14 +1,16 @@
 package org.example.backend.model.request.file;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class DeleteEntryArgs {
+public class EntryCopyReq {
+    @NotNull
+    private Long id;
     @NotNull
     private Long driveId;
     @NotNull
-    private List<Long> ids;
+    @PositiveOrZero
+    private Long targetId;
 }

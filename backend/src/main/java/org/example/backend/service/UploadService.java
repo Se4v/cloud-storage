@@ -15,18 +15,18 @@ import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.mapper.TrafficMapper;
-import org.example.backend.model.request.file.InitUploadArgs;
-import org.example.backend.model.request.file.MergeChunksArgs;
-import org.example.backend.model.request.file.SimpleUploadArgs;
-import org.example.backend.model.request.file.UploadChunkArgs;
+import org.example.backend.model.request.file.UploadInitReq;
+import org.example.backend.model.request.file.ChunkMergeReq;
+import org.example.backend.model.request.file.DirectUploadReq;
+import org.example.backend.model.request.file.ChunkUploadReq;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Traffic;
-import org.example.backend.model.response.file.InitUploadView;
-import org.example.backend.model.response.file.MergeChunksView;
-import org.example.backend.model.response.file.SimpleUploadView;
-import org.example.backend.model.response.file.UploadChunkView;
+import org.example.backend.model.response.file.UploadInitResp;
+import org.example.backend.model.response.file.ChunkMergeResp;
+import org.example.backend.model.response.file.DirectUploadResp;
+import org.example.backend.model.response.file.ChunkUploadResp;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,51 +103,51 @@ public class UploadService {
         this.trafficMapper = trafficMapper;
     }
 
-    public InitUploadView initUpload(InitUploadArgs args, Long userId) {
-        List<InitUploadView.View> viewList = new ArrayList<>();
+    public UploadInitResp initUpload(UploadInitReq req, Long userId) {
+        List<UploadInitResp.Item> items = new ArrayList<>();
         int successCount = 0;
 
-        if (args.getArgList() == null || args.getArgList().isEmpty()) {
-            return InitUploadView.builder()
-                    .viewList(viewList)
+        if (req.getItems() == null || req.getItems().isEmpty()) {
+            return UploadInitResp.builder()
+                    .items(items)
                     .totalCount(0)
                     .successCount(0)
                     .build();
         }
 
-        if (!isUploadSizeValid(args)) {
+        if (!isUploadSizeValid(req)) {
             throw new BusinessException("<UNK>");
         }
 
-        for (InitUploadArgs.Arg arg : args.getArgList()) {
+        for (UploadInitReq.Item reqItem : req.getItems()) {
             try {
-                InitUploadView.View view = initSingleUpload(arg, args, userId);
-                if (Boolean.TRUE.equals(view.getSuccess())) {
+                UploadInitResp.Item respItem = initSingleUpload(reqItem, req, userId);
+                if (Boolean.TRUE.equals(respItem.getSuccess())) {
                     successCount++;
                 }
-                viewList.add(view);
+                items.add(respItem);
             } catch (Exception e) {
                 log.error("初始化上传失败: entryName={}, sha256={}",
-                        arg == null ? null : arg.getEntryName(),
-                        arg == null ? null : arg.getSha256(),
+                        reqItem == null ? null : reqItem.getEntryName(),
+                        reqItem == null ? null : reqItem.getSha256(),
                         e);
-                viewList.add(InitUploadView.View.builder()
-                        .entryName(arg == null ? null : arg.getEntryName())
+                items.add(UploadInitResp.Item.builder()
+                        .entryName(reqItem == null ? null : reqItem.getEntryName())
                         .success(false)
                         .message("初始化失败: " + e.getMessage())
                         .build());
             }
         }
 
-        return InitUploadView.builder()
-                .viewList(viewList)
-                .totalCount(args.getArgList().size())
+        return UploadInitResp.builder()
+                .items(items)
+                .totalCount(req.getItems().size())
                 .successCount(successCount)
                 .build();
     }
 
-    public SimpleUploadView simpleUpload(SimpleUploadArgs args, Long userId) {
-        String taskKey = getTaskKey(userId, args.getSha256());
+    public DirectUploadResp directUpload(DirectUploadReq req, Long userId) {
+        String taskKey = getTaskKey(userId, req.getSha256());
         Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
         String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
         if (taskMap.isEmpty() || !UPLOAD_TYPE_DIRECT.equals(uploadType)) {
@@ -158,22 +158,22 @@ public class UploadService {
         String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
         ensureObjectExists(bucketName, objectName);
 
-        self.persistUploadedFile(taskMap, args.getSha256(), userId);
+        self.persistUploadedFile(taskMap, req.getSha256(), userId);
         redisTemplate.delete(taskKey);
 
         String entryName = taskMap.get(FIELD_ENTRY_NAME).toString();
-        return SimpleUploadView.builder()
+        return DirectUploadResp.builder()
                 .entryName(entryName)
-                .sha256(args.getSha256())
+                .sha256(req.getSha256())
                 .success(true)
                 .build();
     }
 
-    public UploadChunkView uploadChunk(UploadChunkArgs args, Long userId) {
-        List<UploadChunkView.View> viewList = new ArrayList<>();
-        for (UploadChunkArgs.Arg arg : args.getArgList()) {
+    public ChunkUploadResp uploadChunk(ChunkUploadReq req, Long userId) {
+        List<ChunkUploadResp.Item> items = new ArrayList<>();
+        for (ChunkUploadReq.Item item : req.getItems()) {
             try {
-                String taskKey = getTaskKey(userId, arg.getSha256());
+                String taskKey = getTaskKey(userId, item.getSha256());
                 Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
                 if (taskMap.isEmpty()) {
                     throw new BusinessException("任务不存在或已过期");
@@ -184,44 +184,44 @@ public class UploadService {
                     throw new BusinessException("当前任务不是分片上传任务");
                 }
 
-                if (arg.getEtag() == null || arg.getEtag().isBlank()) throw new BusinessException("");
+                if (item.getEtag() == null || item.getEtag().isBlank()) throw new BusinessException("");
 
-                String chunksKey = getChunksKey(userId, arg.getSha256());
-                Object existingEtag = redisTemplate.opsForHash().get(chunksKey, arg.getChunkNumber());
+                String chunksKey = getChunksKey(userId, item.getSha256());
+                Object existingEtag = redisTemplate.opsForHash().get(chunksKey, item.getChunkNumber());
                 if (existingEtag == null) {
-                    redisTemplate.opsForHash().put(chunksKey, arg.getChunkNumber(), arg.getEtag());
+                    redisTemplate.opsForHash().put(chunksKey, item.getChunkNumber(), item.getEtag());
                     redisTemplate.opsForHash().increment(taskKey, FIELD_UPLOADED_CHUNKS, 1);
-                } else if (!Objects.equals(String.valueOf(existingEtag), arg.getEtag())) {
-                    redisTemplate.opsForHash().put(chunksKey, arg.getChunkNumber(), arg.getEtag());
+                } else if (!Objects.equals(String.valueOf(existingEtag), item.getEtag())) {
+                    redisTemplate.opsForHash().put(chunksKey, item.getChunkNumber(), item.getEtag());
                 }
 
                 redisTemplate.expire(taskKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
                 redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
                 String uploadId = taskMap.get(FIELD_UPLOAD_ID).toString();
-                viewList.add(UploadChunkView.View.builder()
+                items.add(ChunkUploadResp.Item.builder()
                         .uploadId(uploadId)
-                        .chunkNumber(arg.getChunkNumber())
+                        .chunkNumber(item.getChunkNumber())
                         .success(true)
                         .build());
             } catch (Exception e) {
                 log.error("记录分片失败: sha256={}, chunk={}",
-                        arg == null ? null : arg.getSha256(),
-                        arg == null ? null : arg.getChunkNumber(),
+                        item == null ? null : item.getSha256(),
+                        item == null ? null : item.getChunkNumber(),
                         e);
-                viewList.add(UploadChunkView.View.builder()
-                        .chunkNumber(arg == null ? null : arg.getChunkNumber())
+                items.add(ChunkUploadResp.Item.builder()
+                        .chunkNumber(item == null ? null : item.getChunkNumber())
                         .success(false)
                         .build());
             }
         }
 
-        return UploadChunkView.builder().viewList(viewList).build();
+        return ChunkUploadResp.builder().items(items).build();
     }
 
-    public MergeChunksView mergeChunks(MergeChunksArgs args, Long userId) {
-        String taskKey = getTaskKey(userId, args.getSha256());
-        String chunksKey = getChunksKey(userId, args.getSha256());
+    public ChunkMergeResp mergeChunks(ChunkMergeReq req, Long userId) {
+        String taskKey = getTaskKey(userId, req.getSha256());
+        String chunksKey = getChunksKey(userId, req.getSha256());
 
         try {
             Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
@@ -255,25 +255,25 @@ public class UploadService {
             ).get();
 
             ensureObjectExists(bucketName, objectName);
-            self.persistUploadedFile(taskMap, args.getSha256(), userId);
+            self.persistUploadedFile(taskMap, req.getSha256(), userId);
             redisTemplate.delete(taskKey);
             redisTemplate.delete(chunksKey);
 
-            return MergeChunksView.builder()
-                    .sha256(args.getSha256())
+            return ChunkMergeResp.builder()
+                    .sha256(req.getSha256())
                     .success(true)
                     .build();
         } catch (Exception e) {
-            log.error("合并分片失败: sha256={}", args.getSha256(), e);
-            return MergeChunksView.builder()
-                    .sha256(args.getSha256())
+            log.error("合并分片失败: sha256={}", req.getSha256(), e);
+            return ChunkMergeResp.builder()
+                    .sha256(req.getSha256())
                     .success(false)
                     .build();
         }
     }
 
-    private InitUploadView.View initSingleUpload(InitUploadArgs.Arg arg, InitUploadArgs args, Long userId) throws Exception {
-        String lockKey = getLockKey(userId, arg.getSha256());
+    private UploadInitResp.Item initSingleUpload(UploadInitReq.Item item, UploadInitReq req, Long userId) throws Exception {
+        String lockKey = getLockKey(userId, item.getSha256());
         RLock lock = redissonClient.getLock(lockKey);
         boolean locked = false;
         try {
@@ -283,37 +283,37 @@ public class UploadService {
             }
 
             LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
-            storageQuery.eq(Storage::getSha256, arg.getSha256());
+            storageQuery.eq(Storage::getSha256, item.getSha256());
             Storage existedStorage = storageMapper.selectOne(storageQuery);
             if (existedStorage != null) {
-                self.createEntryForInstantUpload(existedStorage, arg, args, userId);
-                return InitUploadView.View.builder()
-                        .entryName(arg.getEntryName())
+                self.createEntryForInstantUpload(existedStorage, item, req, userId);
+                return UploadInitResp.Item.builder()
+                        .entryName(item.getEntryName())
                         .success(true)
                         .message("秒传成功")
                         .isSkip(true)
                         .isMultipart(false)
-                        .sha256(arg.getSha256())
+                        .sha256(item.getSha256())
                         .build();
             }
 
-            String taskKey = getTaskKey(userId, arg.getSha256());
+            String taskKey = getTaskKey(userId, item.getSha256());
             Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
             if (!taskMap.isEmpty()) {
-                return buildResumeView(taskMap, userId, arg);
+                return buildResumeView(taskMap, userId, item);
             }
 
-            String objectName = generateObjectName(arg.getSha256(), arg.getEntryName());
-            if (arg.getFileSize() <= UPLOAD_THRESHOLD) {
-                saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, arg, args, userId);
+            String objectName = generateObjectName(item.getSha256(), item.getEntryName());
+            if (item.getFileSize() <= UPLOAD_THRESHOLD) {
+                saveTaskToRedis(taskKey, UPLOAD_TYPE_DIRECT, null, objectName, item, req, userId);
                 String uploadUrl = generateSinglePresignedUrl(minioConfig.getBucketName(), objectName);
-                return InitUploadView.View.builder()
-                        .entryName(arg.getEntryName())
+                return UploadInitResp.Item.builder()
+                        .entryName(item.getEntryName())
                         .success(true)
                         .message("获取小文件直传链接成功")
                         .isSkip(false)
                         .isMultipart(false)
-                        .sha256(arg.getSha256())
+                        .sha256(item.getSha256())
                         .uploadUrl(uploadUrl)
                         .build();
             }
@@ -327,21 +327,21 @@ public class UploadService {
             );
             String uploadId = future.get().result().uploadId();
 
-            saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, arg, args, userId);
-            List<String> chunkUrls = generateChunkUrls(uploadId, objectName, arg.getTotalChunks());
+            saveTaskToRedis(taskKey, UPLOAD_TYPE_MULTIPART, uploadId, objectName, item, req, userId);
+            List<String> chunkUrls = generateChunkUrls(uploadId, objectName, item.getTotalChunks());
 
             // 初始化分片记录表
             // String chunksKey = getChunksKey(args.getUserId(), arg.getSha256());
             // redisTemplate.opsForHash().putAll(chunksKey, new HashMap<>());
             // redisTemplate.expire(chunksKey, TASK_EXPIRE_HOURS, TimeUnit.HOURS);
 
-            return InitUploadView.View.builder()
-                    .entryName(arg.getEntryName())
+            return UploadInitResp.Item.builder()
+                    .entryName(item.getEntryName())
                     .success(true)
                     .message("大文件分片上传初始化成功")
                     .isSkip(false)
                     .isMultipart(true)
-                    .sha256(arg.getSha256())
+                    .sha256(item.getSha256())
                     .uploadedChunks(List.of())
                     .chunkUrls(chunkUrls)
                     .build();
@@ -355,20 +355,20 @@ public class UploadService {
         }
     }
 
-    private InitUploadView.View buildResumeView(Map<Object, Object> taskMap, Long userId, InitUploadArgs.Arg arg) throws Exception {
+    private UploadInitResp.Item buildResumeView(Map<Object, Object> taskMap, Long userId, UploadInitReq.Item item) throws Exception {
         String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
         String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
         String bucketName = taskMap.get(FIELD_BUCKET_NAME).toString();
 
         if (UPLOAD_TYPE_DIRECT.equals(uploadType)) {
             String uploadUrl = generateSinglePresignedUrl(bucketName, objectName);
-            return InitUploadView.View.builder()
-                    .entryName(arg.getEntryName())
+            return UploadInitResp.Item.builder()
+                    .entryName(item.getEntryName())
                     .success(true)
                     .message("小文件断点续传")
                     .isSkip(false)
                     .isMultipart(false)
-                    .sha256(arg.getSha256())
+                    .sha256(item.getSha256())
                     .uploadUrl(uploadUrl)
                     .build();
         }
@@ -379,32 +379,32 @@ public class UploadService {
 
         String uploadId = taskMap.get(FIELD_UPLOAD_ID).toString();
         int totalChunks = Integer.parseInt(taskMap.get(FIELD_TOTAL_CHUNKS).toString());
-        List<Integer> uploadedChunks = getUploadedChunkNumbers(userId, arg.getSha256());
+        List<Integer> uploadedChunks = getUploadedChunkNumbers(userId, item.getSha256());
         List<String> chunkUrls = regenerateChunkUrls(uploadId, objectName, totalChunks, uploadedChunks);
 
-        return InitUploadView.View.builder()
-                .entryName(arg.getEntryName())
+        return UploadInitResp.Item.builder()
+                .entryName(item.getEntryName())
                 .success(true)
                 .message("大文件分片断点续传")
                 .isSkip(false)
                 .isMultipart(true)
-                .sha256(arg.getSha256())
+                .sha256(item.getSha256())
                 .uploadedChunks(uploadedChunks)
                 .chunkUrls(chunkUrls)
                 .build();
     }
 
     @Transactional
-    public void createEntryForInstantUpload(Storage storage, InitUploadArgs.Arg arg, InitUploadArgs args, Long userId) {
+    public void createEntryForInstantUpload(Storage storage, UploadInitReq.Item item, UploadInitReq req, Long userId) {
         Entry entry = Entry.builder()
-                .driveId(args.getDriveId())
-                .parentId(args.getParentId())
+                .driveId(req.getDriveId())
+                .parentId(req.getParentId())
                 .userId(userId)
                 .storageId(storage.getId())
-                .entryName(arg.getEntryName())
+                .entryName(item.getEntryName())
                 .entryType(1)
-                .fileSize(arg.getFileSize())
-                .fileExt(getFileSuffix(arg.getEntryName()))
+                .fileSize(item.getFileSize())
+                .fileExt(getFileSuffix(item.getEntryName()))
                 .status(1)
                 .build();
 
@@ -421,7 +421,7 @@ public class UploadService {
         }
 
         LambdaUpdateWrapper<Drive> driveUpdate = new LambdaUpdateWrapper<>();
-        driveUpdate.setIncrBy(Drive::getUsedQuota, arg.getFileSize()).eq(Drive::getId, args.getDriveId());
+        driveUpdate.setIncrBy(Drive::getUsedQuota, item.getFileSize()).eq(Drive::getId, req.getDriveId());
         int driveCount = driveMapper.update(driveUpdate);
         if (driveCount != 1) {
             throw new BusinessException("秒传更新空间配额失败");
@@ -431,7 +431,7 @@ public class UploadService {
                 .userId(userId)
                 .storageId(storage.getId())
                 .type(1) // 上传
-                .fileSize(arg.getFileSize())
+                .fileSize(item.getFileSize())
                 .status(1) // 成功
                 .build();
         trafficMapper.insert(traffic);
@@ -513,21 +513,21 @@ public class UploadService {
     }
 
     private void saveTaskToRedis(String taskKey, String uploadType, String uploadId,
-                                 String objectName, InitUploadArgs.Arg arg, InitUploadArgs args, Long userId) {
-        int totalChunks = (arg.getTotalChunks() == null || arg.getTotalChunks() <= 0) ? 1 : arg.getTotalChunks();
+                                 String objectName, UploadInitReq.Item item, UploadInitReq req, Long userId) {
+        int totalChunks = (item.getTotalChunks() == null || item.getTotalChunks() <= 0) ? 1 : item.getTotalChunks();
         Map<String, String> task = new HashMap<>();
         task.put(FIELD_UPLOAD_TYPE, uploadType);
         if (uploadId != null) {
             task.put(FIELD_UPLOAD_ID, uploadId);
         }
-        task.put(FIELD_ENTRY_NAME, arg.getEntryName());
-        task.put(FIELD_FILE_SIZE, String.valueOf(arg.getFileSize()));
-        task.put(FIELD_MIME_TYPE, arg.getMimeType() == null ? "application/octet-stream" : arg.getMimeType());
+        task.put(FIELD_ENTRY_NAME, item.getEntryName());
+        task.put(FIELD_FILE_SIZE, String.valueOf(item.getFileSize()));
+        task.put(FIELD_MIME_TYPE, item.getMimeType() == null ? "application/octet-stream" : item.getMimeType());
         task.put(FIELD_UPLOADED_CHUNKS, "0");
         task.put(FIELD_TOTAL_CHUNKS, String.valueOf(totalChunks));
         task.put(FIELD_USER_ID, String.valueOf(userId));
-        task.put(FIELD_DRIVE_ID, String.valueOf(args.getDriveId()));
-        task.put(FIELD_PARENT_ID, String.valueOf(args.getParentId()));
+        task.put(FIELD_DRIVE_ID, String.valueOf(req.getDriveId()));
+        task.put(FIELD_PARENT_ID, String.valueOf(req.getParentId()));
         task.put(FIELD_BUCKET_NAME, minioConfig.getBucketName());
         task.put(FIELD_OBJECT_NAME, objectName);
         task.put(FIELD_CREATE_TIME, LocalDateTime.now().toString());
@@ -644,12 +644,12 @@ public class UploadService {
         return "";
     }
 
-    private boolean isUploadSizeValid(InitUploadArgs uploadArgs) {
-        long totalUploadSize = uploadArgs.getArgList().stream()
-                .mapToLong(arg -> arg.getFileSize() != null ? arg.getFileSize() : 0)
+    private boolean isUploadSizeValid(UploadInitReq req) {
+        long totalUploadSize = req.getItems().stream()
+                .mapToLong(item -> item.getFileSize() != null ? item.getFileSize() : 0)
                 .sum();
 
-        Drive drive = driveMapper.selectById(uploadArgs.getDriveId());
+        Drive drive = driveMapper.selectById(req.getDriveId());
         long remainingSpace = drive.getTotalQuota() - drive.getUsedQuota();
 
         return totalUploadSize <= remainingSpace;

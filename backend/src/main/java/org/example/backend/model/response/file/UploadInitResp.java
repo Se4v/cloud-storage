@@ -7,14 +7,14 @@ import java.util.List;
 
 @Data
 @Builder
-public class InitUploadView {
-    private List<View> viewList;
+public class UploadInitResp {
+    private List<Item> items;
     private Integer totalCount;
     private Integer successCount;
 
     @Data
     @Builder
-    public static class View {
+    public static class Item {
         private String entryName;
         private Boolean success;
         private String message;

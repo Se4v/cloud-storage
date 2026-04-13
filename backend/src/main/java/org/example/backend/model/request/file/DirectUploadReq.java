@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class MergeChunksArgs {
+public class DirectUploadReq {
     @NotBlank
     private String sha256;
 }

@@ -5,7 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MergeChunksView {
+public class DirectUploadResp {
+    private String entryName;
     private String sha256;
     private Boolean success;
 }

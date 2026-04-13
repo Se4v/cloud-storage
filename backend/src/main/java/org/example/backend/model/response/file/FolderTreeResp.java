@@ -5,8 +5,8 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class FolderTreeView {
+public class FolderTreeResp {
     private Long id;
     private String name;
-    private List<FolderTreeView> children;
+    private List<FolderTreeResp> children;
 }

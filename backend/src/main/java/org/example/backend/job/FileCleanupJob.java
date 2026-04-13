@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -47,8 +48,7 @@ public class FileCleanupJob {
         logger.info("定时任务：共发现 {} 条待清理的记录。", entries.size());
 
         try {
-            List<Long> entryIds = entries.stream().map(Entry::getId).toList();
-            entryService.permanentlyDeletedEntry(entryIds);
+            entryService.updateEntryStatus(entries);
         } catch (Exception e) {
             logger.error("定时任务：清理文件失败", e);
         }
@@ -58,7 +58,28 @@ public class FileCleanupJob {
 
     @Scheduled(cron = "0 0 3 * * ?")
     public void markOverdueEntryAsPermanent() {
+        logger.info("定时任务启动：开始更新过期的文件记录...");
 
+        List<Entry> entries = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getStatus, 2)
+                        .lt(Entry::getExpiredAt, LocalDateTime.now()));
+
+        if (CollectionUtils.isEmpty(entries)) {
+            logger.info("定时任务完成：没有需要更新的记录。");
+            return;
+        }
+
+        logger.info("定时任务：共发现 {} 条待更新的记录。", entries.size());
+
+        try {
+            List<Long> entryIds = entries.stream().map(Entry::getId).toList();
+            entryService.permanentlyDeletedEntry(entryIds);
+        } catch (Exception e) {
+            logger.error("定时任务：更新记录失败", e);
+        }
+
+        logger.info("定时任务完成：本轮更新结束。");
     }
 
     @Scheduled(cron = "0 0 4 * * ?")

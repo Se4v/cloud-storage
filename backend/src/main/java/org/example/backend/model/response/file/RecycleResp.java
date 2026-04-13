@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class RecycleView {
+public class RecycleResp {
     private Long id;
     private String name;
     private Integer type;

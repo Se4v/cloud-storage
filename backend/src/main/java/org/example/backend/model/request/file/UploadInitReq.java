@@ -9,16 +9,16 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class InitUploadArgs {
+public class UploadInitReq {
     @NotNull
     private Long driveId;
     @NotNull
     private Long parentId;
     @NotEmpty
-    private List<Arg> argList;
+    private List<Item> items;
 
     @Data
-    public static class Arg {
+    public static class Item {
         @NotBlank
         private String entryName;
         @NotBlank

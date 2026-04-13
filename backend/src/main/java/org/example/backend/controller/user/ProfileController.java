@@ -6,7 +6,7 @@ import org.example.backend.model.request.user.PasswordChangeReq;
 import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.request.user.ProfileUpdateReq;
 import org.example.backend.model.entity.User;
-import org.example.backend.model.response.user.AvatarUploadUrlView;
+import org.example.backend.model.response.user.AvatarUploadResp;
 import org.example.backend.model.response.user.ProfileResp;
 import org.example.backend.service.ProfileService;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +40,7 @@ public class ProfileController {
     public Result<?> getAvatarUploadUrl(@RequestParam String fileName,
                                         @RequestParam(required = false) Long fileSize) {
         Long currentUserId = SecurityUtil.getUserId();
-        AvatarUploadUrlView resp = profileService.getAvatarUploadUrl(fileName, fileSize, currentUserId);
+        AvatarUploadResp resp = profileService.getAvatarUploadUrl(fileName, fileSize, currentUserId);
         return Result.success(resp);
     }
 

@@ -9,7 +9,7 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.mapper.TrafficMapper;
-import org.example.backend.model.request.file.FileDownloadReq;
+import org.example.backend.model.request.file.EntryDownloadReq;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Traffic;
@@ -45,7 +45,7 @@ public class DownloadService {
         this.trafficMapper = trafficMapper;
     }
 
-    public StreamingResponseBody download(FileDownloadReq req, Long userId) {
+    public StreamingResponseBody download(EntryDownloadReq req, Long userId) {
         return outputStream -> {
             try {
                 List<DownloadTask> tasks = collectDownloadTasks(req.getIds());
@@ -96,7 +96,7 @@ public class DownloadService {
     /**
      * 获取下载文件名（在流式传输前调用）
      */
-    public String getDownloadFileName(FileDownloadReq req) {
+    public String getDownloadFileName(EntryDownloadReq req) {
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getStatus, STATUS_UNDELETED)

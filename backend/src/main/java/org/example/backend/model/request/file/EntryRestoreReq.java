@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class RestoreEntryArgs {
+public class EntryRestoreReq {
     @NotNull
     private List<Long> ids;
 }

@@ -7,12 +7,12 @@ import java.util.List;
 
 @Data
 @Builder
-public class UploadChunkView {
-    private List<View> viewList;
+public class ChunkUploadResp {
+    private List<Item> items;
 
     @Data
     @Builder
-    public static class View {
+    public static class Item {
         private String uploadId;
         private String chunkNumber;
         private Boolean success;

@@ -12,7 +12,7 @@ import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.request.file.*;
-import org.example.backend.model.response.file.FolderTreeView;
+import org.example.backend.model.response.file.FolderTreeResp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +61,7 @@ public class PersonalService {
         return entries;
     }
 
-    public List<FolderTreeView> listFolders(Long driveId, Long userId) {
+    public List<FolderTreeResp> listFolders(Long driveId, Long userId) {
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getUserId, userId)
@@ -70,18 +70,18 @@ public class PersonalService {
                         .eq(Entry::getStatus, UNDELETED));
         if (entries == null || entries.isEmpty()) {
             // 返回只有个人空间根节点的列表
-            FolderTreeView personalRoot = new FolderTreeView();
+            FolderTreeResp personalRoot = new FolderTreeResp();
             personalRoot.setId(0L);
             personalRoot.setName("个人空间");
             personalRoot.setChildren(new ArrayList<>());
             return List.of(personalRoot);
         }
         
-        Map<Long, FolderTreeView> nodeMap = new HashMap<>();
-        List<FolderTreeView> roots = new ArrayList<>();
+        Map<Long, FolderTreeResp> nodeMap = new HashMap<>();
+        List<FolderTreeResp> roots = new ArrayList<>();
 
         for (Entry entry : entries) {
-            FolderTreeView node = new FolderTreeView();
+            FolderTreeResp node = new FolderTreeResp();
             node.setId(entry.getId());
             node.setName(entry.getEntryName());
             node.setChildren(new ArrayList<>());
@@ -89,18 +89,18 @@ public class PersonalService {
         }
 
         for (Entry entry : entries) {
-            FolderTreeView node = nodeMap.get(entry.getId());
+            FolderTreeResp node = nodeMap.get(entry.getId());
             Long parentId = entry.getParentId();
             if (parentId == null || parentId == 0 || !nodeMap.containsKey(parentId)) {
                 roots.add(node);
             } else {
-                FolderTreeView parent = nodeMap.get(parentId);
+                FolderTreeResp parent = nodeMap.get(parentId);
                 parent.getChildren().add(node);
             }
         }
         
         // 创建个人空间根节点
-        FolderTreeView personalRoot = new FolderTreeView();
+        FolderTreeResp personalRoot = new FolderTreeResp();
         personalRoot.setId(0L);
         personalRoot.setName("个人空间");
         personalRoot.setChildren(roots);
@@ -109,13 +109,13 @@ public class PersonalService {
     }
 
     @Transactional
-    public void createFolder(CreateFolderArgs args, Long userId) {
+    public void createFolder(FolderCreationReq req, Long userId) {
         // 校验目录是否存在且属于自己
-        if (args.getParentId() > 0) {
+        if (req.getParentId() > 0) {
             Entry parent = entryMapper.selectOne(
                     Wrappers.<Entry>lambdaQuery()
-                            .eq(Entry::getId, args.getParentId())
-                            .eq(Entry::getDriveId, args.getDriveId())
+                            .eq(Entry::getId, req.getParentId())
+                            .eq(Entry::getDriveId, req.getDriveId())
                             .eq(Entry::getUserId, userId)
                             .eq(Entry::getEntryType, FOLDER)
                             .eq(Entry::getStatus, UNDELETED));
@@ -125,18 +125,18 @@ public class PersonalService {
         // 同空间下目标目录是否存在同名条目
         Entry sameEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDriveId, args.getDriveId())
-                        .eq(Entry::getParentId, args.getParentId())
-                        .eq(Entry::getEntryName, args.getFolderName()));
+                        .eq(Entry::getDriveId, req.getDriveId())
+                        .eq(Entry::getParentId, req.getParentId())
+                        .eq(Entry::getEntryName, req.getFolderName()));
         if (sameEntry != null) throw new BusinessException("Folder already exists");
 
         // 创建记录
         Entry folder = Entry.builder()
-                .driveId(args.getDriveId())
+                .driveId(req.getDriveId())
                 .userId(userId)
-                .parentId(args.getParentId())
+                .parentId(req.getParentId())
                 .storageId(0L)
-                .entryName(args.getFolderName())
+                .entryName(req.getFolderName())
                 .entryType(FOLDER)
                 .status(UNDELETED)
                 .build();
@@ -145,13 +145,13 @@ public class PersonalService {
     }
 
     @Transactional
-    public void moveEntries(MoveEntryArgs args, Long userId) {
+    public void moveEntries(EntryMoveReq req, Long userId) {
         // 校验当前文件夹是否存在且属于自己
-        if (args.getTargetId() > 0) {
+        if (req.getTargetId() > 0) {
             Entry entry = entryMapper.selectOne(
                     Wrappers.<Entry>lambdaQuery()
-                            .eq(Entry::getId, args.getTargetId())
-                            .eq(Entry::getDriveId, args.getDriveId())
+                            .eq(Entry::getId, req.getTargetId())
+                            .eq(Entry::getDriveId, req.getDriveId())
                             .eq(Entry::getUserId, userId)
                             .eq(Entry::getEntryType, FOLDER)
                             .eq(Entry::getStatus, UNDELETED));
@@ -160,32 +160,32 @@ public class PersonalService {
 
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
-                        .set(Entry::getParentId, args.getTargetId())
+                        .set(Entry::getParentId, req.getTargetId())
                         .eq(Entry::getUserId, userId)
-                        .in(Entry::getId, args.getIds()));
-        if (count != args.getIds().size()) throw new BusinessException("Move entry failed");
+                        .in(Entry::getId, req.getIds()));
+        if (count != req.getIds().size()) throw new BusinessException("Move entry failed");
     }
 
     @Transactional
-    public void copyEntry(CopyEntryArgs args, Long userId) {
-        if (args.getTargetId() > 0) {
+    public void copyEntry(EntryCopyReq req, Long userId) {
+        if (req.getTargetId() > 0) {
             Entry parent = entryMapper.selectOne(
                     Wrappers.<Entry>lambdaQuery()
-                            .eq(Entry::getId, args.getTargetId())
-                            .eq(Entry::getDriveId, args.getDriveId())
+                            .eq(Entry::getId, req.getTargetId())
+                            .eq(Entry::getDriveId, req.getDriveId())
                             .eq(Entry::getUserId, userId)
                             .eq(Entry::getEntryType, FOLDER)
                             .eq(Entry::getStatus, UNDELETED));
             if (parent == null) throw new BusinessException("<UNK>");
         }
 
-        Entry entry = entryMapper.selectById(args.getId());
+        Entry entry = entryMapper.selectById(req.getId());
         if (entry == null) throw new BusinessException("Entry does not exist");
 
         // 目标目录下是否有同名文件
         Entry sameNameEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getParentId, entry.getParentId())
                         .eq(Entry::getEntryName, entry.getEntryName()));
         String entryName = sameNameEntry == null ?
@@ -195,7 +195,7 @@ public class PersonalService {
         Entry copyEntry = Entry.builder()
                 .driveId(entry.getDriveId())
                 .userId(userId)
-                .parentId(args.getTargetId())
+                .parentId(req.getTargetId())
                 .storageId(entry.getStorageId())
                 .entryName(entryName)
                 .entryType(entry.getEntryType())
@@ -215,41 +215,41 @@ public class PersonalService {
     }
 
     @Transactional
-    public void renameEntry(RenameEntryArgs args, Long userId) {
+    public void renameEntry(EntryRenameReq req, Long userId) {
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getId, args.getId())
-                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getId, req.getId())
+                        .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getUserId, userId)
                         .eq(Entry::getStatus, UNDELETED));
         if (existedEntry == null) throw new BusinessException("Entry does not exist");
 
         // 新文件名校验
-        if (!validateFileName(args.getNewEntryName())) throw new BusinessException("Invalid file name");
+        if (!validateFileName(req.getNewEntryName())) throw new BusinessException("Invalid file name");
 
         // 目标父目录下是否存在同名条目
         Entry sameNameEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getParentId, existedEntry.getParentId())
-                        .eq(Entry::getEntryName, args.getNewEntryName()));
+                        .eq(Entry::getEntryName, req.getNewEntryName()));
         if (sameNameEntry != null) throw new BusinessException("Folder already exists");
 
         // 重命名
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
-                        .set(Entry::getEntryName, args.getNewEntryName())
-                        .eq(Entry::getId, args.getId()));
+                        .set(Entry::getEntryName, req.getNewEntryName())
+                        .eq(Entry::getId, req.getId()));
         if (count != 1) throw new BusinessException("Rename entry failed");
     }
 
     @Transactional
-    public void deleteEntries(DeleteEntryArgs args, Long userId) {
+    public void deleteEntries(EntryDeletionReq req, Long userId) {
         // 查询要删除的条目
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getStatus, UNDELETED)
-                        .in(Entry::getId, args.getIds()));
+                        .in(Entry::getId, req.getIds()));
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
 
         int count = entryMapper.update(
@@ -259,21 +259,21 @@ public class PersonalService {
                         .set(Entry::getDeletedAt, LocalDateTime.now())
                         .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
                         .eq(Entry::getUserId, userId)
-                        .in(Entry::getId, args.getIds()));
+                        .in(Entry::getId, req.getIds()));
         if (count != entries.size()) throw new BusinessException("Delete entry failed");
     }
 
     @Transactional
-    public void shareEntry(ShareEntryArgs args, Long userId) {
+    public void shareEntry(EntryShareReq req, Long userId) {
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getId, args.getId())
-                        .eq(Entry::getDriveId, args.getDriveId())
+                        .eq(Entry::getId, req.getId())
+                        .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getUserId, userId)
                         .eq(Entry::getStatus, UNDELETED));
         if (existedEntry == null) throw new BusinessException("文件条目不存在");
 
-        if (args.getLinkType() == 2 && args.getAccessCode().isBlank()) {
+        if (req.getLinkType() == 2 && req.getAccessCode().isBlank()) {
             throw new BusinessException("<UNK>");
         }
 
@@ -282,11 +282,11 @@ public class PersonalService {
                 .entryId(existedEntry.getId())
                 .entryType(existedEntry.getEntryType())
                 .userId(userId)
-                .linkName(args.getLinkName())
-                .linkType(args.getLinkType())
+                .linkName(req.getLinkName())
+                .linkType(req.getLinkType())
                 .linkKey(generateLinkKey())
-                .accessCode(args.getAccessCode())
-                .expiredAt(args.getExpireTime())
+                .accessCode(req.getAccessCode())
+                .expiredAt(req.getExpireTime())
                 .isDeleted(0)
                 .build();
         int count = shareMapper.insert(link);

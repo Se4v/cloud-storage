@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class FileDownloadReq {
+public class EntryDownloadReq {
     @NotNull
     private List<Long> ids;
 }

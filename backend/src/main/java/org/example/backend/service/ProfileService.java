@@ -11,7 +11,7 @@ import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.entity.User;
 import org.example.backend.model.request.user.PasswordChangeReq;
 import org.example.backend.model.request.user.ProfileUpdateReq;
-import org.example.backend.model.response.user.AvatarUploadUrlView;
+import org.example.backend.model.response.user.AvatarUploadResp;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +58,7 @@ public class ProfileService {
         return url;
     }
 
-    public AvatarUploadUrlView getAvatarUploadUrl(String fileName, Long fileSize, Long userId) {
+    public AvatarUploadResp getAvatarUploadUrl(String fileName, Long fileSize, Long userId) {
         // 判断用户是否存在
         User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException("用户不存在");
@@ -84,7 +84,7 @@ public class ProfileService {
             );
 
             // 返回结果
-            return AvatarUploadUrlView.builder()
+            return AvatarUploadResp.builder()
                     .uploadUrl(presignedUrl)
                     .objectName(objectName)
                     .build();
