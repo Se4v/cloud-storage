@@ -21,7 +21,7 @@ public class DriveService {
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery()
                         .eq(Drive::getUserId, currentUserId)
-                        .eq(Drive::getDriveType, DbConsts.TYPE_PERSONAL)
+                        .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL)
                         .eq(Drive::getNodeId, 0));
         if (drive == null) throw new BusinessException("Drive does not exist");
         return drive;
@@ -32,7 +32,7 @@ public class DriveService {
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery()
                         .eq(Drive::getUserId, currentUserId)
-                        .eq(Drive::getDriveType, DbConsts.TYPE_PERSONAL));
+                        .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL));
         if (drive == null) throw new BusinessException("Drive does not exist");
         return drive.getId();
     }

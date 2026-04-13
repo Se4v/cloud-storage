@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.ShareMapper;
@@ -16,9 +17,6 @@ import java.util.List;
 public class ShareService {
     private final ShareMapper shareMapper;
 
-    private static final int DELETED = 1;
-    private static final int UNDELETED = 0;
-
     public ShareService(ShareMapper shareMapper) {
         this.shareMapper = shareMapper;
     }
@@ -29,7 +27,7 @@ public class ShareService {
         List<Share> shareList = shareMapper.selectList(
                 Wrappers.<Share>lambdaQuery()
                         .eq(Share::getUserId, currentUserId)
-                        .eq(Share::getIsDeleted, UNDELETED));
+                        .eq(Share::getIsDeleted, DbConsts.DELETED_NO));
 
         if (shareList == null || shareList.isEmpty()) return List.of();
 
@@ -43,7 +41,7 @@ public class ShareService {
         Share link = shareMapper.selectOne(
                 Wrappers.<Share>lambdaQuery()
                         .eq(Share::getUserId, currentUserId)
-                        .eq(Share::getIsDeleted, UNDELETED));
+                        .eq(Share::getIsDeleted, DbConsts.DELETED_NO));
         if (link == null) throw new BusinessException("分享链接不存在");
 
         // 更新链接信息
@@ -65,7 +63,7 @@ public class ShareService {
 
         int count = shareMapper.update(
                 Wrappers.<Share>lambdaUpdate()
-                        .set(Share::getIsDeleted, DELETED)
+                        .set(Share::getIsDeleted, DbConsts.DELETED_YES)
                         .eq(Share::getUserId, currentUserId)
                         .in(Share::getId, req.getLinkIds()));
         if (count != req.getLinkIds().size()) throw new BusinessException("删除分享链接失败");

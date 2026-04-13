@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.*;
 import org.example.backend.model.request.perm.PermAssignmentReq;
@@ -25,8 +26,6 @@ public class RoleService {
     private final PermissionMapper permissionMapper;
     private final RolePermissionMapper rolePermissionMapper;
 
-    private static final int DELETED = 1;
-
     public RoleService(RoleMapper roleMapper, MemberMapper memberMapper, UserRoleMapper userRoleMapper,
                        PermissionMapper permissionMapper, RolePermissionMapper rolePermissionMapper) {
         this.roleMapper = roleMapper;
@@ -45,14 +44,14 @@ public class RoleService {
         long sameCode = roleMapper.selectCount(
                 Wrappers.<Role>lambdaQuery()
                         .eq(Role::getCode, req.getCode())
-                        .eq(Role::getDeleted, 0));
+                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
         if (sameCode > 0) throw new BusinessException("角色编码已存在");
 
         // 校验角色名称是否重复
         long sameName = roleMapper.selectCount(
                 Wrappers.<Role>lambdaQuery()
                         .eq(Role::getName, req.getName())
-                        .eq(Role::getDeleted, 0));
+                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
         if (sameName > 0) throw new BusinessException("角色名称已存在");
 
         // 创建角色
@@ -73,7 +72,7 @@ public class RoleService {
         // 查询组织角色是否被使用
         long usedMember = memberMapper.selectCount(
                 Wrappers.<Member>lambdaQuery()
-                        .eq(Member::getDeleted, 0)
+                        .eq(Member::getDeleted, DbConsts.DELETED_NO)
                         .in(Member::getRoleId, req.getRoleIds()));
         if (usedMember > 0) throw new BusinessException("部分组织角色仍被成员使用，无法删除");
 
@@ -86,14 +85,14 @@ public class RoleService {
         // 删除角色
         int roleDeleteCount = roleMapper.update(
                 Wrappers.<Role>lambdaUpdate()
-                        .set(Role::getDeleted, DELETED)
+                        .set(Role::getDeleted, DbConsts.DELETED_YES)
                         .in(Role::getId, req.getRoleIds()));
         if (roleDeleteCount == 0) throw new BusinessException("删除角色失败");
 
         // 删除组织角色关联
         memberMapper.update(
                 Wrappers.<Member>lambdaUpdate()
-                        .set(Member::getDeleted, DELETED)
+                        .set(Member::getDeleted, DbConsts.DELETED_YES)
                         .in(Member::getRoleId, req.getRoleIds()));
 
         // 删除全局角色关联
@@ -150,7 +149,7 @@ public class RoleService {
     public List<Role> listAllRoles() {
         List<Role> allRoles = roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getDeleted, 0));
+                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
         return allRoles;
     }
 

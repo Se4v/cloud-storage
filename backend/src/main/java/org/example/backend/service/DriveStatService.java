@@ -52,9 +52,9 @@ public class DriveStatService {
         Long personalQuota = 0L;
         for (Map<String, Object> map : result) {
             Integer type = (Integer) map.get("type");
-            if (type == 1) {
+            if (type == DbConsts.DRIVE_TYPE_PERSONAL) {
                 personalQuota = Long.parseLong(map.get("totalQuota").toString());
-            } else if (type == 2) {
+            } else if (type == DbConsts.DRIVE_TYPE_ENTERPRISE) {
                 enterpriseQuota = Long.parseLong(map.get("totalQuota").toString());
             }
         }
@@ -68,8 +68,7 @@ public class DriveStatService {
 
     public List<DriveDetailResp> getEnterpriseDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
-                Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getDriveType, DbConsts.TYPE_ENTERPRISE));
+                Wrappers.<Drive>lambdaQuery().eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_ENTERPRISE));
 
         List<DriveDetailResp> resp = drives.stream()
                 .map(drive -> {
@@ -88,8 +87,7 @@ public class DriveStatService {
 
     public List<DriveDetailResp> getPersonalDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
-                Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getDriveType, DbConsts.TYPE_PERSONAL));
+                Wrappers.<Drive>lambdaQuery().eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL));
 
         List<DriveDetailResp> resp = drives.stream()
                 .map(drive -> {

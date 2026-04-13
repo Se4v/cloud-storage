@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.model.request.sys.SystemConfigUpdateReq;
@@ -26,7 +27,7 @@ public class SystemService {
     public Map<String, String> getSystemConfigs() {
         List<Config> configList = configMapper.selectList(
                 Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getIsEnabled, 1));
+                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
         Map<String, String> configMap = configList.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getConfigValue, (a, b) -> a));
         return configMap;
@@ -37,7 +38,7 @@ public class SystemService {
         // 查询配置项
         List<Config> configList = configMapper.selectList(
                 Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getIsEnabled, 1));
+                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
         Map<String, Long> configMap = configList.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getId));
 

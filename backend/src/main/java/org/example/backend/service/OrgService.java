@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.DriveMapper;
@@ -29,8 +30,6 @@ public class OrgService {
     private final DriveMapper driveMapper;
     private final UserMapper userMapper;
 
-    private static final int DELETED = 1;
-
     public OrgService(MemberMapper memberMapper, NodeMapper nodeMapper,
                       DriveMapper driveMapper, UserMapper userMapper) {
         this.memberMapper = memberMapper;
@@ -42,8 +41,7 @@ public class OrgService {
     public List<OrgNodeTreeResp> getOrgTree() {
         Long currentUserId = SecurityUtils.getUserId();
         List<Member> members = memberMapper.selectList(
-                Wrappers.<Member>lambdaQuery()
-                        .eq(Member::getUserId, currentUserId));
+                Wrappers.<Member>lambdaQuery().eq(Member::getUserId, currentUserId));
 
         List<Long> childNodeIds = members.stream().map(Member::getNodeId).toList();
         List<Node> nodeList = nodeMapper.selectNodeWithParents(childNodeIds);
@@ -51,7 +49,7 @@ public class OrgService {
 
         List<Drive> driveList = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getDriveType, 2)
+                        .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_ENTERPRISE)
                         .in(Drive::getNodeId, allNodeIds));
         Map<Long, Long> driveMap = driveList.stream().collect(Collectors.toMap(Drive::getNodeId, Drive::getId));
 
@@ -121,8 +119,7 @@ public class OrgService {
             adminId = 0L;
         } else {
             User admin = userMapper.selectOne(
-                    Wrappers.<User>lambdaQuery()
-                            .eq(User::getUsername, req.getAdminUsername()));
+                    Wrappers.<User>lambdaQuery().eq(User::getUsername, req.getAdminUsername()));
             if (admin == null) throw new BusinessException("该用户不存在");
             adminId = admin.getId();
         }
@@ -130,7 +127,7 @@ public class OrgService {
         // 创建企业空间
         Drive drive = Drive.builder()
                 .driveName(req.getName())
-                .driveType(2)
+                .driveType(DbConsts.DRIVE_TYPE_ENTERPRISE)
                 .nodeId(node.getId())
                 .userId(adminId)
                 .totalQuota(req.getStorageQuota())
@@ -146,14 +143,13 @@ public class OrgService {
 
         // 校验是否存在子节点
         long childCount = nodeMapper.selectCount(
-                Wrappers.<Node>lambdaQuery()
-                        .in(Node::getParentId, nodeIds));
+                Wrappers.<Node>lambdaQuery().in(Node::getParentId, nodeIds));
         if (childCount > 0) throw new BusinessException("请先删除该节点下的所有子节点");
 
         // 删除节点
         int updateCount = nodeMapper.update(
                 Wrappers.<Node>lambdaUpdate()
-                        .set(Node::getIsDeleted, DELETED)
+                        .set(Node::getIsDeleted, DbConsts.DELETED_YES)
                         .in(Node::getId, nodeIds));
         if (updateCount != nodeIds.size()) throw new BusinessException("删除节点失败");
     }
@@ -170,7 +166,7 @@ public class OrgService {
             List<Node> children = nodeMapper.selectList(
                     Wrappers.<Node>lambdaQuery()
                             .eq(Node::getParentId, req.getId())
-                            .eq(Node::getIsDeleted, 0));
+                            .eq(Node::getIsDeleted, DbConsts.DELETED_NO));
             Map<Long, Node> childrenMap = children.stream().collect(Collectors.toMap(Node::getId, node -> node));
             if (childrenMap.containsKey(req.getParentId())) throw new BusinessException("不能设置自己的子节点为父节点");
         }
@@ -203,16 +199,14 @@ public class OrgService {
             adminId = 0L;
         } else {
             User admin = userMapper.selectOne(
-                    Wrappers.<User>lambdaQuery()
-                            .eq(User::getUsername, req.getAdminUsername()));
+                    Wrappers.<User>lambdaQuery().eq(User::getUsername, req.getAdminUsername()));
             if (admin == null) throw new BusinessException("该用户不存在");
             adminId = admin.getId();
         }
 
         // 更新
         Drive drive = driveMapper.selectOne(
-                Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getNodeId, req.getId()));
+                Wrappers.<Drive>lambdaQuery().eq(Drive::getNodeId, req.getId()));
         if (drive == null) throw new BusinessException("节点对应的存储空间不存在");
         if (drive.getUsedQuota() > req.getStorageQuota()) throw new BusinessException("");
 
@@ -228,8 +222,7 @@ public class OrgService {
     public List<OrgNodeResp> listAllOrgNodes() {
         // 查询组织节点
         List<Node> nodeList = nodeMapper.selectList(
-                Wrappers.<Node>lambdaQuery()
-                        .eq(Node::getIsDeleted, 0));
+                Wrappers.<Node>lambdaQuery().eq(Node::getIsDeleted, DbConsts.DELETED_NO));
         if (nodeList == null || nodeList.isEmpty()) return List.of();
         Map<Long, String> parentNodeMap = nodeList.stream().collect(Collectors.toMap(Node::getId, Node::getNodeName));
 
@@ -238,8 +231,7 @@ public class OrgService {
                 .map(Node::getId)
                 .toList();
         List<Drive> driveList = driveMapper.selectList(
-                Wrappers.<Drive>lambdaQuery()
-                        .in(Drive::getNodeId, nodeIdList));
+                Wrappers.<Drive>lambdaQuery().in(Drive::getNodeId, nodeIdList));
         Map<Long, Drive> driveMap = driveList.stream()
                 .collect(Collectors.toMap(Drive::getNodeId, drive -> drive));
 
@@ -248,8 +240,7 @@ public class OrgService {
                 .map(Drive::getUserId)
                 .collect(Collectors.toSet());
         List<User> userList = userMapper.selectList(
-                Wrappers.<User>lambdaQuery()
-                        .in(User::getId, adminIdList));
+                Wrappers.<User>lambdaQuery().in(User::getId, adminIdList));
         Map<Long, String> userMap = userList.stream()
                 .collect(Collectors.toMap(User::getId, User::getUsername));
 

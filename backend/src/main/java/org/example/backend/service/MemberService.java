@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.MemberMapper;
@@ -42,24 +43,24 @@ public class MemberService {
         User user = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery()
                         .eq(User::getUsername, req.getUsername())
-                        .eq(User::getEnabled, 1)
-                        .eq(User::getDeleted, 0));
+                        .eq(User::getEnabled, DbConsts.ENABLED_YES)
+                        .eq(User::getDeleted, DbConsts.DELETED_NO));
         if (user == null) throw new BusinessException("<UNK>");
 
         // 查询角色是否存在
         Role role = roleMapper.selectOne(
                 Wrappers.<Role>lambdaQuery()
                         .eq(Role::getId, req.getRoleId())
-                        .eq(Role::getEnabled, 1)
-                        .eq(Role::getDeleted, 0));
+                        .eq(Role::getEnabled, DbConsts.ENABLED_YES)
+                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
         if (role == null) throw new BusinessException("<UNK>");
 
         // 查询组织节点是否存在
         Node node = nodeMapper.selectOne(
                 Wrappers.<Node>lambdaQuery()
                         .eq(Node::getId, req.getNodeId())
-                        .eq(Node::getIsEnabled, 1)
-                        .eq(Node::getIsDeleted, 0));
+                        .eq(Node::getIsEnabled, DbConsts.ENABLED_YES)
+                        .eq(Node::getIsDeleted, DbConsts.DELETED_NO));
         if (node == null) throw new BusinessException("<UNK>");
 
         Member member = Member.builder()
@@ -75,7 +76,7 @@ public class MemberService {
     public void deleteMembers(MemberDeletionReq req) {
         int count = memberMapper.update(
                 Wrappers.<Member>lambdaUpdate()
-                        .set(Member::getDeleted, 1)
+                        .set(Member::getDeleted, DbConsts.DELETED_YES)
                         .in(Member::getId, req.getMemberIds()));
         if (count != req.getMemberIds().size()) throw new BusinessException("<UNK>");
     }
@@ -86,7 +87,7 @@ public class MemberService {
         Member member = memberMapper.selectOne(
                 Wrappers.<Member>lambdaQuery()
                         .eq(Member::getId, req.getMemberId())
-                        .eq(Member::getDeleted, 0));
+                        .eq(Member::getDeleted, DbConsts.DELETED_NO));
         if (member == null) throw new BusinessException("<UNK>");
 
         // 更新信息
@@ -106,7 +107,7 @@ public class MemberService {
 
         List<Member> members = memberMapper.selectList(
                 Wrappers.<Member>lambdaQuery()
-                        .eq(Member::getDeleted, 0)
+                        .eq(Member::getDeleted, DbConsts.DELETED_NO)
                         .in(manageNodeIds != null && !manageNodeIds.isEmpty(), Member::getNodeId, manageNodeIds));
         if (members == null || members.isEmpty()) return List.of();
 
@@ -124,8 +125,8 @@ public class MemberService {
         if (!userIds.isEmpty()) {
             List<User> users = userMapper.selectList(
                     Wrappers.<User>lambdaQuery()
-                            .eq(User::getEnabled, 1)
-                            .eq(User::getDeleted, 0)
+                            .eq(User::getEnabled, DbConsts.ENABLED_YES)
+                            .eq(User::getDeleted, DbConsts.DELETED_NO)
                             .in(User::getId, userIds));
             userMap.putAll(
                     users.stream().collect(Collectors.toMap(User::getId, user -> user, (k1, k2) -> k1))
@@ -138,8 +139,8 @@ public class MemberService {
         if (!roleIds.isEmpty()) {
             List<Role> roles = roleMapper.selectList(
                     Wrappers.<Role>lambdaQuery()
-                            .eq(Role::getDeleted, 0)
-                            .eq(Role::getEnabled, 1)
+                            .eq(Role::getEnabled, DbConsts.ENABLED_YES)
+                            .eq(Role::getDeleted, DbConsts.DELETED_NO)
                             .in(Role::getId, roleIds));
             roleMap.putAll(
                     roles.stream().collect(Collectors.toMap(Role::getId, role -> role, (k1, k2) -> k1))
@@ -151,8 +152,8 @@ public class MemberService {
         if (!nodeIds.isEmpty()) {
             List<Node> nodes = nodeMapper.selectList(
                     Wrappers.<Node>lambdaQuery()
-                            .eq(Node::getIsDeleted, 0)
-                            .eq(Node::getIsEnabled, 1)
+                            .eq(Node::getIsEnabled, DbConsts.ENABLED_YES)
+                            .eq(Node::getIsDeleted, DbConsts.DELETED_NO)
                             .in(Node::getId, nodeIds));
             nodeMap.putAll(
                     nodes.stream().collect(Collectors.toMap(Node::getId, node -> node, (k1, k2) -> k1))
@@ -180,17 +181,17 @@ public class MemberService {
     public List<Role> listOrgRoles() {
         List<Role> orgRoles = roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getType, 2)
-                        .eq(Role::getEnabled, 1)
-                        .eq(Role::getDeleted, 0));
+                        .eq(Role::getType, DbConsts.ROLE_TYPE_ORG)
+                        .eq(Role::getEnabled, DbConsts.ENABLED_YES)
+                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
         return orgRoles;
     }
 
     public List<Node> listOrgNodes() {
         List<Node> orgNodes = nodeMapper.selectList(
                 Wrappers.<Node>lambdaQuery()
-                        .eq(Node::getIsEnabled, 1)
-                        .eq(Node::getIsDeleted, 0));
+                        .eq(Node::getIsEnabled, DbConsts.ENABLED_YES)
+                        .eq(Node::getIsDeleted, DbConsts.DELETED_NO));
         return orgNodes;
     }
 }

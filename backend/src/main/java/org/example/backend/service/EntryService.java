@@ -37,7 +37,7 @@ public class EntryService {
         List<Long> folderIds = new ArrayList<>();
         List<Long> storageIds = new ArrayList<>();
         entries.forEach(entry -> {
-            if (entry.getEntryType() == DbConsts.TYPE_FILE) {
+            if (entry.getEntryType() == DbConsts.ENTRY_TYPE_FILE) {
                 fileIds.add(entry.getId());
                 storageIds.add(entry.getStorageId());
             } else {
@@ -51,7 +51,7 @@ public class EntryService {
         if (!folderIds.isEmpty()) {
             List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             children.forEach(entry -> {
-                if (entry.getEntryType() == DbConsts.TYPE_FILE) {
+                if (entry.getEntryType() == DbConsts.ENTRY_TYPE_FILE) {
                     allChildFileIds.add(entry.getId());
                     storageIds.add(entry.getStorageId());
                 } else {
@@ -66,7 +66,7 @@ public class EntryService {
         if (!allFileIds.isEmpty()) {
             int count = entryMapper.update(
                     Wrappers.<Entry>lambdaUpdate()
-                            .set(Entry::getStatus, DbConsts.STATUS_PERMANENT_DELETED)
+                            .set(Entry::getStatus, DbConsts.ENTRY_STATUS_PERMANENT_DELETED)
                             .in(Entry::getId, allFileIds));
             if (count != allFileIds.size()) throw new BusinessException("Permanently Delete files failed");
         }
@@ -77,7 +77,7 @@ public class EntryService {
         if (!allFolderIds.isEmpty()) {
             int count = entryMapper.update(
                     Wrappers.<Entry>lambdaUpdate()
-                            .set(Entry::getStatus, DbConsts.STATUS_PERMANENT_DELETED)
+                            .set(Entry::getStatus, DbConsts.ENTRY_STATUS_PERMANENT_DELETED)
                             .in(Entry::getId, allFolderIds));
             if (count != allFolderIds.size()) throw new BusinessException("Permanently Delete folders failed");
         }

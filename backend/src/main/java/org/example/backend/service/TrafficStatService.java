@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -39,7 +40,7 @@ public class TrafficStatService {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getConfigKey, "total_quota")
-                        .eq(Config::getIsEnabled, 1));
+                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
         Long totalQuota = Long.parseLong(config.getConfigValue());
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();
@@ -50,9 +51,9 @@ public class TrafficStatService {
         long totalDownload = 0L;
         for (Map<String, Object> map : result) {
             Integer type = (Integer) map.get("type");
-            if (type == 1) {
+            if (type == DbConsts.DRIVE_TYPE_PERSONAL) {
                 totalUpload = Long.parseLong(map.get("totalTraffic").toString());
-            } else if (type == 2) {
+            } else if (type == DbConsts.DRIVE_TYPE_ENTERPRISE) {
                 totalDownload = Long.parseLong(map.get("totalTraffic").toString());
             }
         }

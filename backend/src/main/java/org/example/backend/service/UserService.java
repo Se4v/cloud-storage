@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.*;
@@ -29,11 +30,6 @@ public class UserService {
     private final UserRoleMapper userRoleMapper;
     private final PasswordEncoder passwordEncoder;
 
-    private static final int ENABLED = 1;
-    private static final int DISABLED = 0;
-    private static final int UNDELETED = 0;
-    private static final int DELETED = 1;
-
     public UserService(UserMapper userMapper, MemberMapper memberMapper, ConfigMapper configMapper,
                        DriveMapper driveMapper, RoleMapper roleMapper, UserRoleMapper userRoleMapper,
                        PasswordEncoder passwordEncoder) {
@@ -55,14 +51,14 @@ public class UserService {
         User existUser = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery()
                         .eq(User::getUsername, req.getUsername())
-                        .eq(User::getDeleted, UNDELETED));
+                        .eq(User::getDeleted, DbConsts.DELETED_NO));
         if (existUser != null) throw new BusinessException("用户名已存在");
 
         // 调用配置表
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getConfigKey, "default_password")
-                        .eq(Config::getIsEnabled, ENABLED));
+                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
 
         // 创建用户
         User user = User.builder()
@@ -95,7 +91,7 @@ public class UserService {
     public void deleteUsers(UserDeletionReq req) {
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
-                        .set(User::getDeleted, DELETED)
+                        .set(User::getDeleted, DbConsts.DELETED_YES)
                         .in(User::getId, req.getUserIds()));
         if (count != req.getUserIds().size()) throw new BusinessException("删除用户失败");
     }
@@ -110,7 +106,7 @@ public class UserService {
                         .set(User::getRealName, req.getRealName())
                         .set(User::getMobile, req.getMobile())
                         .set(User::getEmail, req.getEmail())
-                        .set(User::getEnabled, Boolean.TRUE.equals(req.getIsEnabled()) ? ENABLED : DISABLED)
+                        .set(User::getEnabled, Boolean.TRUE.equals(req.getIsEnabled()) ? DbConsts.ENABLED_YES : DbConsts.ENABLED_NO)
                         .eq(User::getId, req.getId()));
         if (count != 1) throw new BusinessException("更新用户失败");
     }
@@ -132,7 +128,7 @@ public class UserService {
         // 查询用户
         List<User> users = userMapper.selectList(
                 Wrappers.<User>lambdaQuery()
-                        .eq(User::getDeleted, UNDELETED)
+                        .eq(User::getDeleted, DbConsts.DELETED_NO)
                         .in(manageUserIds != null && !manageUserIds.isEmpty(), User::getId, manageUserIds));
         if (users == null || users.isEmpty()) return List.of();
         List<Long> validUserIds = users.stream().map(User::getId).toList();
@@ -240,7 +236,7 @@ public class UserService {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getConfigKey, "default_password")
-                        .eq(Config::getIsEnabled, ENABLED));
+                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
 
         // 重置密码
         int count = userMapper.update(
@@ -254,8 +250,8 @@ public class UserService {
         List<Role> systemRoles = roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery()
                         .eq(Role::getType, 1)
-                        .eq(Role::getEnabled, ENABLED)
-                        .eq(Role::getDeleted, UNDELETED));
+                        .eq(Role::getEnabled, DbConsts.ENABLED_YES)
+                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
         return systemRoles;
     }
 }

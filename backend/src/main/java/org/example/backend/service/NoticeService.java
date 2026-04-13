@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.NoticeMapper;
@@ -16,9 +17,6 @@ import java.util.List;
 public class NoticeService {
     private final NoticeMapper noticeMapper;
 
-    private static final int UNREAD = 0;
-    private static final int UNDELETED = 0;
-
     public NoticeService(NoticeMapper noticeMapper) {
         this.noticeMapper = noticeMapper;
     }
@@ -28,8 +26,8 @@ public class NoticeService {
         List<Notice> unreadNotices = noticeMapper.selectList(
                 Wrappers.<Notice>lambdaQuery()
                         .eq(Notice::getTargetId, currentUserId)
-                        .eq(Notice::getIsRead, UNREAD)
-                        .eq(Notice::getIsDeleted, UNDELETED));
+                        .eq(Notice::getIsRead, DbConsts.READ_NO)
+                        .eq(Notice::getIsDeleted, DbConsts.DELETED_NO));
 
         return unreadNotices;
     }
@@ -39,7 +37,7 @@ public class NoticeService {
         List<Notice> notices = noticeMapper.selectList(
                 Wrappers.<Notice>lambdaQuery()
                         .eq(Notice::getTargetId, currentUserId)
-                        .eq(Notice::getIsDeleted, UNDELETED));
+                        .eq(Notice::getIsDeleted, DbConsts.DELETED_NO));
 
         return notices;
     }
@@ -49,7 +47,7 @@ public class NoticeService {
         Long currentUserId = SecurityUtils.getUserId();
         int count = noticeMapper.update(
                 Wrappers.<Notice>lambdaUpdate()
-                        .set(Notice::getIsRead, 1)
+                        .set(Notice::getIsRead, DbConsts.READ_YES)
                         .eq(Notice::getTargetId, currentUserId)
                         .in(Notice::getId, req.getIds()));
         if (count != req.getIds().size()) throw new BusinessException("<UNK>");
@@ -60,7 +58,7 @@ public class NoticeService {
         Long currentUserId = SecurityUtils.getUserId();
         int count = noticeMapper.update(
                 Wrappers.<Notice>lambdaUpdate()
-                        .set(Notice::getIsDeleted, 1)
+                        .set(Notice::getIsDeleted, DbConsts.DELETED_YES)
                         .eq(Notice::getTargetId, currentUserId)
                         .in(Notice::getId, req.getIds()));
         if (count != req.getIds().size()) throw new BusinessException("<UNK>");
