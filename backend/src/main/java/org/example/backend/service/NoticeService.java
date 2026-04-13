@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.NoticeMapper;
 import org.example.backend.model.request.notice.NoticeDeletionReq;
 import org.example.backend.model.request.notice.NoticeReadMarkReq;
@@ -22,41 +23,45 @@ public class NoticeService {
         this.noticeMapper = noticeMapper;
     }
 
-    public List<Notice> listUnreadNotices(Long userId) {
+    public List<Notice> listUnreadNotices() {
+        Long currentUserId = SecurityUtils.getUserId();
         List<Notice> unreadNotices = noticeMapper.selectList(
                 Wrappers.<Notice>lambdaQuery()
-                        .eq(Notice::getTargetId, userId)
+                        .eq(Notice::getTargetId, currentUserId)
                         .eq(Notice::getIsRead, UNREAD)
                         .eq(Notice::getIsDeleted, UNDELETED));
 
         return unreadNotices;
     }
 
-    public List<Notice> listNotices(Long userId) {
+    public List<Notice> listNotices() {
+        Long currentUserId = SecurityUtils.getUserId();
         List<Notice> notices = noticeMapper.selectList(
                 Wrappers.<Notice>lambdaQuery()
-                        .eq(Notice::getTargetId, userId)
+                        .eq(Notice::getTargetId, currentUserId)
                         .eq(Notice::getIsDeleted, UNDELETED));
 
         return notices;
     }
 
     @Transactional
-    public void markNoticeAsRead(NoticeReadMarkReq req, Long userId) {
+    public void markNoticeAsRead(NoticeReadMarkReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         int count = noticeMapper.update(
                 Wrappers.<Notice>lambdaUpdate()
                         .set(Notice::getIsRead, 1)
-                        .eq(Notice::getTargetId, userId)
+                        .eq(Notice::getTargetId, currentUserId)
                         .in(Notice::getId, req.getIds()));
         if (count != req.getIds().size()) throw new BusinessException("<UNK>");
     }
 
     @Transactional
-    public void deleteNotices(NoticeDeletionReq req, Long userId) {
+    public void deleteNotices(NoticeDeletionReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         int count = noticeMapper.update(
                 Wrappers.<Notice>lambdaUpdate()
                         .set(Notice::getIsDeleted, 1)
-                        .eq(Notice::getTargetId, userId)
+                        .eq(Notice::getTargetId, currentUserId)
                         .in(Notice::getId, req.getIds()));
         if (count != req.getIds().size()) throw new BusinessException("<UNK>");
     }

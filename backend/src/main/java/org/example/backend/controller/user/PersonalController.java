@@ -1,7 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.entity.Drive;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.request.file.*;
@@ -37,39 +36,33 @@ public class PersonalController {
 
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody UploadInitReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        UploadInitResp resp = uploadService.initUpload(req, currentUserId);
+        UploadInitResp resp = uploadService.initUpload(req);
         return Result.success(resp);
     }
 
     @PostMapping("/simple-upload")
     public Result<?> directUpload(@RequestBody DirectUploadReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        DirectUploadResp resp = uploadService.directUpload(req, currentUserId);
+        DirectUploadResp resp = uploadService.directUpload(req);
         return Result.success(resp);
     }
 
     @PostMapping("/upload-chunk")
     public Result<?> uploadChunk(@RequestBody ChunkUploadReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        ChunkUploadResp resp = uploadService.uploadChunk(req, currentUserId);
+        ChunkUploadResp resp = uploadService.uploadChunk(req);
         return Result.success(resp);
     }
 
     @PostMapping("/merge-chunks")
     public Result<?> mergeChunks(@RequestBody ChunkMergeReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        ChunkMergeResp resp = uploadService.mergeChunks(req, currentUserId);
+        ChunkMergeResp resp = uploadService.mergeChunks(req);
         return Result.success(resp);
     }
 
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody EntryDownloadReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-
         String fileName = downloadService.getDownloadFileName(req);
 
-        StreamingResponseBody stream = downloadService.download(req, currentUserId);
+        StreamingResponseBody stream = downloadService.download(req);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -83,8 +76,7 @@ public class PersonalController {
 
     @GetMapping
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
-        Long currentUserId = SecurityUtil.getUserId();
-        List<Entry> entries = personalService.listEntries(driveId, parentId, currentUserId);
+        List<Entry> entries = personalService.listEntries(driveId, parentId);
         List<EntryResp> resp = entries.stream().map(entry -> EntryResp.builder()
                 .id(entry.getId())
                 .name(entry.getEntryName())
@@ -97,64 +89,55 @@ public class PersonalController {
 
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
-        Long currentUserId = SecurityUtil.getUserId();
-        List<FolderTreeResp> resp = personalService.listFolders(driveId, currentUserId);
+        List<FolderTreeResp> resp = personalService.listFolders(driveId);
         return Result.success(resp);
     }
 
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody FolderCreationReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        personalService.createFolder(req, currentUserId);
+        personalService.createFolder(req);
         return Result.success();
     }
 
     @PostMapping("/move")
     public Result<?> moveEntries(@RequestBody EntryMoveReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        personalService.moveEntries(req, currentUserId);
+        personalService.moveEntries(req);
         return Result.success();
     }
 
     @PostMapping("/copy")
     public Result<?> copyEntry(@RequestBody EntryCopyReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        personalService.copyEntry(req, currentUserId);
+        personalService.copyEntry(req);
         return Result.success();
     }
 
     @PostMapping("/rename")
     public Result<?> renameEntry(@RequestBody EntryRenameReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        personalService.renameEntry(req, currentUserId);
+        personalService.renameEntry(req);
         return Result.success();
     }
 
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody EntryDeletionReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        personalService.deleteEntries(req, currentUserId);
+        personalService.deleteEntries(req);
         return Result.success();
     }
 
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody EntryShareReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        personalService.shareEntry(req, currentUserId);
+        personalService.shareEntry(req);
         return Result.success();
     }
 
     @GetMapping("/preview")
     public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {
-        Long currentUserId = SecurityUtil.getUserId();
-        String url = personalService.preview(id, driveId, currentUserId);
+        String url = personalService.preview(id, driveId);
         return Result.success(url);
     }
 
     @GetMapping("/usage")
     public Result<?> getPersonalDriveUsage() {
-        Long currentUserId = SecurityUtil.getUserId();
-        Drive drive = driveService.getPersonalDriveUsage(currentUserId);
+        Drive drive = driveService.getPersonalDriveUsage();
         PersonalDriveUsageResp resp = PersonalDriveUsageResp.builder()
                 .usedQuota(drive.getUsedQuota())
                 .totalQuota(drive.getTotalQuota())
@@ -164,8 +147,7 @@ public class PersonalController {
 
     @GetMapping("/id")
     public Result<?> getPersonalDriveId() {
-        Long currentUserId = SecurityUtil.getUserId();
-        Long personalDriveId = driveService.getPersonalDriveId(currentUserId);
+        Long personalDriveId = driveService.getPersonalDriveId();
         return Result.success(personalDriveId);
     }
 }

@@ -6,7 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
-public class SecurityUtil {
+public class SecurityUtils {
     // 获取当前登录的完整用户信息
     public static LoginUser getLoginUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

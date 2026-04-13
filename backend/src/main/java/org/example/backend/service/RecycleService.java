@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
@@ -38,11 +39,12 @@ public class RecycleService {
     /**
      * 查询用户回收站中的条目
      */
-    public List<RecycleResp> listEntries(Long userId) {
+    public List<RecycleResp> listEntries() {
         // 查询用户回收站中的条目（状态为已删除且未过期）
+        Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDeleterId, userId)
+                        .eq(Entry::getDeleterId, currentUserId)
                         .eq(Entry::getStatus, STATUS_DELETED)
                         .gt(Entry::getExpiredAt, LocalDateTime.now()));
         if (entries == null || entries.isEmpty()) return List.of();
@@ -86,11 +88,12 @@ public class RecycleService {
      * 批量恢复条目
      */
     @Transactional
-    public void restoreEntries(EntryRestoreReq req, Long userId) {
+    public void restoreEntries(EntryRestoreReq req) {
         // 查询要恢复的条目
+        Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDeleterId, userId)
+                        .eq(Entry::getDeleterId, currentUserId)
                         .eq(Entry::getStatus, STATUS_DELETED)
                         .in(Entry::getId, req.getIds()));
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
@@ -141,11 +144,12 @@ public class RecycleService {
      * 批量永久删除条目
      */
     @Transactional
-    public void deleteEntries(EntryDeletionReq req, Long userId) {
+    public void deleteEntries(EntryDeletionReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         // 查询要删除的条目
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDeleterId, userId)
+                        .eq(Entry::getDeleterId, currentUserId)
                         .eq(Entry::getStatus, STATUS_DELETED)
                         .in(Entry::getId, req.getIds()));
         if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
@@ -213,11 +217,12 @@ public class RecycleService {
      * 清空用户回收站
      */
     @Transactional
-    public void clearEntries(Long userId) {
+    public void clearEntries() {
         // 查询用户回收站中所有条目
+        Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getDeleterId, userId)
+                        .eq(Entry::getDeleterId, currentUserId)
                         .eq(Entry::getStatus, STATUS_DELETED));
         if (entries == null || entries.isEmpty()) throw new BusinessException("不存在可删除文件");
 

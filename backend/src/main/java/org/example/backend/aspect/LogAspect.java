@@ -7,7 +7,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.example.backend.common.annotation.OperationLog;
-import org.example.backend.common.util.SecurityUtil;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.model.entity.Log;
 import org.example.backend.service.LogService;
 import org.springframework.core.DefaultParameterNameDiscoverer;
@@ -125,9 +125,9 @@ public class LogAspect {
             log.setRequestUri(request.getRequestURI());
             log.setClientIp(getClientIp(request));
         }
-        log.setUserId(SecurityUtil.getUserId());
-        log.setUsername(SecurityUtil.getUsername());
-        log.setRealName(SecurityUtil.getRealName());
+        log.setUserId(SecurityUtils.getUserId());
+        log.setUsername(SecurityUtils.getUsername());
+        log.setRealName(SecurityUtils.getRealName());
         log.setModule(operationLog.module());
         log.setAction(operationLog.action());
         log.setTargetType(operationLog.targetType());

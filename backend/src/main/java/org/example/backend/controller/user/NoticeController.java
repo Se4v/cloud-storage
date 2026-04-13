@@ -1,7 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.notice.NoticeDeletionReq;
 import org.example.backend.model.request.notice.NoticeReadMarkReq;
 import org.example.backend.model.entity.Notice;
@@ -22,8 +21,7 @@ public class NoticeController {
 
     @GetMapping("/unread")
     public Result<?> listUnreadNotices() {
-        Long currentUserId = SecurityUtil.getUserId();
-        List<Notice> notices = noticeService.listUnreadNotices(currentUserId);
+        List<Notice> notices = noticeService.listUnreadNotices();
 
         List<NoticeResp> resp = notices.stream()
                 .map(notice -> NoticeResp.builder()
@@ -41,8 +39,7 @@ public class NoticeController {
 
     @GetMapping
     public Result<?> listNotices() {
-        Long currentUserId = SecurityUtil.getUserId();
-        List<Notice> notices = noticeService.listNotices(currentUserId);
+        List<Notice> notices = noticeService.listNotices();
 
         List<NoticeResp> resp = notices.stream()
                 .map(notice -> NoticeResp.builder()
@@ -60,15 +57,13 @@ public class NoticeController {
 
     @PostMapping("/read")
     public Result<?> markNoticeAsRead(@RequestBody NoticeReadMarkReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        noticeService.markNoticeAsRead(req, currentUserId);
+        noticeService.markNoticeAsRead(req);
         return Result.success();
     }
 
     @PostMapping("/delete")
     public Result<?> deleteNotices(@RequestBody NoticeDeletionReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        noticeService.deleteNotices(req, currentUserId);
+        noticeService.deleteNotices(req);
         return Result.success();
     }
 }

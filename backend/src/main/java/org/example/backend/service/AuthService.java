@@ -2,10 +2,12 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.common.constant.DbConsts;
+import org.example.backend.common.constant.RedisConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.security.LoginUser;
-import org.example.backend.common.util.JwtUtil;
-import org.example.backend.common.util.SecurityUtil;
+import org.example.backend.common.util.JwtUtils;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.*;
 import org.example.backend.model.entity.*;
 import org.example.backend.model.request.auth.AuthReq;
@@ -26,37 +28,35 @@ public class AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
 
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
     private static final String TYPE_LOGIN_ADMIN = "admin";
-    private static final String KEY_AUTH_USER = "auth:user:";
-    private static final String KEY_AUTH_TOKEN = "auth:token:";
 
     public AuthService(UserMapper userMapper, PasswordEncoder passwordEncoder,
-                       RedisTemplate<String, Object> redisTemplate, JwtUtil jwtUtil) {
+                       RedisTemplate<String, Object> redisTemplate, JwtUtils jwtUtils) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
     }
 
     public String login(AuthReq req) {
         // 防止重复登录
-        String existingToken = (String) redisTemplate.opsForValue().get(KEY_AUTH_USER + req.getUsername());
+        String existingToken = (String) redisTemplate.opsForValue().get(RedisConsts.KEY_AUTH_USER + req.getUsername());
         if (existingToken != null) {
             return existingToken;
         }
 
         User user = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery().eq(User::getUsername, req.getUsername()));
-        if (user == null || user.getEnabled() == 0) return null;
+        if (user == null || user.getEnabled() == DbConsts.ENABLED_NO) return null;
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new BusinessException("Username or password is incorrect");
         }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        String token = jwtUtils.generateToken(user.getId(), user.getUsername());
 
         List<String> systemRoles = userMapper.selectSystemRoles(user.getId());
         List<String> systemPermissions = userMapper.selectSystemPermissions(user.getId());
@@ -88,15 +88,15 @@ public class AuthService {
         loginUser.setOrgPermissions(orgPermissions);
 
         // TODO:使用 Redis 事务或 Pipeline 保证两个写操作的原子性
-        redisTemplate.opsForValue().set(KEY_AUTH_USER + token, loginUser, 4, TimeUnit.HOURS);
-        redisTemplate.opsForValue().set(KEY_AUTH_TOKEN + req.getUsername(), token, 4, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(RedisConsts.KEY_AUTH_USER + token, loginUser, 4, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(RedisConsts.KEY_AUTH_TOKEN + req.getUsername(), token, 4, TimeUnit.HOURS);
 
         return token;
     }
 
     public void logout() {
-        String tokenKey = KEY_AUTH_USER + SecurityUtil.getToken();
-        String usernameKey = KEY_AUTH_TOKEN + SecurityUtil.getUsername();
+        String tokenKey = RedisConsts.KEY_AUTH_USER + SecurityUtils.getToken();
+        String usernameKey = RedisConsts.KEY_AUTH_TOKEN + SecurityUtils.getUsername();
         redisTemplate.delete(Arrays.asList(tokenKey, usernameKey));
         SecurityContextHolder.clearContext();
     }

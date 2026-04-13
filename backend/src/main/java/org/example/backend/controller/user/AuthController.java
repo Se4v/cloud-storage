@@ -1,7 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.auth.AuthReq;
 import org.example.backend.service.AuthService;
 import org.springframework.web.bind.annotation.*;

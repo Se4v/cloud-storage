@@ -1,7 +1,9 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.model.entity.Drive;
 import org.springframework.stereotype.Service;
@@ -14,21 +16,23 @@ public class DriveService {
         this.driveMapper = driveMapper;
     }
 
-    public Drive getPersonalDriveUsage(Long userId) {
+    public Drive getPersonalDriveUsage() {
+        Long currentUserId = SecurityUtils.getUserId();
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getUserId, userId)
-                        .eq(Drive::getDriveType, 1)
+                        .eq(Drive::getUserId, currentUserId)
+                        .eq(Drive::getDriveType, DbConsts.TYPE_PERSONAL)
                         .eq(Drive::getNodeId, 0));
         if (drive == null) throw new BusinessException("Drive does not exist");
         return drive;
     }
 
-    public Long getPersonalDriveId(Long userId) {
+    public Long getPersonalDriveId() {
+        Long currentUserId = SecurityUtils.getUserId();
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getUserId, userId)
-                        .eq(Drive::getDriveType, 1));
+                        .eq(Drive::getUserId, currentUserId)
+                        .eq(Drive::getDriveType, DbConsts.TYPE_PERSONAL));
         if (drive == null) throw new BusinessException("Drive does not exist");
         return drive.getId();
     }

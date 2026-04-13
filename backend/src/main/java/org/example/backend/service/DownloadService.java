@@ -5,7 +5,9 @@ import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
 import org.example.backend.mapper.TrafficMapper;
@@ -33,10 +35,6 @@ public class DownloadService {
     private final StorageMapper storageMapper;
     private final TrafficMapper trafficMapper;
 
-    private static final int TYPE_FILE = 1;
-    private static final int TYPE_FOLDER = 2;
-    private static final int STATUS_UNDELETED = 1;
-
     public DownloadService(MinioClient minioClient, EntryMapper entryMapper,
                            StorageMapper storageMapper, TrafficMapper trafficMapper) {
         this.minioClient = minioClient;
@@ -45,7 +43,9 @@ public class DownloadService {
         this.trafficMapper = trafficMapper;
     }
 
-    public StreamingResponseBody download(EntryDownloadReq req, Long userId) {
+    public StreamingResponseBody download(EntryDownloadReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
+
         return outputStream -> {
             try {
                 List<DownloadTask> tasks = collectDownloadTasks(req.getIds());
@@ -60,7 +60,7 @@ public class DownloadService {
                         .sum();
 
                 Traffic traffic = Traffic.builder()
-                        .userId(userId)
+                        .userId(currentUserId)
                         .storageId(null)
                         .type(2)
                         .fileSize(totalSize)
@@ -99,7 +99,7 @@ public class DownloadService {
     public String getDownloadFileName(EntryDownloadReq req) {
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getStatus, STATUS_UNDELETED)
+                        .eq(Entry::getStatus, DbConsts.STATUS_UNDELETED)
                         .in(Entry::getId, req.getIds()));
 
         if (entries == null || entries.isEmpty()) {
@@ -107,7 +107,7 @@ public class DownloadService {
         }
 
         // 单文件下载：直接返回文件名
-        if (entries.size() == 1 && entries.get(0).getEntryType() == TYPE_FILE) {
+        if (entries.size() == 1 && entries.get(0).getEntryType() == DbConsts.TYPE_FILE) {
             return entries.get(0).getEntryName();
         }
 
@@ -125,14 +125,14 @@ public class DownloadService {
         List<Entry> roots = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
                         .in(Entry::getId, entryIds)
-                        .eq(Entry::getStatus, STATUS_UNDELETED));
+                        .eq(Entry::getStatus, DbConsts.STATUS_UNDELETED));
 
         if (roots == null || roots.isEmpty()) {
             return tasks;
         }
 
         // 单文件直接返回，无需查子节点
-        if (roots.size() == 1 && roots.get(0).getEntryType() == TYPE_FILE) {
+        if (roots.size() == 1 && roots.get(0).getEntryType() == DbConsts.TYPE_FILE) {
             Entry file = roots.get(0);
             Storage storage = storageMapper.selectById(file.getStorageId());
             if (storage != null) {
@@ -144,7 +144,7 @@ public class DownloadService {
 
         // 2. 收集文件夹ID，递归查询所有后代节点
         List<Long> folderIds = roots.stream()
-                .filter(e -> e.getEntryType() == TYPE_FOLDER)
+                .filter(e -> e.getEntryType() == DbConsts.TYPE_FOLDER)
                 .map(Entry::getId)
                 .toList();
 
@@ -161,7 +161,7 @@ public class DownloadService {
         // 4. 遍历根节点，构建下载任务tre
         for (Entry root : roots) {
             String rootPath = root.getEntryName();
-            if (root.getEntryType() == TYPE_FOLDER) {
+            if (root.getEntryType() == DbConsts.TYPE_FOLDER) {
                 // 文件夹：递归遍历所有子节点，生成带路径的下载任务
                 buildTasks(root, rootPath, childrenMap, storageMap, tasks);
             } else {
@@ -186,7 +186,7 @@ public class DownloadService {
 
         // 收集根节点中的文件 storageId
         for (Entry root : roots) {
-            if (root.getEntryType() == TYPE_FILE && root.getStorageId() != null && root.getStorageId() != 0) {
+            if (root.getEntryType() == DbConsts.TYPE_FILE && root.getStorageId() != null && root.getStorageId() != 0) {
                 storageIds.add(root.getStorageId());
             }
         }
@@ -194,7 +194,7 @@ public class DownloadService {
         // 收集后代节点中的文件 storageId
         for (List<Entry> children : childrenMap.values()) {
             for (Entry child : children) {
-                if (child.getEntryType() == TYPE_FILE && child.getStorageId() != null && child.getStorageId() != 0) {
+                if (child.getEntryType() == DbConsts.TYPE_FILE && child.getStorageId() != null && child.getStorageId() != 0) {
                     storageIds.add(child.getStorageId());
                 }
             }
@@ -224,13 +224,13 @@ public class DownloadService {
                             Map<Long, List<Entry>> childrenMap,
                             Map<Long, Storage> storageMap,
                             List<DownloadTask> tasks) {
-        if (node.getEntryType() == TYPE_FOLDER) {
+        if (node.getEntryType() == DbConsts.TYPE_FOLDER) {
             tasks.add(DownloadTask.emptyDir(currentPath + "/"));
 
             List<Entry> children = childrenMap.getOrDefault(node.getId(), Collections.emptyList());
             for (Entry child : children) {
                 String childPath = currentPath + "/" + child.getEntryName();
-                if (child.getEntryType() == TYPE_FOLDER) {
+                if (child.getEntryType() == DbConsts.TYPE_FOLDER) {
                     buildTasks(child, childPath, childrenMap, storageMap, tasks);
                 } else {
                     Storage storage = storageMap.get(child.getStorageId());

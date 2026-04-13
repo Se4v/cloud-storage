@@ -5,6 +5,7 @@ import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.mapper.StorageMapper;
@@ -49,10 +50,11 @@ public class PersonalService {
         this.minioClient = minioClient;
     }
 
-    public List<Entry> listEntries(Long driveId, Long parentId, Long userId) {
+    public List<Entry> listEntries(Long driveId, Long parentId) {
+        Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getParentId, parentId)
                         .eq(Entry::getDriveId, driveId)
                         .eq(Entry::getStatus, UNDELETED));
@@ -61,10 +63,11 @@ public class PersonalService {
         return entries;
     }
 
-    public List<FolderTreeResp> listFolders(Long driveId, Long userId) {
+    public List<FolderTreeResp> listFolders(Long driveId) {
+        Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getDriveId, driveId)
                         .eq(Entry::getEntryType, FOLDER)
                         .eq(Entry::getStatus, UNDELETED));
@@ -109,14 +112,15 @@ public class PersonalService {
     }
 
     @Transactional
-    public void createFolder(FolderCreationReq req, Long userId) {
+    public void createFolder(FolderCreationReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         // 校验目录是否存在且属于自己
         if (req.getParentId() > 0) {
             Entry parent = entryMapper.selectOne(
                     Wrappers.<Entry>lambdaQuery()
                             .eq(Entry::getId, req.getParentId())
                             .eq(Entry::getDriveId, req.getDriveId())
-                            .eq(Entry::getUserId, userId)
+                            .eq(Entry::getUserId, currentUserId)
                             .eq(Entry::getEntryType, FOLDER)
                             .eq(Entry::getStatus, UNDELETED));
             if (parent == null) throw new BusinessException("<UNK>");
@@ -133,7 +137,7 @@ public class PersonalService {
         // 创建记录
         Entry folder = Entry.builder()
                 .driveId(req.getDriveId())
-                .userId(userId)
+                .userId(currentUserId)
                 .parentId(req.getParentId())
                 .storageId(0L)
                 .entryName(req.getFolderName())
@@ -145,14 +149,15 @@ public class PersonalService {
     }
 
     @Transactional
-    public void moveEntries(EntryMoveReq req, Long userId) {
+    public void moveEntries(EntryMoveReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         // 校验当前文件夹是否存在且属于自己
         if (req.getTargetId() > 0) {
             Entry entry = entryMapper.selectOne(
                     Wrappers.<Entry>lambdaQuery()
                             .eq(Entry::getId, req.getTargetId())
                             .eq(Entry::getDriveId, req.getDriveId())
-                            .eq(Entry::getUserId, userId)
+                            .eq(Entry::getUserId, currentUserId)
                             .eq(Entry::getEntryType, FOLDER)
                             .eq(Entry::getStatus, UNDELETED));
             if (entry == null) throw new BusinessException("Entry does not exist");
@@ -161,19 +166,20 @@ public class PersonalService {
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
                         .set(Entry::getParentId, req.getTargetId())
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .in(Entry::getId, req.getIds()));
         if (count != req.getIds().size()) throw new BusinessException("Move entry failed");
     }
 
     @Transactional
-    public void copyEntry(EntryCopyReq req, Long userId) {
+    public void copyEntry(EntryCopyReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         if (req.getTargetId() > 0) {
             Entry parent = entryMapper.selectOne(
                     Wrappers.<Entry>lambdaQuery()
                             .eq(Entry::getId, req.getTargetId())
                             .eq(Entry::getDriveId, req.getDriveId())
-                            .eq(Entry::getUserId, userId)
+                            .eq(Entry::getUserId, currentUserId)
                             .eq(Entry::getEntryType, FOLDER)
                             .eq(Entry::getStatus, UNDELETED));
             if (parent == null) throw new BusinessException("<UNK>");
@@ -194,7 +200,7 @@ public class PersonalService {
 
         Entry copyEntry = Entry.builder()
                 .driveId(entry.getDriveId())
-                .userId(userId)
+                .userId(currentUserId)
                 .parentId(req.getTargetId())
                 .storageId(entry.getStorageId())
                 .entryName(entryName)
@@ -215,12 +221,13 @@ public class PersonalService {
     }
 
     @Transactional
-    public void renameEntry(EntryRenameReq req, Long userId) {
+    public void renameEntry(EntryRenameReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getId, req.getId())
                         .eq(Entry::getDriveId, req.getDriveId())
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getStatus, UNDELETED));
         if (existedEntry == null) throw new BusinessException("Entry does not exist");
 
@@ -244,7 +251,8 @@ public class PersonalService {
     }
 
     @Transactional
-    public void deleteEntries(EntryDeletionReq req, Long userId) {
+    public void deleteEntries(EntryDeletionReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         // 查询要删除的条目
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
@@ -255,21 +263,22 @@ public class PersonalService {
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
                         .set(Entry::getStatus, DELETED)
-                        .set(Entry::getDeleterId, userId)
+                        .set(Entry::getDeleterId, currentUserId)
                         .set(Entry::getDeletedAt, LocalDateTime.now())
                         .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .in(Entry::getId, req.getIds()));
         if (count != entries.size()) throw new BusinessException("Delete entry failed");
     }
 
     @Transactional
-    public void shareEntry(EntryShareReq req, Long userId) {
+    public void shareEntry(EntryShareReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getId, req.getId())
                         .eq(Entry::getDriveId, req.getDriveId())
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getStatus, UNDELETED));
         if (existedEntry == null) throw new BusinessException("文件条目不存在");
 
@@ -281,7 +290,7 @@ public class PersonalService {
                 .driveId(existedEntry.getDriveId())
                 .entryId(existedEntry.getId())
                 .entryType(existedEntry.getEntryType())
-                .userId(userId)
+                .userId(currentUserId)
                 .linkName(req.getLinkName())
                 .linkType(req.getLinkType())
                 .linkKey(generateLinkKey())
@@ -293,12 +302,13 @@ public class PersonalService {
         if (count != 1) throw new BusinessException("Create share link failed");
     }
 
-    public String preview(Long id, Long driveId, Long userId) {
+    public String preview(Long id, Long driveId) {
+        Long currentUserId = SecurityUtils.getUserId();
         Entry entry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getId, id)
                         .eq(Entry::getDriveId, driveId)
-                        .eq(Entry::getUserId, userId)
+                        .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getStatus, UNDELETED));
         if (entry == null) throw new BusinessException("Entry does not exist");
 

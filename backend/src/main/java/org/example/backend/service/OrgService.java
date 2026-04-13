@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.NodeMapper;
@@ -38,10 +39,11 @@ public class OrgService {
         this.userMapper = userMapper;
     }
 
-    public List<OrgNodeTreeResp> getOrgTree(Long userId) {
+    public List<OrgNodeTreeResp> getOrgTree() {
+        Long currentUserId = SecurityUtils.getUserId();
         List<Member> members = memberMapper.selectList(
                 Wrappers.<Member>lambdaQuery()
-                        .eq(Member::getUserId, userId));
+                        .eq(Member::getUserId, currentUserId));
 
         List<Long> childNodeIds = members.stream().map(Member::getNodeId).toList();
         List<Node> nodeList = nodeMapper.selectNodeWithParents(childNodeIds);

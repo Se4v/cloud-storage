@@ -1,7 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.request.file.*;
 import org.example.backend.model.response.file.*;
@@ -36,42 +35,37 @@ public class EnterpriseController {
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody UploadInitReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        UploadInitResp resp = uploadService.initUpload(req, currentUserId);
+        UploadInitResp resp = uploadService.initUpload(req);
         return Result.success(resp);
     }
 
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/simple-upload")
     public Result<?> directUpload(@RequestBody DirectUploadReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        DirectUploadResp resp = uploadService.directUpload(req, currentUserId);
+        DirectUploadResp resp = uploadService.directUpload(req);
         return Result.success(resp);
     }
 
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/upload-chunk")
     public Result<?> uploadChunk(@RequestBody ChunkUploadReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        ChunkUploadResp resp = uploadService.uploadChunk(req, currentUserId);
+        ChunkUploadResp resp = uploadService.uploadChunk(req);
         return Result.success(resp);
     }
 
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/merge-chunks")
     public Result<?> mergeChunks(@RequestBody ChunkMergeReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        ChunkMergeResp resp = uploadService.mergeChunks(req, currentUserId);
+        ChunkMergeResp resp = uploadService.mergeChunks(req);
         return Result.success(resp);
     }
 
     @PreAuthorize("hasAuthority('file:dowanload')")
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody EntryDownloadReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
         String fileName = downloadService.getDownloadFileName(req);
 
-        StreamingResponseBody stream = downloadService.download(req, currentUserId);
+        StreamingResponseBody stream = downloadService.download(req);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -86,8 +80,7 @@ public class EnterpriseController {
     @PreAuthorize("hasAuthority('file:list')")
     @GetMapping
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        List<Entry> entries = enterpriseService.listEntries(driveId, parentId, currentOrgId);
+        List<Entry> entries = enterpriseService.listEntries(driveId, parentId);
         List<EntryResp> resp = entries.stream().map(entry -> EntryResp.builder()
                 .id(entry.getId())
                 .name(entry.getEntryName())
@@ -101,68 +94,56 @@ public class EnterpriseController {
 
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        List<FolderTreeResp> resp = enterpriseService.listFolders(driveId, currentOrgId);
+        List<FolderTreeResp> resp = enterpriseService.listFolders(driveId);
         return Result.success(resp);
     }
 
     @PreAuthorize("hasAuthority('file:mkdir')")
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody FolderCreationReq req) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        Long currentUserId = SecurityUtil.getUserId();
-        enterpriseService.createFolder(req, currentUserId, currentOrgId);
+        enterpriseService.createFolder(req);
         return Result.success();
     }
 
     @PreAuthorize("hasAuthority('file:move')")
     @PostMapping("/move")
     public Result<?> moveEntries(@RequestBody EntryMoveReq req) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        enterpriseService.moveEntries(req, currentOrgId);
+        enterpriseService.moveEntries(req);
         return Result.success();
     }
 
     @PreAuthorize("hasAuthority('file:copy')")
     @PostMapping("/copy")
     public Result<?> copyEntry(@RequestBody EntryCopyReq req) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        Long currentUserId = SecurityUtil.getUserId();
-        enterpriseService.copyEntry(req, currentUserId, currentOrgId);
+        enterpriseService.copyEntry(req);
         return Result.success();
     }
 
     @PreAuthorize("hasAuthority('file:rename')")
     @PostMapping("/rename")
     public Result<?> renameEntry(@RequestBody EntryRenameReq req) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        enterpriseService.renameEntry(req, currentOrgId);
+        enterpriseService.renameEntry(req);
         return Result.success();
     }
 
     @PreAuthorize("hasAuthority('file:delete')")
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody EntryDeletionReq req) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        Long currentUserId = SecurityUtil.getUserId();
-        enterpriseService.deleteEntries(req, currentUserId, currentOrgId);
+        enterpriseService.deleteEntries(req);
         return Result.success();
     }
 
     @PreAuthorize("hasAuthority('file:share')")
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody EntryShareReq req) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        Long currentUserId = SecurityUtil.getUserId();
-        enterpriseService.shareEntry(req, currentUserId, currentOrgId);
+        enterpriseService.shareEntry(req);
         return Result.success();
     }
 
     @PreAuthorize("hasAuthority('file:view')")
     @GetMapping("/preview")
     public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {
-        Long currentOrgId = SecurityUtil.getOrgId();
-        String url = enterpriseService.preview(id, driveId, currentOrgId);
+        String url = enterpriseService.preview(id, driveId);
         return Result.success(url);
     }
 }

@@ -10,6 +10,7 @@ import io.minio.http.Method;
 import io.minio.messages.Part;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.config.MinioConfig;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
@@ -103,7 +104,8 @@ public class UploadService {
         this.trafficMapper = trafficMapper;
     }
 
-    public UploadInitResp initUpload(UploadInitReq req, Long userId) {
+    public UploadInitResp initUpload(UploadInitReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
         List<UploadInitResp.Item> items = new ArrayList<>();
         int successCount = 0;
 
@@ -121,7 +123,7 @@ public class UploadService {
 
         for (UploadInitReq.Item reqItem : req.getItems()) {
             try {
-                UploadInitResp.Item respItem = initSingleUpload(reqItem, req, userId);
+                UploadInitResp.Item respItem = initSingleUpload(reqItem, req, currentUserId);
                 if (Boolean.TRUE.equals(respItem.getSuccess())) {
                     successCount++;
                 }
@@ -146,8 +148,9 @@ public class UploadService {
                 .build();
     }
 
-    public DirectUploadResp directUpload(DirectUploadReq req, Long userId) {
-        String taskKey = getTaskKey(userId, req.getSha256());
+    public DirectUploadResp directUpload(DirectUploadReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
+        String taskKey = getTaskKey(currentUserId, req.getSha256());
         Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
         String uploadType = taskMap.get(FIELD_UPLOAD_TYPE).toString();
         if (taskMap.isEmpty() || !UPLOAD_TYPE_DIRECT.equals(uploadType)) {
@@ -158,7 +161,7 @@ public class UploadService {
         String objectName = taskMap.get(FIELD_OBJECT_NAME).toString();
         ensureObjectExists(bucketName, objectName);
 
-        self.persistUploadedFile(taskMap, req.getSha256(), userId);
+        self.persistUploadedFile(taskMap, req.getSha256(), currentUserId);
         redisTemplate.delete(taskKey);
 
         String entryName = taskMap.get(FIELD_ENTRY_NAME).toString();
@@ -169,11 +172,12 @@ public class UploadService {
                 .build();
     }
 
-    public ChunkUploadResp uploadChunk(ChunkUploadReq req, Long userId) {
+    public ChunkUploadResp uploadChunk(ChunkUploadReq req) {
         List<ChunkUploadResp.Item> items = new ArrayList<>();
+        Long currentUserId = SecurityUtils.getUserId();
         for (ChunkUploadReq.Item item : req.getItems()) {
             try {
-                String taskKey = getTaskKey(userId, item.getSha256());
+                String taskKey = getTaskKey(currentUserId, item.getSha256());
                 Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
                 if (taskMap.isEmpty()) {
                     throw new BusinessException("任务不存在或已过期");
@@ -186,7 +190,7 @@ public class UploadService {
 
                 if (item.getEtag() == null || item.getEtag().isBlank()) throw new BusinessException("");
 
-                String chunksKey = getChunksKey(userId, item.getSha256());
+                String chunksKey = getChunksKey(currentUserId, item.getSha256());
                 Object existingEtag = redisTemplate.opsForHash().get(chunksKey, item.getChunkNumber());
                 if (existingEtag == null) {
                     redisTemplate.opsForHash().put(chunksKey, item.getChunkNumber(), item.getEtag());
@@ -219,9 +223,10 @@ public class UploadService {
         return ChunkUploadResp.builder().items(items).build();
     }
 
-    public ChunkMergeResp mergeChunks(ChunkMergeReq req, Long userId) {
-        String taskKey = getTaskKey(userId, req.getSha256());
-        String chunksKey = getChunksKey(userId, req.getSha256());
+    public ChunkMergeResp mergeChunks(ChunkMergeReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
+        String taskKey = getTaskKey(currentUserId, req.getSha256());
+        String chunksKey = getChunksKey(currentUserId, req.getSha256());
 
         try {
             Map<Object, Object> taskMap = redisTemplate.opsForHash().entries(taskKey);
@@ -255,7 +260,7 @@ public class UploadService {
             ).get();
 
             ensureObjectExists(bucketName, objectName);
-            self.persistUploadedFile(taskMap, req.getSha256(), userId);
+            self.persistUploadedFile(taskMap, req.getSha256(), currentUserId);
             redisTemplate.delete(taskKey);
             redisTemplate.delete(chunksKey);
 

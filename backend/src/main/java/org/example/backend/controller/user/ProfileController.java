@@ -1,7 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.user.PasswordChangeReq;
 import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.request.user.ProfileUpdateReq;
@@ -26,8 +25,7 @@ public class ProfileController {
      */
     @GetMapping("/avatar")
     public Result<?> getAvatar() {
-        Long currentUserId = SecurityUtil.getUserId();
-        String avatarUrl = profileService.getAvatar(currentUserId);
+        String avatarUrl = profileService.getAvatar();
         return Result.success(avatarUrl);
     }
 
@@ -39,8 +37,7 @@ public class ProfileController {
     @GetMapping("/avatar/upload-url")
     public Result<?> getAvatarUploadUrl(@RequestParam String fileName,
                                         @RequestParam(required = false) Long fileSize) {
-        Long currentUserId = SecurityUtil.getUserId();
-        AvatarUploadResp resp = profileService.getAvatarUploadUrl(fileName, fileSize, currentUserId);
+        AvatarUploadResp resp = profileService.getAvatarUploadUrl(fileName, fileSize);
         return Result.success(resp);
     }
 
@@ -51,8 +48,7 @@ public class ProfileController {
      */
     @PostMapping("/avatar")
     public Result<?> updateAvatar(@RequestBody AvatarUpdateReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        profileService.updateAvatar(req, currentUserId);
+        profileService.updateAvatar(req);
         return Result.success();
     }
 
@@ -62,8 +58,7 @@ public class ProfileController {
      */
     @GetMapping
     public Result<?> getProfile() {
-        Long currentUserId = SecurityUtil.getUserId();
-        User user = profileService.getProfile(currentUserId);
+        User user = profileService.getProfile();
 
         ProfileResp resp = ProfileResp.builder()
                 .userId(user.getId())
@@ -84,8 +79,7 @@ public class ProfileController {
      */
     @PostMapping
     public Result<?> updateProfile(@RequestBody ProfileUpdateReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        profileService.updateProfile(req, currentUserId);
+        profileService.updateProfile(req);
         return Result.success();
     }
 
@@ -96,8 +90,7 @@ public class ProfileController {
      */
     @PostMapping("/password")
     public Result<?> updatePassword(@RequestBody PasswordChangeReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        profileService.updatePassword(req, currentUserId);
+        profileService.updatePassword(req);
         return Result.success();
     }
 }

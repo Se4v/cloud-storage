@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
@@ -17,9 +18,6 @@ import java.util.stream.Collectors;
 public class EntryService {
     private final EntryMapper entryMapper;
     private final StorageMapper storageMapper;
-
-    private static final int TYPE_FILE = 1;
-    private static final int STATUS_PERMANENT_DELETED = 3;
 
     public EntryService(EntryMapper entryMapper, StorageMapper storageMapper) {
         this.entryMapper = entryMapper;
@@ -39,7 +37,7 @@ public class EntryService {
         List<Long> folderIds = new ArrayList<>();
         List<Long> storageIds = new ArrayList<>();
         entries.forEach(entry -> {
-            if (entry.getEntryType() == TYPE_FILE) {
+            if (entry.getEntryType() == DbConsts.TYPE_FILE) {
                 fileIds.add(entry.getId());
                 storageIds.add(entry.getStorageId());
             } else {
@@ -53,7 +51,7 @@ public class EntryService {
         if (!folderIds.isEmpty()) {
             List<Entry> children = entryMapper.selectDescendantsByFolderId(folderIds);
             children.forEach(entry -> {
-                if (entry.getEntryType() == TYPE_FILE) {
+                if (entry.getEntryType() == DbConsts.TYPE_FILE) {
                     allChildFileIds.add(entry.getId());
                     storageIds.add(entry.getStorageId());
                 } else {
@@ -68,7 +66,7 @@ public class EntryService {
         if (!allFileIds.isEmpty()) {
             int count = entryMapper.update(
                     Wrappers.<Entry>lambdaUpdate()
-                            .set(Entry::getStatus, STATUS_PERMANENT_DELETED)
+                            .set(Entry::getStatus, DbConsts.STATUS_PERMANENT_DELETED)
                             .in(Entry::getId, allFileIds));
             if (count != allFileIds.size()) throw new BusinessException("Permanently Delete files failed");
         }
@@ -79,7 +77,7 @@ public class EntryService {
         if (!allFolderIds.isEmpty()) {
             int count = entryMapper.update(
                     Wrappers.<Entry>lambdaUpdate()
-                            .set(Entry::getStatus, STATUS_PERMANENT_DELETED)
+                            .set(Entry::getStatus, DbConsts.STATUS_PERMANENT_DELETED)
                             .in(Entry::getId, allFolderIds));
             if (count != allFolderIds.size()) throw new BusinessException("Permanently Delete folders failed");
         }

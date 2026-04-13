@@ -1,7 +1,6 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
-import org.example.backend.common.util.SecurityUtil;
 import org.example.backend.model.request.share.LinkDeletionReq;
 import org.example.backend.model.request.share.LinkUpdateReq;
 import org.example.backend.model.entity.Share;
@@ -22,8 +21,7 @@ public class ShareLinkController {
 
     @GetMapping
     public Result<?> listLinks() {
-        Long currentUserId = SecurityUtil.getUserId();
-        List<Share> shareList = shareService.listLinks(currentUserId);
+        List<Share> shareList = shareService.listLinks();
 
         List<ShareLinkResp> resp = shareList.stream()
                 .map(share -> ShareLinkResp.builder()
@@ -43,15 +41,13 @@ public class ShareLinkController {
 
     @PostMapping("/update")
     public Result<?> updateLink(@RequestBody LinkUpdateReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        shareService.updateLink(req, currentUserId);
+        shareService.updateLink(req);
         return Result.success();
     }
 
     @PostMapping("/delete")
     public Result<?> deleteLinks(@RequestBody LinkDeletionReq req) {
-        Long currentUserId = SecurityUtil.getUserId();
-        shareService.deleteLinks(req, currentUserId);
+        shareService.deleteLinks(req);
         return Result.success();
     }
 }

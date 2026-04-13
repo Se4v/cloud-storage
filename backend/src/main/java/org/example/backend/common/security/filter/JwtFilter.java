@@ -4,8 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.backend.common.constant.RedisConsts;
 import org.example.backend.common.security.LoginUser;
-import org.example.backend.common.util.JwtUtil;
+import org.example.backend.common.util.JwtUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,15 +19,14 @@ import java.util.*;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public JwtFilter(RedisTemplate<String, Object> redisTemplate, JwtUtil jwtUtil) {
+    public JwtFilter(RedisTemplate<String, Object> redisTemplate, JwtUtils jwtUtils) {
         this.redisTemplate = redisTemplate;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
     }
 
-    private static final String KEY_AUTH_USER = "auth:user:";
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
     private static final String ROLE_MANAGER = "ROLE_MANAGER";
 
@@ -43,12 +43,12 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7);
-        if (!jwtUtil.validateToken(token)) {
+        if (!jwtUtils.validateToken(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized2");
             return;
         }
 
-        LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(KEY_AUTH_USER + token);
+        LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(RedisConsts.KEY_AUTH_USER + token);
         if (loginUser == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized3");
             return;

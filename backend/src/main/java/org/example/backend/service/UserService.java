@@ -3,7 +3,7 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.common.util.SecurityUtil;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.*;
 import org.example.backend.model.request.role.SystemRoleAssignmentReq;
 import org.example.backend.model.request.user.PasswordResetReq;
@@ -121,8 +121,8 @@ public class UserService {
     public List<UserResp> listAllUsers() {
         // 筛选部门管理查看的数据
         List<Long> manageUserIds = null;
-        if (!SecurityUtil.isSuperAdmin()) {
-            List<Long> manageNodeIds = SecurityUtil.getManageNodeIds();
+        if (!SecurityUtils.isSuperAdmin()) {
+            List<Long> manageNodeIds = SecurityUtils.getManageNodeIds();
             if (manageNodeIds.isEmpty()) return List.of();
             List<Member> members = memberMapper.selectList(
                     Wrappers.<Member>lambdaQuery().in(Member::getNodeId, manageNodeIds));

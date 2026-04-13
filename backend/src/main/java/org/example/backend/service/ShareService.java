@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.model.request.share.LinkDeletionReq;
 import org.example.backend.model.request.share.LinkUpdateReq;
@@ -22,11 +23,12 @@ public class ShareService {
         this.shareMapper = shareMapper;
     }
 
-    public List<Share> listLinks(Long userId) {
+    public List<Share> listLinks() {
         // 查询分享链接列表
+        Long currentUserId = SecurityUtils.getUserId();
         List<Share> shareList = shareMapper.selectList(
                 Wrappers.<Share>lambdaQuery()
-                        .eq(Share::getUserId, userId)
+                        .eq(Share::getUserId, currentUserId)
                         .eq(Share::getIsDeleted, UNDELETED));
 
         if (shareList == null || shareList.isEmpty()) return List.of();
@@ -35,11 +37,12 @@ public class ShareService {
     }
 
     @Transactional
-    public void updateLink(LinkUpdateReq req, Long userId) {
+    public void updateLink(LinkUpdateReq req) {
         // 判断分享链接是否存在
+        Long currentUserId = SecurityUtils.getUserId();
         Share link = shareMapper.selectOne(
                 Wrappers.<Share>lambdaQuery()
-                        .eq(Share::getUserId, userId)
+                        .eq(Share::getUserId, currentUserId)
                         .eq(Share::getIsDeleted, UNDELETED));
         if (link == null) throw new BusinessException("分享链接不存在");
 
@@ -51,20 +54,20 @@ public class ShareService {
                         .set(Share::getAccessCode, accessCode)
                         .set(Share::getExpiredAt, req.getExpireTime())
                         .set(Share::getLinkType, req.getLinkType())
-                        .eq(Share::getUserId, userId)
+                        .eq(Share::getUserId, currentUserId)
                         .eq(Share::getId, req.getId()));
         if (count != 1) throw new BusinessException("更新分享链接信息失败");
     }
 
     @Transactional
-    public void deleteLinks(LinkDeletionReq req, Long userId) {
-        List<Long> linkIds = req.getLinkIds();
+    public void deleteLinks(LinkDeletionReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
 
         int count = shareMapper.update(
                 Wrappers.<Share>lambdaUpdate()
                         .set(Share::getIsDeleted, DELETED)
-                        .eq(Share::getUserId, userId)
-                        .in(Share::getId, linkIds));
-        if (count != linkIds.size()) throw new BusinessException("删除分享链接失败");
+                        .eq(Share::getUserId, currentUserId)
+                        .in(Share::getId, req.getLinkIds()));
+        if (count != req.getLinkIds().size()) throw new BusinessException("删除分享链接失败");
     }
 }

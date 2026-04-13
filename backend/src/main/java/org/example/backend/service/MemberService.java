@@ -2,7 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.common.util.SecurityUtil;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.MemberMapper;
 import org.example.backend.mapper.NodeMapper;
 import org.example.backend.mapper.RoleMapper;
@@ -100,8 +100,8 @@ public class MemberService {
 
     public List<MemberResp> listAllMembers() {
         List<Long> manageNodeIds = null;
-        if (!SecurityUtil.isSuperAdmin()) {
-            manageNodeIds = SecurityUtil.getManageNodeIds();
+        if (!SecurityUtils.isSuperAdmin()) {
+            manageNodeIds = SecurityUtils.getManageNodeIds();
         }
 
         List<Member> members = memberMapper.selectList(

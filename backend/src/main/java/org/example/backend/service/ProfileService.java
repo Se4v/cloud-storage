@@ -6,6 +6,7 @@ import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.UserMapper;
 import org.example.backend.model.request.user.AvatarUpdateReq;
 import org.example.backend.model.entity.User;
@@ -36,9 +37,10 @@ public class ProfileService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String getAvatar(Long userId) {
+    public String getAvatar() {
         // 判断用户是否存在
-        User user = userMapper.selectById(userId);
+        Long currentUserId = SecurityUtils.getUserId();
+        User user = userMapper.selectById(currentUserId);
         if (user == null) throw new BusinessException("用户不存在");
 
         // 获取头像预处理链接
@@ -58,9 +60,10 @@ public class ProfileService {
         return url;
     }
 
-    public AvatarUploadResp getAvatarUploadUrl(String fileName, Long fileSize, Long userId) {
+    public AvatarUploadResp getAvatarUploadUrl(String fileName, Long fileSize) {
         // 判断用户是否存在
-        User user = userMapper.selectById(userId);
+        Long currentUserId = SecurityUtils.getUserId();
+        User user = userMapper.selectById(currentUserId);
         if (user == null) throw new BusinessException("用户不存在");
 
         // 校验文件大小
@@ -70,7 +73,7 @@ public class ProfileService {
         String ext = getFileExtension(fileName);
         if (!Arrays.asList("jpg", "jpeg", "png").contains(ext)) throw new BusinessException("格式不支持");
 
-        String objectName = String.format("user/%d/%s.%s", userId, UUID.randomUUID(), ext);
+        String objectName = String.format("user/%d/%s.%s", currentUserId, UUID.randomUUID(), ext);
 
         try {
             // 生成预签名 PUT 链接
@@ -95,9 +98,10 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updateAvatar(AvatarUpdateReq req, Long userId) {
+    public void updateAvatar(AvatarUpdateReq req) {
         // 判断用户是否存在
-        User user = userMapper.selectById(userId);
+        Long currentUserId = SecurityUtils.getUserId();
+        User user = userMapper.selectById(currentUserId);
         if (user == null) throw new BusinessException("用户不存在");
 
         // 更新头像信息
@@ -108,16 +112,18 @@ public class ProfileService {
         if (count != 1) throw new BusinessException("<UNK>");
     }
 
-    public User getProfile(Long userId) {
-        User user = userMapper.selectById(userId);
+    public User getProfile() {
+        Long currentUserId = SecurityUtils.getUserId();
+        User user = userMapper.selectById(currentUserId);
         if (user == null) throw new BusinessException("用户不存在");
         return user;
     }
 
     @Transactional
-    public void updateProfile(ProfileUpdateReq req, Long userId) {
+    public void updateProfile(ProfileUpdateReq req) {
         // 判断用户是否存在
-        User user = userMapper.selectById(userId);
+        Long currentUserId = SecurityUtils.getUserId();
+        User user = userMapper.selectById(currentUserId);
         if (user == null) throw new BusinessException("<UNK>");
 
         // 更新用户信息
@@ -130,9 +136,10 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updatePassword(PasswordChangeReq req, Long userId) {
+    public void updatePassword(PasswordChangeReq req) {
         // 判断用户是否存在
-        User user = userMapper.selectById(userId);
+        Long currentUserId = SecurityUtils.getUserId();
+        User user = userMapper.selectById(currentUserId);
         if (user == null) throw new BusinessException("用户不存在");
 
         // 密码比对

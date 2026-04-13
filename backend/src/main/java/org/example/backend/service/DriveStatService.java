@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.mapper.ConfigMapper;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.model.entity.Config;
@@ -27,7 +28,7 @@ public class DriveStatService {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getConfigKey, "total_quota")
-                        .eq(Config::getIsEnabled, 1));
+                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
         Long totalQuota = Long.parseLong(config.getConfigValue());
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();
@@ -68,7 +69,7 @@ public class DriveStatService {
     public List<DriveDetailResp> getEnterpriseDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getDriveType, 2));
+                        .eq(Drive::getDriveType, DbConsts.TYPE_ENTERPRISE));
 
         List<DriveDetailResp> resp = drives.stream()
                 .map(drive -> {
@@ -88,7 +89,7 @@ public class DriveStatService {
     public List<DriveDetailResp> getPersonalDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getDriveType, 1));
+                        .eq(Drive::getDriveType, DbConsts.TYPE_PERSONAL));
 
         List<DriveDetailResp> resp = drives.stream()
                 .map(drive -> {

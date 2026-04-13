@@ -5,6 +5,7 @@ import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
@@ -53,8 +54,9 @@ public class EnterpriseService {
         this.minioClient = minioClient;
     }
 
-    public List<Entry> listEntries(Long driveId, Long parentId, Long orgId) {
-        if (!isMemberOfOrganization(driveId, orgId)) throw new BusinessException("未授权操作");
+    public List<Entry> listEntries(Long driveId, Long parentId) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(driveId, currentOrgId)) throw new BusinessException("未授权操作");
 
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
@@ -66,8 +68,9 @@ public class EnterpriseService {
         return entries;
     }
 
-    public List<FolderTreeResp> listFolders(Long driveId, Long orgId) {
-        if (!isMemberOfOrganization(driveId, orgId)) throw new BusinessException("未授权操作");
+    public List<FolderTreeResp> listFolders(Long driveId) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(driveId, currentOrgId)) throw new BusinessException("未授权操作");
 
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
@@ -117,8 +120,9 @@ public class EnterpriseService {
     }
 
     @Transactional
-    public void createFolder(FolderCreationReq req, Long userId, Long orgId) {
-        if (!isMemberOfOrganization(req.getDriveId(), orgId)) throw new BusinessException("未授权操作");
+    public void createFolder(FolderCreationReq req) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentOrgId)) throw new BusinessException("未授权操作");
 
         if (req.getParentId() > 0) {
             Entry dir = entryMapper.selectOne(
@@ -139,9 +143,10 @@ public class EnterpriseService {
         if (sameEntry != null) throw new BusinessException("Folder already exists");
 
         // 创建记录
+        Long currentUserId = SecurityUtils.getUserId();
         Entry folder = Entry.builder()
                 .driveId(req.getDriveId())
-                .userId(userId)
+                .userId(currentUserId)
                 .parentId(req.getParentId())
                 .storageId(0L)
                 .entryName(req.getFolderName())
@@ -153,8 +158,9 @@ public class EnterpriseService {
     }
 
     @Transactional
-    public void moveEntries(EntryMoveReq req, Long orgId) {
-        if (!isMemberOfOrganization(req.getDriveId(), orgId)) throw new BusinessException("未授权操作");
+    public void moveEntries(EntryMoveReq req) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentOrgId)) throw new BusinessException("未授权操作");
 
         if (req.getTargetId() > 0) {
             Entry entry = entryMapper.selectOne(
@@ -175,8 +181,9 @@ public class EnterpriseService {
     }
 
     @Transactional
-    public void copyEntry(EntryCopyReq req, Long userId, Long orgId) {
-        if (!isMemberOfOrganization(req.getDriveId(), orgId)) throw new BusinessException("未授权操作");
+    public void copyEntry(EntryCopyReq req) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentOrgId)) throw new BusinessException("未授权操作");
 
         if (req.getTargetId() > 0) {
             Entry dir = entryMapper.selectOne(
@@ -203,9 +210,10 @@ public class EnterpriseService {
                 entry.getEntryName() :
                 entry.getEntryName() + "-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
 
+        Long currentUserId = SecurityUtils.getUserId();
         Entry copyEntry = Entry.builder()
                 .driveId(entry.getDriveId())
-                .userId(userId)
+                .userId(currentUserId)
                 .parentId(req.getTargetId())
                 .storageId(entry.getStorageId())
                 .entryName(entryName)
@@ -225,8 +233,9 @@ public class EnterpriseService {
     }
 
     @Transactional
-    public void renameEntry(EntryRenameReq req, Long orgId) {
-        if (!isMemberOfOrganization(req.getDriveId(), orgId)) throw new BusinessException("未授权操作");
+    public void renameEntry(EntryRenameReq req) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentOrgId)) throw new BusinessException("未授权操作");
 
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
@@ -256,8 +265,9 @@ public class EnterpriseService {
     }
 
     @Transactional
-    public void deleteEntries(EntryDeletionReq req, Long userId, Long orgId) {
-        if (!isMemberOfOrganization(req.getDriveId(), orgId)) throw new BusinessException("未授权操作");
+    public void deleteEntries(EntryDeletionReq req) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentOrgId)) throw new BusinessException("未授权操作");
 
         // 查询要删除的条目
         List<Entry> entries = entryMapper.selectList(
@@ -269,10 +279,11 @@ public class EnterpriseService {
             throw new BusinessException("entry does not exist");
         }
 
+        Long currentUserId = SecurityUtils.getUserId();
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
                         .set(Entry::getStatus, DELETED)
-                        .set(Entry::getDeleterId, userId)
+                        .set(Entry::getDeleterId, currentUserId)
                         .set(Entry::getDeletedAt, LocalDateTime.now())
                         .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
                         .eq(Entry::getDriveId, req.getDriveId())
@@ -281,8 +292,9 @@ public class EnterpriseService {
     }
 
     @Transactional
-    public void shareEntry(EntryShareReq req, Long userId, Long orgId) {
-        if (!isMemberOfOrganization(req.getDriveId(), orgId)) throw new BusinessException("未授权操作");
+    public void shareEntry(EntryShareReq req) {
+        Long currentUserId = SecurityUtils.getUserId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentUserId)) throw new BusinessException("未授权操作");
 
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
@@ -295,11 +307,12 @@ public class EnterpriseService {
             throw new BusinessException("<UNK>");
         }
 
+        Long currentOrgId = SecurityUtils.getOrgId();
         Share link = Share.builder()
                 .driveId(existedEntry.getDriveId())
                 .entryId(existedEntry.getId())
                 .entryType(existedEntry.getEntryType())
-                .userId(userId)
+                .userId(currentOrgId)
                 .linkName(req.getLinkName())
                 .linkType(req.getLinkType())
                 .linkKey(generateLinkKey())
@@ -311,8 +324,9 @@ public class EnterpriseService {
         if (count != 1) throw new BusinessException("Create share link failed");
     }
 
-    public String preview(Long id, Long driveId, Long orgId) {
-        if (!isMemberOfOrganization(driveId, orgId)) throw new BusinessException("未授权操作");
+    public String preview(Long id, Long driveId) {
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(driveId, currentOrgId)) throw new BusinessException("未授权操作");
 
         Entry entry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
