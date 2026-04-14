@@ -18,6 +18,10 @@ public class SystemManageController {
         this.systemService = systemService;
     }
 
+    /**
+     * 获取系统全局配置
+     * @return 系统配置详情响应结果
+     */
     @GetMapping
     public Result<SystemConfigResp> getSystemConfigs() {
         Map<String, String> configMap = systemService.getSystemConfigs();
@@ -41,6 +45,11 @@ public class SystemManageController {
         return Result.success(resp);
     }
 
+    /**
+     * 更新系统全局配置
+     * @param req 系统配置更新请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/update")
     public Result<Void> updateSystemConfigs(@RequestBody SystemConfigUpdateReq req) {
         systemService.updateSystemConfigs(req);

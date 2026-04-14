@@ -16,23 +16,31 @@ import java.util.TimeZone;
 
 @Configuration
 public class RedisConfig {
+    /**
+     * 自定义RedisTemplate
+     * @param connectionFactory Redis连接工厂
+     * @return 配置完成的RedisTemplate
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
+        // 自定义Redis专用ObjectMappe
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
-        // 仅为 Redis 开启多态类型处理，避免影响全局接口解析
+        // 开启多态类型处理，保证反序列化时能正确还原对象类型
         objectMapper.activateDefaultTyping(
                 objectMapper.getPolymorphicTypeValidator(),
                 ObjectMapper.DefaultTyping.NON_FINAL
         );
+        // 时间序列化配置
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
 
+        // 使用Jackson序列化器
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
         template.setKeySerializer(RedisSerializer.string());

@@ -20,17 +20,30 @@ public class DriveStatController {
         this.driveStatService = driveStatService;
     }
 
+    /**
+     * 获取空间总览数据
+     * @return 空间概览统计结果
+     */
     @GetMapping("/overview")
     public Result<?> getDriveOverview() {
         DriveOverviewResp resp = driveStatService.getDriveOverview();
         return Result.success(resp);
     }
 
+    /**
+     * 获取空间使用分类明细
+     * @return 空间使用分类统计结果
+     */
     @GetMapping("/breakdown")
     public Result<?> getDriveUsageBreakdown() {
         DriveUsageBreakdownResp resp = driveStatService.getDriveUsageBreakdown();
         return Result.success(resp);
     }
+
+    /**
+     * 获取企业空间详情列表
+     * @return 企业空间详情集合
+     */
 
     @GetMapping("/enterprise")
     public Result<?> getEnterpriseDriveDetails() {
@@ -38,6 +51,10 @@ public class DriveStatController {
         return Result.success(resp);
     }
 
+    /**
+     * 获取个人空间详情列表
+     * @return 个人空间详情集合
+     */
     @GetMapping("/personal")
     public Result<?> getPersonalDriveDetails() {
         List<DriveDetailResp> resp = driveStatService.getPersonalDriveDetails();

@@ -39,18 +39,23 @@ public class LogAspect {
     }
 
     /**
-     * 环绕通知
+     * 操作日志环绕通知
+     * @param joinPoint 切点对象
+     * @param operationLog 操作日志注解
+     * @return 目标方法执行结果
+     * @throws Throwable 方法执行抛出的异常
      */
     @Around("@annotation(operationLog)")
     public Object around(ProceedingJoinPoint joinPoint, OperationLog operationLog) throws Throwable {
+        // 记录接口执行开始时间
         long startTime = System.currentTimeMillis();
         Log log = new Log();
         log.setCreatedAt(LocalDateTime.now());
 
-        // 填充基础和静态信息
+        // 填充日志基础信息和静态配置信息
         fillBaseInfo(log, operationLog);
 
-        // 2. 解析基础的 SpEL 表达式 (处理前端传来的基础参数，如 targetId)
+        // 获取目标方法签名和入参，解析SpEL表达式
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Object[] args = joinPoint.getArgs();
 
@@ -59,35 +64,47 @@ public class LogAspect {
 
         Object result;
         try {
-            // 3. 放行，执行真实的业务接口 (此时业务代码里可能会往 LogContextHolder 里塞值)
+            // 执行目标业务方法
             result = joinPoint.proceed();
+            // 执行成功，设置日志状态
             log.setStatus(1);
             log.setErrorMsg("");
         } catch (Throwable e) {
+            // 执行失败，记录异常信息
             log.setStatus(0);
             log.setErrorMsg(e.getMessage() != null ? e.getMessage() : e.toString());
             throw e;
         } finally {
-            // 4. 执行完毕后，从上下文中读取数据 (优先级最高)
+            // 从线程上下文获取业务层传递的扩展数据
             Map<String, Object> contextMap = LogContextHolder.getAll();
             if (contextMap.containsKey("targetId")) idVal = contextMap.get("targetId");
             if (contextMap.containsKey("targetName")) nameVal = contextMap.get("targetName");
 
-            // 5. 组装最终的数据 (处理单体和批量)
+            // 构建最终日志数据（处理批量操作、组装详情）
             buildFinalTargetData(log, operationLog, idVal, nameVal, contextMap);
 
-            // 6. 记录耗时，准备入库
+            // 计算接口耗时并异步保存日志
             log.setCostTime(System.currentTimeMillis() - startTime);
             logService.saveLogAsync(log);
 
-            // 7. 【切记】清理 ThreadLocal，防止内存泄漏或数据串线
+            // 清空线程上下文，防止内存泄漏
             LogContextHolder.clear();
         }
 
         return result;
     }
 
-    private void buildFinalTargetData(Log log, OperationLog operationLog, Object idVal, Object nameVal, Map<String, Object> contextMap) throws Exception {
+    /**
+     * 构建日志最终目标数据
+     * @param log 日志实体对象
+     * @param operationLog 操作日志注解
+     * @param idVal 解析后的目标ID
+     * @param nameVal 解析后的目标名称
+     * @param contextMap 线程上下文扩展数据
+     * @throws Exception JSON序列化异常
+     */
+    private void buildFinalTargetData(Log log, OperationLog operationLog, Object idVal,
+                                      Object nameVal, Map<String, Object> contextMap) throws Exception {
         Map<String, Object> finalDetailMap = new HashMap<>();
         // 如果 Context 中有业务层额外传的属性，也放进 detail JSON 里
         contextMap.forEach((k, v) -> {
@@ -118,6 +135,11 @@ public class LogAspect {
         }
     }
 
+    /**
+     * 填充日志基础信息
+     * @param log 日志实体对象
+     * @param operationLog 操作日志注解
+     */
     private void fillBaseInfo(Log log, OperationLog operationLog) {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes != null) {
@@ -135,15 +157,22 @@ public class LogAspect {
 
     /**
      * 解析 SpEL 表达式
+     * @param method 目标方法对象
+     * @param args 目标方法的入参
+     * @param spel 待解析的 SpEL 表达式字符串
+     * @return 表达式解析结果，解析失败或表达式为空时返回 null
      */
     private Object parseSpel(Method method, Object[] args, String spel) {
         if (!StringUtils.hasText(spel)) return null;
         try {
             StandardEvaluationContext context = new StandardEvaluationContext();
+            // 获取方法参数名
             String[] params = discoverer.getParameterNames(method);
             if (params != null) {
+                // 将方法参数名和参数值存入SpEL上下文
                 for (int i = 0; i < params.length; i++) context.setVariable(params[i], args[i]);
             }
+            // 解析并执行SpEL表达式
             Expression expression = parser.parseExpression(spel);
             return expression.getValue(context);
         } catch (Exception e) {
@@ -152,7 +181,9 @@ public class LogAspect {
     }
 
     /**
-     * 获取客户端真实IP
+     * 获取客户端真实IP地址
+     * @param request HTTP请求对象
+     * @return 客户端真实IP字符串
      */
     private String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");

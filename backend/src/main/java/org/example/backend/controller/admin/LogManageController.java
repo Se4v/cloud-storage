@@ -18,6 +18,10 @@ public class LogManageController {
         this.logService = logService;
     }
 
+    /**
+     * 获取所有操作日志列表
+     * @return 操作日志列表数据
+     */
     @GetMapping("/all")
     public Result<?> listAllLogs() {
         List<LogResp> resp = logService.listAllLogs().stream()

@@ -19,6 +19,10 @@ public class PermissionManageController {
         this.permissionService = permissionService;
     }
 
+    /**
+     * 获取所有权限列表
+     * @return 权限列表数据
+     */
     @GetMapping("/all")
     public Result<?> listALlPermissions() {
         List<Permission> permissionList = permissionService.listAllPermissions();

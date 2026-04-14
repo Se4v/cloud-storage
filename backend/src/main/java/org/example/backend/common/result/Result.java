@@ -1,13 +1,19 @@
 package org.example.backend.common.result;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class Result<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    private Integer code;   // 响应状态码
-    private String msg;     // 响应提示消息
-    private T data;         // 响应数据
+    /** 响应状态码 */
+    private Integer code;
+    /** 响应提示消息 */
+    private String msg;
+    /** 响应数据 */
+    private T data;
+    /** 响应时间 */
     private long timestamp;
 
     private Result() {

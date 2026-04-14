@@ -32,6 +32,11 @@ public class EnterpriseController {
         this.downloadService = downloadService;
     }
 
+    /**
+     * 上传初始化
+     * @param req 上传初始化请求参数
+     * @return 上传初始化响应结果
+     */
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody UploadInitReq req) {
@@ -39,6 +44,11 @@ public class EnterpriseController {
         return Result.success(resp);
     }
 
+    /**
+     * 普通单文件上传
+     * @param req 普通上传请求参数
+     * @return 上传完成响应结果
+     */
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/simple-upload")
     public Result<?> directUpload(@RequestBody DirectUploadReq req) {
@@ -46,6 +56,11 @@ public class EnterpriseController {
         return Result.success(resp);
     }
 
+    /**
+     * 上传文件分片
+     * @param req 分片上传请求参数
+     * @return 分片上传响应结果
+     */
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/upload-chunk")
     public Result<?> uploadChunk(@RequestBody ChunkUploadReq req) {
@@ -53,6 +68,11 @@ public class EnterpriseController {
         return Result.success(resp);
     }
 
+    /**
+     * 合并文件分片
+     * @param req 分片合并请求参数
+     * @return 合并完成响应结果
+     */
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/merge-chunks")
     public Result<?> mergeChunks(@RequestBody ChunkMergeReq req) {
@@ -60,6 +80,11 @@ public class EnterpriseController {
         return Result.success(resp);
     }
 
+    /**
+     * 文件下载
+     * @param req 文件下载请求参数
+     * @return 文件流响应实体
+     */
     @PreAuthorize("hasAuthority('file:dowanload')")
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody EntryDownloadReq req) {
@@ -77,6 +102,12 @@ public class EnterpriseController {
         return ResponseEntity.ok().headers(headers).body(stream);
     }
 
+    /**
+     * 获取文件条目列表
+     * @param driveId 空间ID
+     * @param parentId 父目录ID
+     * @return 文件条目列表
+     */
     @PreAuthorize("hasAuthority('file:list')")
     @GetMapping
     public Result<?> listEntries(@RequestParam Long driveId, @RequestParam Long parentId) {
@@ -91,13 +122,22 @@ public class EnterpriseController {
         return Result.success(resp);
     }
 
-
+    /**
+     * 获取文件夹树形列表
+     * @param driveId 网盘ID
+     * @return 文件夹树形结构列表
+     */
     @GetMapping("/folder")
     public Result<?> listFolders(@RequestParam Long driveId) {
         List<FolderTreeResp> resp = enterpriseService.listFolders(driveId);
         return Result.success(resp);
     }
 
+    /**
+     * 创建文件夹
+     * @param req 文件夹创建请求参数
+     * @return 统一响应结果
+     */
     @PreAuthorize("hasAuthority('file:mkdir')")
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody FolderCreationReq req) {
@@ -105,6 +145,11 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    /**
+     * 批量移动文件条目
+     * @param req 文件移动请求参数
+     * @return 统一响应结果
+     */
     @PreAuthorize("hasAuthority('file:move')")
     @PostMapping("/move")
     public Result<?> moveEntries(@RequestBody EntryMoveReq req) {
@@ -112,6 +157,11 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    /**
+     * 复制文件条目
+     * @param req 文件复制请求参数
+     * @return 统一响应结果
+     */
     @PreAuthorize("hasAuthority('file:copy')")
     @PostMapping("/copy")
     public Result<?> copyEntry(@RequestBody EntryCopyReq req) {
@@ -119,6 +169,11 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    /**
+     * 重命名文件条目
+     * @param req 重命名请求参数
+     * @return 统一响应结果
+     */
     @PreAuthorize("hasAuthority('file:rename')")
     @PostMapping("/rename")
     public Result<?> renameEntry(@RequestBody EntryRenameReq req) {
@@ -126,6 +181,11 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    /**
+     * 批量删除文件条目
+     * @param req 删除请求参数
+     * @return 统一响应结果
+     */
     @PreAuthorize("hasAuthority('file:delete')")
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody EntryDeletionReq req) {
@@ -133,6 +193,11 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    /**
+     * 创建文件条目分享链接
+     * @param req 文件分享请求参数
+     * @return 统一响应结果
+     */
     @PreAuthorize("hasAuthority('file:share')")
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody EntryShareReq req) {
@@ -140,6 +205,12 @@ public class EnterpriseController {
         return Result.success();
     }
 
+    /**
+     * 获取文件预览地址
+     * @param id 文件ID
+     * @param driveId 空间ID
+     * @return 文件预览URL
+     */
     @PreAuthorize("hasAuthority('file:view')")
     @GetMapping("/preview")
     public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {

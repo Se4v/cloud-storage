@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +31,11 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /* ================= 业务自定义异常 ================= */
-
     /**
      * 处理自定义业务异常
+     * @param e 自定义业务异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletRequest request) {
@@ -43,11 +43,11 @@ public class GlobalExceptionHandler {
         return Result.fail(e.getCode(), e.getMessage());
     }
 
-    /* ================= 参数校验与绑定异常 (Validation) ================= */
-
     /**
-     * 处理参数校验异常 (@Valid @Validated @ModelAttribute)
-     * 涵盖了 MethodArgumentNotValidException 和 BindException
+     * 处理参数绑定/校验失败异常
+     * @param e 参数绑定异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(BindException.class)
     public Result<Void> handleBindException(BindException e, HttpServletRequest request) {
@@ -59,7 +59,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理单个参数校验异常（@RequestParam @PathVariable）
+     * 处理单个参数约束校验异常
+     * @param e 约束校验异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<Void> handleConstraintViolationException(ConstraintViolationException e,
@@ -71,10 +74,11 @@ public class GlobalExceptionHandler {
         return Result.fail(400, message);
     }
 
-    /* ================= HTTP 请求与解析异常 (Spring Web) ================= */
-
     /**
-     * 处理缺少请求参数异常
+     * 处理缺少必要请求参数异常
+     * @param e 缺少请求参数异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public Result<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException e,
@@ -85,6 +89,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理参数类型不匹配异常
+     * @param e 参数类型不匹配异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public Result<Void> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e,
@@ -94,7 +101,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理 JSON 格式错误或不可读
+     * 处理请求体解析失败异常
+     * @param e 请求体不可读异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public Result<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException e,
@@ -105,6 +115,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理请求方法不支持异常
+     * @param e 请求方法不支持异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Result<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e,
@@ -113,12 +126,23 @@ public class GlobalExceptionHandler {
         return Result.fail(405, "请求方法不支持: " + e.getMethod());
     }
 
+    /**
+     * 处理不支持的媒体类型异常
+     * @param e 媒体类型不支持异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
+     */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public Result<Void> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e, HttpServletRequest request) {
         logger.warn("不支持的媒体类型 - URI: [{}], 类型: {}", request.getRequestURI(), e.getContentType());
         return Result.fail(415, "不支持的 Content-Type: " + e.getContentType());
     }
 
+    /**
+     * 处理响应写入失败异常
+     * @param ex 响应写入异常
+     * @param response HTTP响应对象
+     */
     @ExceptionHandler(HttpMessageNotWritableException.class)
     public void handleDownloadException(HttpMessageNotWritableException ex, HttpServletResponse response) {
         logger.error("响应写入失败 (通常发生在文件下载) - 错误: {}", ex.getMessage());
@@ -131,10 +155,11 @@ public class GlobalExceptionHandler {
         }
     }
 
-    /* ================= 安全与鉴权异常 (Security + JJWT) ================= */
-
     /**
-     * 处理权限不足异常
+     * 处理权限不足访问异常
+     * @param e 权限拒绝异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Void> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
@@ -143,7 +168,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理未认证异常
+     * 处理用户认证失败/未登录异常
+     * @param e 认证异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(AuthenticationException.class)
     public Result<Void> handleAuthenticationException(AuthenticationException e, HttpServletRequest request) {
@@ -152,7 +180,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理 JWT 解析异常
+     * 处理JWT令牌无效/过期异常
+     * @param e JWT解析异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(JwtException.class)
     public Result<Void> handleJwtException(JwtException e, HttpServletRequest request) {
@@ -160,10 +191,11 @@ public class GlobalExceptionHandler {
         return Result.fail(401, "Token 无效或已过期");
     }
 
-    /* ================= 数据库与持久层异常 (MySQL + MyBatis Plus) ================= */
-
     /**
-     * 处理唯一键冲突异常 (如账号重复注册等)
+     * 处理数据库唯一键冲突异常
+     * @param e 唯一键重复异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(DuplicateKeyException.class)
     public Result<Void> handleDuplicateKeyException(DuplicateKeyException e, HttpServletRequest request) {
@@ -173,7 +205,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理数据完整性异常 (如字段过长、非空限制等)
+     * 处理数据库数据完整性约束异常
+     * @param e 数据完整性异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Result<Void> handleDataIntegrityViolationException(DataIntegrityViolationException e, HttpServletRequest request) {
@@ -181,10 +216,11 @@ public class GlobalExceptionHandler {
         return Result.fail(400, "提交的数据不合法，违反数据库约束");
     }
 
-    /* ================= 文件存储与第三方组件异常 (MinIO + Spring Web Multipart) ================= */
-
     /**
-     * 处理文件上传大小超限异常
+     * 处理文件上传大小超出限制异常
+     * @param e 文件上传超限异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public Result<Void> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
@@ -193,7 +229,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理 MinIO 操作异常
+     * 处理MinIO文件服务操作异常
+     * @param e MinIO服务异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(MinioException.class)
     public Result<Void> handleMinioException(MinioException e, HttpServletRequest request) {
@@ -201,10 +240,11 @@ public class GlobalExceptionHandler {
         return Result.fail(500, "文件存储服务异常");
     }
 
-    /* ================= 系统级及未知异常 ================= */
-
     /**
-     * 处理空指针异常
+     * 处理系统空指针异常
+     * @param e 空指针异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(NullPointerException.class)
     public Result<Void> handleNullPointerException(NullPointerException e, HttpServletRequest request) {
@@ -214,6 +254,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理非法参数异常
+     * @param e 非法参数异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<Void> handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request) {
@@ -222,7 +265,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理其他所有未知异常
+     * 兜底处理所有未匹配的系统未知异常
+     * @param e 通用异常
+     * @param request HTTP请求对象
+     * @return 统一失败响应结果
      */
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e, HttpServletRequest request) {

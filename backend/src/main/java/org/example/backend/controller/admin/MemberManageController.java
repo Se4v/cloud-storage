@@ -1,5 +1,6 @@
 package org.example.backend.controller.admin;
 
+import jakarta.annotation.Resource;
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.member.MemberCreationReq;
 import org.example.backend.model.request.member.MemberDeletionReq;
@@ -23,30 +24,53 @@ public class MemberManageController {
         this.memberService = memberService;
     }
 
+    /**
+     * 创建组织成员
+     * @param req 成员创建请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/create")
     public Result<?> createMember(@RequestBody MemberCreationReq req) {
         memberService.createMember(req);
         return Result.success();
     }
 
+    /**
+     * 批量删除组织成员
+     * @param req 成员删除请求参数（支持批量）
+     * @return 统一响应结果
+     */
     @PostMapping("/delete")
     public Result<?> deleteMembers(@RequestBody MemberDeletionReq req) {
         memberService.deleteMembers(req);
         return Result.success();
     }
 
+    /**
+     * 更新组织成员信息
+     * @param req 成员更新请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/update")
     public Result<?> updateMember(@RequestBody MemberUpdateReq req) {
         memberService.updateMember(req);
         return Result.success();
     }
 
+    /**
+     * 查询所有组织成员列表
+     * @return 组织成员列表
+     */
     @GetMapping("/all")
     public Result<?> listAllMembers() {
         List<MemberResp> resp = memberService.listAllMembers();
         return Result.success(resp);
     }
 
+    /**
+     * 查询组织角色列表
+     * @return 精简后的组织角色信息列表
+     */
     @GetMapping("/role")
     public Result<?> listOrgRoles() {
         List<Role> roles = memberService.listOrgRoles();
@@ -59,6 +83,10 @@ public class MemberManageController {
         return Result.success(resp);
     }
 
+    /**
+     * 查询组织部门节点列表
+     * @return 精简后的组织部门节点信息列表
+     */
     @GetMapping("/org")
     public Result<?> listOrgNodes() {
         List<Node> nodes = memberService.listOrgNodes();

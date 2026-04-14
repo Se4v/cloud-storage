@@ -29,15 +29,28 @@ public class SecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
+    /**
+     * Spring Security 核心过滤链配置
+     * @param http HttpSecurity配置对象
+     * @return 构建完成的安全过滤链
+     * @throws Exception 配置异常
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 配置跨域
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // 关闭CSRF防护
                 .csrf(csrf -> csrf.disable())
+                // 关闭默认HTTP Basic认证
                 .httpBasic(basic -> basic.disable())
+                // 关闭默认表单登录
                 .formLogin(form -> form.disable())
+                // 关闭默认登出功能
                 .logout(logout -> logout.disable())
+                // 配置请求授权规则
                 .authorizeHttpRequests(auth -> {
+                    // 配置白名单接口
                     auth.requestMatchers(
                             "/api/auth/login",
                             "/api/user/**",
@@ -53,14 +66,16 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
-                // 配置异常处理
+                // 自定义异常处理
                 .exceptionHandling(exception -> exception
+                        // 未认证访问
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.setCharacterEncoding("UTF-8");
                             response.getWriter().write("{\"code\":401,\"msg\":\"未认证\",\"data\":null}");
                         })
+                        // 权限不足访问
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpStatus.FORBIDDEN.value());
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -77,6 +92,10 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * 全局跨域配置
+     * @return 跨域配置源
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -94,11 +113,19 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * 密码加密编码器
+     * @return 密码编码器
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 用户详情服务
+     * @return UserDetailsService实例
+     */
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {

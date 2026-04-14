@@ -1,6 +1,8 @@
 package org.example.backend.common.constant;
 
 public final class DbConsts {
+    private DbConsts() {}
+
     public static final int ENTRY_TYPE_FILE = 1;
     public static final int ENTRY_TYPE_FOLDER = 2;
     public static final int ENTRY_STATUS_UNDELETED = 1;

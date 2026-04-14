@@ -18,6 +18,10 @@ public class OrgController {
         this.orgService = orgService;
     }
 
+    /**
+     * 获取组织树形结构
+     * @return 组织树形列表
+     */
     @GetMapping("/org")
     public Result<?> getOrgTree() {
         List<OrgNodeTreeResp> resp = orgService.getOrgTree();

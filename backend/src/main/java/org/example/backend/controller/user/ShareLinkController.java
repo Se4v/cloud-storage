@@ -19,6 +19,10 @@ public class ShareLinkController {
         this.shareService = shareService;
     }
 
+    /**
+     * 查询分享链接列表
+     * @return 分享链接列表
+     */
     @GetMapping
     public Result<?> listLinks() {
         List<Share> shareList = shareService.listLinks();
@@ -39,12 +43,22 @@ public class ShareLinkController {
         return Result.success(resp);
     }
 
+    /**
+     * 更新分享链接信息
+     * @param req 分享链接更新请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/update")
     public Result<?> updateLink(@RequestBody LinkUpdateReq req) {
         shareService.updateLink(req);
         return Result.success();
     }
 
+    /**
+     * 批量删除分享链接
+     * @param req 分享链接删除请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/delete")
     public Result<?> deleteLinks(@RequestBody LinkDeletionReq req) {
         shareService.deleteLinks(req);

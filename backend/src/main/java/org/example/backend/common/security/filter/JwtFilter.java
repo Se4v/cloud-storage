@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.example.backend.common.constant.RedisConsts;
 import org.example.backend.common.security.LoginUser;
 import org.example.backend.common.util.JwtUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,18 +23,27 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
+    private static final String ROLE_MANAGER = "ROLE_MANAGER";
+
     public JwtFilter(RedisTemplate<String, Object> redisTemplate, JwtUtils jwtUtils) {
         this.redisTemplate = redisTemplate;
         this.jwtUtils = jwtUtils;
     }
 
-    private static final String ROLE_ADMIN = "ROLE_ADMIN";
-    private static final String ROLE_MANAGER = "ROLE_MANAGER";
-
+    /**
+     * 执行过滤器内部逻辑
+     * @param request HTTP请求对象
+     * @param response HTTP响应对象
+     * @param filterChain 过滤器链
+     * @throws IOException IO异常
+     * @throws ServletException Servlet异常
+     */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws IOException, ServletException {
+    protected void doFilterInternal(@NotNull HttpServletRequest request,
+                                    @NotNull HttpServletResponse response,
+                                    @NotNull FilterChain filterChain) throws IOException, ServletException {
+        // 获取请求关键信息
         String header = request.getHeader("Authorization");
         String requestURI = request.getRequestURI();
         String orgId = request.getHeader("X-Org-Id");
@@ -42,12 +52,14 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 截取纯Token字符串
         String token = header.substring(7);
         if (!jwtUtils.validateToken(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized2");
             return;
         }
 
+        // 从Redis中获取登录用户信息
         LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(RedisConsts.KEY_AUTH_USER + token);
         if (loginUser == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized3");
@@ -55,12 +67,12 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         loginUser.setToken(token);
 
-        // 判断是否是超级管理员
+        // 判断用户是否为系统超级管理员
         if (loginUser.getSystemRoles() != null && loginUser.getSystemRoles().contains(ROLE_ADMIN)) {
             loginUser.setSuperAdmin(true);
         }
 
-        // 获取自己管辖的部门
+        // 解析用户管辖的部门ID
         List<Long> manageNodeIds = new ArrayList<>();
         if (loginUser.getOrgRoles() != null) {
             manageNodeIds = loginUser.getOrgRoles().entrySet().stream()
@@ -70,33 +82,32 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         loginUser.setManageNodeIds(manageNodeIds);
 
+        // 整合用户权限集合
         Set<String> authorities = new HashSet<>();
         if (loginUser.getSystemPermissions() != null) {
             authorities.addAll(loginUser.getSystemPermissions());
         }
 
-        // 判断是企业空间还是个人空间
+        //  处理企业空间接口
         if (requestURI.startsWith("/api/enterprise")) {
-            // 访问企业空间
             if (orgId == null || orgId.isEmpty()) {
-                // 拒绝服务：访问企业接口必须指定企业上下文！
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "缺少 X-Org-Id 请求头");
                 return;
             }
             Long currentOrgId = Long.valueOf(orgId);
 
+            // 获取当前企业下的权限，不存在则说明用户无该企业权限
             List<String> orgPermissions = loginUser.getOrgPermissions().get(currentOrgId);
             if (orgPermissions != null) {
-                authorities.addAll(orgPermissions); // 比如注入了 "file:delete"
+                authorities.addAll(orgPermissions);
             } else {
-                // 用户不属于该企业，直接抛异常，防越权访问
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "您不属于该企业或部门");
                 return;
             }
             loginUser.setOrgId(currentOrgId);
         }
 
-        // 封装 Authentication 并放行
+        // 封装认证对象
         List<SimpleGrantedAuthority> grantedAuthorities = authorities.stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();
@@ -104,6 +115,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 new UsernamePasswordAuthenticationToken(loginUser, null, grantedAuthorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // 放行请求，执行后续业务逻辑
         filterChain.doFilter(request, response);
     }
 }

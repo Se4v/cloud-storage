@@ -23,24 +23,42 @@ public class RoleManageController {
         this.roleService = roleService;
     }
 
+    /**
+     * 创建角色
+     * @param req 角色创建请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/create")
     public Result<?> createRole(@RequestBody RoleCreationReq req) {
         roleService.createRole(req);
         return Result.success();
     }
 
+    /**
+     * 批量删除角色
+     * @param req 角色删除请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/delete")
     public Result<?> deleteRoles(@RequestBody RoleDeletionReq req) {
         roleService.deleteRoles(req);
         return Result.success();
     }
 
-    @PostMapping("/update")
+    /**
+     * 更新角色信息
+     * @param req 角色更新请求参数
+     * @return 统一响应结果
+     */    @PostMapping("/update")
     public Result<?> updateRole(@RequestBody RoleUpdateReq req) {
         roleService.updateRole(req);
         return Result.success();
     }
 
+    /**
+     * 查询所有角色列表
+     * @return 封装后的角色响应列表
+     */
     @GetMapping("/all")
     public Result<?> listAllRoles() {
         List<Role> roleList = roleService.listAllRoles();
@@ -57,12 +75,21 @@ public class RoleManageController {
         return Result.success(resp);
     }
 
+    /**
+     * 为角色分配权限
+     * @param req 权限分配请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/assign")
     public Result<?> assignPermissions(@RequestBody PermAssignmentReq req) {
         roleService.assignPermissions(req);
         return Result.success();
     }
 
+    /**
+     * 查询系统所有权限列表
+     * @return 精简后的权限响应列表
+     */
     @GetMapping("/perm")
     public Result<?> listPermissions() {
         List<Permission> permissionList = roleService.listPermissions();

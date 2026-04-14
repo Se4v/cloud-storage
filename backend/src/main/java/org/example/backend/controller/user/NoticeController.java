@@ -19,6 +19,10 @@ public class NoticeController {
         this.noticeService = noticeService;
     }
 
+    /**
+     * 查询当前用户未读通知列表
+     * @return 未读通知响应列表
+     */
     @GetMapping("/unread")
     public Result<?> listUnreadNotices() {
         List<Notice> notices = noticeService.listUnreadNotices();
@@ -37,6 +41,10 @@ public class NoticeController {
         return Result.success(resp);
     }
 
+    /**
+     * 查询当前用户全部通知列表
+     * @return 全部通知响应列表
+     */
     @GetMapping
     public Result<?> listNotices() {
         List<Notice> notices = noticeService.listNotices();
@@ -55,12 +63,22 @@ public class NoticeController {
         return Result.success(resp);
     }
 
+    /**
+     * 标记通知为已读
+     * @param req 通知标记已读请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/read")
     public Result<?> markNoticeAsRead(@RequestBody NoticeReadMarkReq req) {
         noticeService.markNoticeAsRead(req);
         return Result.success();
     }
 
+    /**
+     * 批量删除通知
+     * @param req 通知删除请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/delete")
     public Result<?> deleteNotices(@RequestBody NoticeDeletionReq req) {
         noticeService.deleteNotices(req);

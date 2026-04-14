@@ -20,18 +20,30 @@ public class TrafficStatController {
         this.trafficStatService = trafficStatService;
     }
 
+    /**
+     * 获取流量总览数据
+     * @return 流量概览统计结果
+     */
     @GetMapping("/overview")
     public Result<?> getTrafficOverview() {
         TrafficOverviewResp resp = trafficStatService.getTrafficOverview();
         return Result.success(resp);
     }
 
+    /**
+     * 获取流量趋势统计数据
+     * @return 流量趋势统计列表
+     */
     @GetMapping("/trend")
     public Result<?> getTrendStatistics() {
         List<TrendStatisticsResp> resp = trafficStatService.getTrendStatistics();
         return Result.success(resp);
     }
 
+    /**
+     * 获取文件类型分布数据
+     * @return 文件类型分布统计列表
+     */
     @GetMapping("/distribution")
     public Result<?> getFileTypeDistribution() {
         List<FileTypeDistributionResp> resp = trafficStatService.getFileTypeDistribution();
