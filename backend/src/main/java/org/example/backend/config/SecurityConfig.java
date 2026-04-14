@@ -62,7 +62,8 @@ public class SecurityConfig {
                             "/api/perm/**",
                             "/api/storage/**",
                             "/api/system/**",
-                            "/api/traffic/**"
+                            "/api/traffic/**",
+                            "/api/share/file"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

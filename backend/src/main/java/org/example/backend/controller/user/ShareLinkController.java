@@ -1,9 +1,11 @@
 package org.example.backend.controller.user;
 
 import org.example.backend.common.result.Result;
+import org.example.backend.model.entity.Entry;
 import org.example.backend.model.request.share.LinkDeletionReq;
 import org.example.backend.model.request.share.LinkUpdateReq;
 import org.example.backend.model.entity.Share;
+import org.example.backend.model.response.file.EntryResp;
 import org.example.backend.model.response.share.ShareLinkResp;
 import org.example.backend.service.ShareService;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/link")
+@RequestMapping("/api/share")
 public class ShareLinkController {
     private final ShareService shareService;
 
@@ -40,6 +42,20 @@ public class ShareLinkController {
                         .build())
                 .toList();
 
+        return Result.success(resp);
+    }
+
+    @GetMapping("/file")
+    public Result<?> listEntries(@RequestParam(required = false) String linkKey,
+                                 @RequestParam(required = false) Long parentId) {
+        List<Entry> entries = shareService.listEntries(linkKey, parentId);
+        List<EntryResp> resp = entries.stream().map(entry -> EntryResp.builder()
+                .id(entry.getId())
+                .name(entry.getEntryName())
+                .type(entry.getEntryType())
+                .size(entry.getFileSize())
+                .createTime(entry.getCreatedAt())
+                .build()).toList();
         return Result.success(resp);
     }
 

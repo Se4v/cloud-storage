@@ -1,6 +1,5 @@
 <template>
   <div class="h-full flex flex-col bg-slate-50 font-sans min-h-screen">
-    <!-- Top Header -->
     <div class="bg-white px-8 py-4 border-b border-slate-200 flex-shrink-0 z-10 shadow-sm">
       <div class="flex items-center gap-2 cursor-pointer">
         <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -10,11 +9,9 @@
       </div>
     </div>
 
-    <!-- Main Content -->
     <div class="flex-1 overflow-auto p-6 w-full max-w-[1200px] mx-auto">
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
-        
-        <!-- User Info & Top Actions -->
+
         <div class="px-6 py-5 border-b border-slate-200 flex flex-wrap gap-4 items-center justify-between bg-white">
           <div class="flex items-center gap-4">
             <el-avatar 
@@ -32,8 +29,7 @@
               </div>
             </div>
           </div>
-          
-          <!-- Download Button -->
+
           <div class="flex items-center gap-3">
             <button
               @click="handleDownload"
@@ -68,12 +64,6 @@
           </template>
         </div>
 
-        <!-- File List Tools -->
-        <div class="px-6 py-4 flex items-center justify-between bg-white">
-          <div class="text-sm text-slate-700 font-medium">全部文件</div>
-        </div>
-
-        <!-- File List Table -->
         <div class="flex-1 px-6 pb-6 bg-white">
           <el-table 
             :data="fileList" 
@@ -144,41 +134,32 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   Download,
   Document,
   Folder
 } from '@element-plus/icons-vue'
 
+const API_BASE_URL = 'http://localhost:8080'
+
 // 面包屑路径历史
 const pathHistory = ref([])
+
+// 根文件夹ID（页面加载时保存最初的文件夹ID）
+const rootFolderId = ref(null)
 
 // 当前所在目录的 folderId（根目录为 null 或 0）
 const currentFolderId = ref(null)
 
-// 模拟数据 - 包含文件夹和文件
+// 文件列表
 const fileList = ref([
   {
     id: 1,
     name: 'Idea 版本控制配置.docx',
     size: '703488',
-    type: 1, // 1=文件
+    type: 1,
     createTime: '2026-01-11 18:28',
-  },
-  {
-    id: 2,
-    name: '我的文件夹',
-    size: null, // 文件夹没有大小
-    type: 2, // 2=文件夹
-    createTime: '2026-01-10 10:00',
-  },
-  {
-    id: 3,
-    name: '项目资料',
-    size: null,
-    type: 2,
-    createTime: '2026-01-09 15:30',
   }
 ])
 
@@ -205,88 +186,58 @@ const handleRowDblClick = (row) => {
   handleOpenFile(row)
 }
 
-// 打开文件/文件夹
+// 打开文件/文件夹（仅处理文件夹进入）
 const handleOpenFile = (file) => {
   if (file.type === 2) {
     // 进入文件夹：更新路径历史，加载文件夹内容
     pathHistory.value.push({ id: file.id, name: file.name })
     currentFolderId.value = file.id
-    // TODO: 调用API加载文件夹内容
-    loadFolderContent(file.id)
-  } else {
-    // 预览文件
-    console.log('预览文件:', file)
-    // TODO: 实现文件预览逻辑
+    loadFileList(null, file.id)
   }
 }
 
-// 加载文件夹内容（模拟）
-const loadFolderContent = (folderId) => {
-  // TODO: 调用后端API获取文件夹内容
-  console.log('加载文件夹内容:', folderId)
-  // 模拟数据更新
-  fileList.value = [
-    {
-      id: folderId * 10 + 1,
-      name: `文件夹${folderId}中的文件1.txt`,
-      size: '1024',
-      type: 1,
-      createTime: '2026-01-11 18:28',
-    },
-    {
-      id: folderId * 10 + 2,
-      name: `子文件夹`,
-      size: null,
-      type: 2,
-      createTime: '2026-01-10 10:00',
+// 加载文件列表
+const loadFileList = async (linkKey = null, parentId = null) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/share/file`, {
+      params: {
+        linkKey: linkKey.value,
+        parentId: parentId
+      }
+    })
+    if (res.data.code === 200) {
+      fileList.value = res.data.data || []
+      selectedFiles.value = []
     }
-  ]
-  selectedFiles.value = []
+  } catch (error) {
+    console.error('加载文件列表失败:', error)
+    fileList.value = []
+  }
 }
 
 // 面包屑导航 - 返回根目录
 const goToRoot = () => {
   pathHistory.value = []
-  currentFolderId.value = null
-  // TODO: 重新加载根目录文件列表
-  console.log('返回根目录')
-  // 模拟根目录数据
-  fileList.value = [
-    {
-      id: 1,
-      name: 'Idea 版本控制配置.docx',
-      size: '703488',
-      type: 1,
-      createTime: '2026-01-11 18:28',
-    },
-    {
-      id: 2,
-      name: '我的文件夹',
-      size: null,
-      type: 2,
-      createTime: '2026-01-10 10:00',
-    },
-    {
-      id: 3,
-      name: '项目资料',
-      size: null,
-      type: 2,
-      createTime: '2026-01-09 15:30',
-    }
-  ]
-  selectedFiles.value = []
+  currentFolderId.value = rootFolderId.value
+  loadFileList(null, rootFolderId.value)
 }
 
 // 面包屑导航 - 点击某个路径层级
 const goToPath = (index) => {
   // 保留从0到index的路径，删除后面的
   pathHistory.value = pathHistory.value.slice(0, index + 1)
-  const targetId = pathHistory.value.length > 0 ? pathHistory.value[pathHistory.value.length - 1].id : null
+  const targetId = pathHistory.value.length > 0 ? pathHistory.value[pathHistory.value.length - 1].id : rootFolderId.value
   currentFolderId.value = targetId
-  // TODO: 加载对应层级的文件列表
-  console.log('导航到路径层级:', targetId)
-  loadFolderContent(targetId)
+  loadFileList(null, targetId)
 }
+
+// 页面初始化
+onMounted(() => {
+  // TODO: 从路由参数或其他方式获取最初的文件夹ID
+  // 例如：rootFolderId.value = route.params.folderId
+  // 然后加载根目录文件列表
+  // loadFileList(linkKey, null)
+})
 
 const handleDownload = () => {
   const filesToDownload = selectedFiles.value.length > 0 ? selectedFiles.value : fileList.value

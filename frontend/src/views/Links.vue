@@ -237,7 +237,7 @@ const editForm = ref({
 const loadLinkList = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/link`, getAuthConfig())
+    const response = await axios.get(`${API_BASE_URL}/api/share`, getAuthConfig())
     const { code, data, msg } = response.data
     if (code === 200) {
       linkList.value = data || []
@@ -309,7 +309,7 @@ const handleSaveEdit = async () => {
       accessCode: editForm.value.accessCode,
       expireTime: editForm.value.expireTime
     }
-    const response = await axios.post(`${API_BASE_URL}/api/link/update`, updateData, getAuthConfig())
+    const response = await axios.post(`${API_BASE_URL}/api/share/update`, updateData, getAuthConfig())
     const { code, msg } = response.data
     if (code === 200) {
       ElMessage.success('更新成功')
@@ -329,7 +329,7 @@ const handleSaveEdit = async () => {
 
 // 复制链接
 const handleCopyLink = async (row) => {
-  const linkUrl = `http://localhost:8080/links/${row.linkKey}`
+  const linkUrl = `http://localhost:8080/s/${row.linkKey}`
   try {
     await navigator.clipboard.writeText(linkUrl)
     ElMessage.success(`已复制分享链接`)
@@ -355,7 +355,7 @@ const handleDelete = (row) => {
       const deleteData = {
         linkIds: [parseInt(row.id)]
       }
-      const response = await axios.post(`${API_BASE_URL}/api/link/delete`, deleteData, getAuthConfig())
+      const response = await axios.post(`${API_BASE_URL}/api/share/delete`, deleteData, getAuthConfig())
       const { code, msg } = response.data
       if (code === 200) {
         ElMessage.success('删除成功')
@@ -389,7 +389,7 @@ const handleBatchDelete = () => {
       const deleteData = {
         linkIds: linkIds
       }
-      const response = await axios.post(`${API_BASE_URL}/api/link/delete`, deleteData, getAuthConfig())
+      const response = await axios.post(`${API_BASE_URL}/api/share/delete`, deleteData, getAuthConfig())
       const { code, msg } = response.data
       if (code === 200) {
         ElMessage.success('批量删除成功')
