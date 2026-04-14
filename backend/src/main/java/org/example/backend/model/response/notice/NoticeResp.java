@@ -13,7 +13,7 @@ public class NoticeResp {
     private String title;
     private String content;
     private Integer type;
-    private Boolean isRead;
+    private Integer isRead;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime;
 }

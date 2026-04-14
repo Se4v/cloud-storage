@@ -65,7 +65,7 @@
               <div class="flex items-center gap-2">
                 <span class="font-medium text-slate-900">{{ row.title }}</span>
                 <span
-                  v-if="!row.isRead"
+                  v-if="row.isRead === 0"
                   class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"
                 ></span>
               </div>
@@ -83,12 +83,12 @@
           <el-table-column label="状态" width="100" align="center">
             <template #default="{ row }">
               <el-tag
-                :type="row.isRead ? 'info' : 'danger'"
+                :type="row.isRead === 1 ? 'info' : 'danger'"
                 size="small"
                 class="!rounded-md !border-0"
-                :class="row.isRead ? '!bg-slate-100 !text-slate-500' : '!bg-red-50 !text-red-600'"
+                :class="row.isRead === 1 ? '!bg-slate-100 !text-slate-500' : '!bg-red-50 !text-red-600'"
               >
-                {{ row.isRead ? '已读' : '未读' }}
+                {{ row.isRead === 1 ? '已读' : '未读' }}
               </el-tag>
             </template>
           </el-table-column>
@@ -106,7 +106,7 @@
               <div class="flex items-center justify-center gap-1">
                 <el-tooltip content="标记为已读" placement="top" :show-after="500">
                   <button
-                    v-if="!row.isRead"
+                    v-if="row.isRead === 0"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                     @click.stop="markAsRead(row)"
                   >
@@ -204,16 +204,7 @@ const searchQuery = ref('')
 const selectedMessages = ref([])
 
 // 消息列表
-const messageList = ref([
-  {
-    id: '123',
-    title: '1234',
-    content: '1234',
-    type: 1,
-    isRead: false,
-    createTime: '2026-04-14 18:23:34'
-  }
-])
+const messageList = ref([])
 
 // 过滤后的消息列表（仅搜索标题）
 const filteredMessageList = computed(() => {
@@ -236,7 +227,7 @@ const paginatedMessageList = computed(() => {
 
 // 未读消息数量
 const unreadCount = computed(() => {
-  return messageList.value.filter(msg => !msg.isRead).length
+  return messageList.value.filter(msg => msg.isRead === 0).length
 })
 
 // 选择变化
@@ -273,7 +264,7 @@ const markAsRead = async (message) => {
   try {
     const res = await axios.post(`${API_BASE_URL}/api/notice/read`, { ids: [message.id] }, getAuthConfig())
     if (res.data.code === 200) {
-      message.isRead = true
+      message.isRead = 1
       ElMessage.success('已标记为已读')
     } else {
       ElMessage.error('标记已读失败')

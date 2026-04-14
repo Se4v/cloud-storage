@@ -221,7 +221,7 @@
               title="消息"
             >
               <el-icon :size="20"><Message /></el-icon>
-              <span v-if="messageList.length > 0" class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              <span v-if="messageList.filter(msg => msg.isRead === 0).length > 0" class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
             
             <!-- 消息列表面板 -->
@@ -236,11 +236,11 @@
                   <p class="text-sm">暂无消息</p>
                 </div>
                 
-                <div 
-                  v-for="message in messageList" 
+                <div
+                  v-for="message in messageList"
                   :key="message.id"
                   class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
-                  :class="{ 'bg-slate-50/80': !message.isRead }"
+                  :class="{ 'bg-slate-50/80': message.isRead === 0 }"
                 >
                   <!-- 消息图标 -->
                   <div 
@@ -505,16 +505,7 @@ const treeRef = ref(null)
 
 // 消息面板相关
 const isMessagePanelVisible = ref(false)
-const messageList = ref([
-  {
-    id: '123',
-    title: '1234',
-    content: '1234',
-    type: 1,
-    isRead: false,
-    createTime: '2026-04-14 18:23:34'
-  }
-])
+const messageList = ref([])
 
 // 加载未读消息列表
 const loadUnreadMessages = async () => {

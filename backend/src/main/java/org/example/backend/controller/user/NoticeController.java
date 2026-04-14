@@ -33,7 +33,7 @@ public class NoticeController {
                         .title(notice.getTitle())
                         .content(notice.getContent())
                         .type(notice.getType())
-                        .isRead(notice.getIsRead() == 1)
+                        .isRead(notice.getIsRead())
                         .createTime(notice.getCreatedAt())
                         .build())
                 .toList();
@@ -55,7 +55,7 @@ public class NoticeController {
                         .title(notice.getTitle())
                         .content(notice.getContent())
                         .type(notice.getType())
-                        .isRead(notice.getIsRead() == 1)
+                        .isRead(notice.getIsRead())
                         .createTime(notice.getCreatedAt())
                         .build())
                 .toList();
