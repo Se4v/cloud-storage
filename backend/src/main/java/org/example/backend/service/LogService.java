@@ -19,10 +19,18 @@ public class LogService {
 
     private static final Logger logger = LoggerFactory.getLogger(LogService.class);
 
+    /**
+     * 列出所有操作日志
+     * @return 操作日志列表
+     */
     public List<Log> listAllLogs() {
         return logMapper.selectList(null);
     }
 
+    /**
+     * 异步保存操作日志
+     * @param log 操作日志实体
+     */
     @Async
     public void saveLogAsync(Log log) {
         try {

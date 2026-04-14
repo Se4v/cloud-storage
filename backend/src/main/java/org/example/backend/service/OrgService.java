@@ -38,6 +38,10 @@ public class OrgService {
         this.userMapper = userMapper;
     }
 
+    /**
+     * 获取当前用户的组织树
+     * @return 组织节点的树形结构
+     */
     public List<OrgNodeTreeResp> getOrgTree() {
         Long currentUserId = SecurityUtils.getUserId();
         List<Member> members = memberMapper.selectList(
@@ -69,6 +73,13 @@ public class OrgService {
         return orgTree;
     }
 
+    /**
+     * 递归构建组织节点树
+     * @param node 当前节点
+     * @param nodeMap 节点ID到节点的映射
+     * @param driveMap 节点ID到驱动器ID的映射
+     * @return 构建的组织节点树响应
+     */
     private OrgNodeTreeResp buildOrgTree(Node node, Map<Long, Node> nodeMap, Map<Long, Long> driveMap) {
         // 获取子节点
         List<Node> children = nodeMap.values().stream()
@@ -89,6 +100,10 @@ public class OrgService {
                 .build();
     }
 
+    /**
+     * 创建组织节点
+     * @param req 创建节点的请求参数
+     */
     @Transactional
     public void createOrgNode(NodeCreationReq req) {
         // 校验父节点是否存在（如果不是根节点）
@@ -137,6 +152,10 @@ public class OrgService {
         if (driveInsert != 1) throw new BusinessException("创建部门失败");
     }
 
+    /**
+     * 删除组织节点
+     * @param req 包含要删除的节点ID列表的请求
+     */
     @Transactional
     public void deleteOrgNodes(OrgNodeDeletionReq req) {
         List<Long> nodeIds = req.getNodeIds();
@@ -154,6 +173,10 @@ public class OrgService {
         if (updateCount != nodeIds.size()) throw new BusinessException("删除节点失败");
     }
 
+    /**
+     * 更新组织节点信息
+     * @param req 更新节点的请求参数
+     */
     @Transactional
     public void updateOrgNode(OrgNodeUpdateReq req) {
         // 校验节点是否存在
@@ -219,6 +242,10 @@ public class OrgService {
         if (driveUpdateCount != 1) throw new BusinessException("更新节点-空间失败");
     }
 
+    /**
+     * 列出所有组织节点。
+     * @return 组织节点列表
+     */
     public List<OrgNodeResp> listAllOrgNodes() {
         // 查询组织节点
         List<Node> nodeList = nodeMapper.selectList(
@@ -227,9 +254,7 @@ public class OrgService {
         Map<Long, String> parentNodeMap = nodeList.stream().collect(Collectors.toMap(Node::getId, Node::getNodeName));
 
         // 查询空间
-        List<Long> nodeIdList = nodeList.stream()
-                .map(Node::getId)
-                .toList();
+        List<Long> nodeIdList = nodeList.stream().map(Node::getId).toList();
         List<Drive> driveList = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery().in(Drive::getNodeId, nodeIdList));
         Map<Long, Drive> driveMap = driveList.stream()
