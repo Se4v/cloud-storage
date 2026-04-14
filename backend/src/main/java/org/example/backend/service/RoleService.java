@@ -37,6 +37,7 @@ public class RoleService {
 
     /**
      * 创建角色
+     * @param req 角色创建请求
      */
     @Transactional
     public void createRole(RoleCreationReq req) {
@@ -66,6 +67,7 @@ public class RoleService {
 
     /**
      * 批量删除角色
+     * @param req 角色删除请求
      */
     @Transactional
     public void deleteRoles(RoleDeletionReq req) {
@@ -78,8 +80,7 @@ public class RoleService {
 
         // 查询全局角色是否被使用
         long usedSystemRole = userRoleMapper.selectCount(
-                Wrappers.<UserRole>lambdaQuery()
-                        .in(UserRole::getRoleId, req.getRoleIds()));
+                Wrappers.<UserRole>lambdaQuery().in(UserRole::getRoleId, req.getRoleIds()));
         if (usedSystemRole > 0) throw new BusinessException("部分全局角色仍被用户绑定，无法删除");
 
         // 删除角色
@@ -97,17 +98,16 @@ public class RoleService {
 
         // 删除全局角色关联
         userRoleMapper.delete(
-                Wrappers.<UserRole>lambdaQuery()
-                        .in(UserRole::getRoleId, req.getRoleIds()));
+                Wrappers.<UserRole>lambdaQuery().in(UserRole::getRoleId, req.getRoleIds()));
 
         // 删除角色-权限关联
         rolePermissionMapper.delete(
-                Wrappers.<RolePermission>lambdaQuery()
-                        .in(RolePermission::getRoleId, req.getRoleIds()));
+                Wrappers.<RolePermission>lambdaQuery().in(RolePermission::getRoleId, req.getRoleIds()));
     }
 
     /**
      * 更新角色
+     * @param req 角色更新请求
      */
     @Transactional
     public void updateRole(RoleUpdateReq req) {
@@ -145,14 +145,18 @@ public class RoleService {
 
     /**
      * 查询所有角色
+     * @return 角色列表
      */
     public List<Role> listAllRoles() {
         List<Role> allRoles = roleMapper.selectList(
-                Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getDeleted, DbConsts.DELETED_NO));
+                Wrappers.<Role>lambdaQuery().eq(Role::getDeleted, DbConsts.DELETED_NO));
         return allRoles;
     }
 
+    /**
+     * 分配权限
+     * @param req 权限分配请求
+     */
     @Transactional
     public void assignPermissions(PermAssignmentReq req) {
         // 基础参数校验
@@ -162,8 +166,7 @@ public class RoleService {
 
         // 查询该角色当前已绑定的权限
         List<RolePermission> boundedPermissions = rolePermissionMapper.selectList(
-                Wrappers.<RolePermission>lambdaQuery()
-                        .eq(RolePermission::getRoleId, roleId));
+                Wrappers.<RolePermission>lambdaQuery().eq(RolePermission::getRoleId, roleId));
 
         // 提取已有的权限ID集合
         Set<Long> existingPermissionIds = boundedPermissions.stream()
@@ -195,7 +198,7 @@ public class RoleService {
             int insertCount = results.stream()
                     .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
                     .sum();
-            if (insertCount != addRolePermissions.size()) throw new BusinessException("<UNK>");
+            if (insertCount != addRolePermissions.size()) throw new BusinessException("分配权限失败");
         }
 
         // 删除权限关联
@@ -204,14 +207,17 @@ public class RoleService {
                     Wrappers.<RolePermission>lambdaQuery()
                             .eq(RolePermission::getRoleId, roleId)
                             .in(RolePermission::getPermId, deletePermissionIds));
-            if (deleteCount != deletePermissionIds.size()) throw new BusinessException("<UNK>");
+            if (deleteCount != deletePermissionIds.size()) throw new BusinessException("分配权限失败");
         }
     }
 
+    /**
+     * 列出所有权限
+     * @return 权限列表
+     */
     public List<Permission> listPermissions() {
         List<Permission> permissions = permissionMapper.selectList(
-                Wrappers.<Permission>lambdaQuery()
-                        .eq(Permission::getType, 2));
+                Wrappers.<Permission>lambdaQuery().eq(Permission::getType, 2));
         return permissions;
     }
 }

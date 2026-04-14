@@ -14,6 +14,10 @@ public class PermissionService {
         this.permissionMapper = permissionMapper;
     }
 
+    /**
+     * 获取权限数据列表
+     * @return 权限实体列表
+     */
     public List<Permission> listAllPermissions() {
         return permissionMapper.selectList(null);
     }

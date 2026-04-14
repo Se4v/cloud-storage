@@ -24,6 +24,10 @@ public class SystemService {
         this.configMapper = configMapper;
     }
 
+    /**
+     * 获取系统配置
+     * @return 系统配置映射
+     */
     public Map<String, String> getSystemConfigs() {
         List<Config> configList = configMapper.selectList(
                 Wrappers.<Config>lambdaQuery()
@@ -33,6 +37,10 @@ public class SystemService {
         return configMap;
     }
 
+    /**
+     * 更新系统配置
+     * @param req 系统配置更新请求
+     */
     @Transactional
     public void updateSystemConfigs(SystemConfigUpdateReq req) {
         // 查询配置项

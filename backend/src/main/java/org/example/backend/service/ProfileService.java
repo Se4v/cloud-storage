@@ -13,6 +13,8 @@ import org.example.backend.model.entity.User;
 import org.example.backend.model.request.user.PasswordChangeReq;
 import org.example.backend.model.request.user.ProfileUpdateReq;
 import org.example.backend.model.response.user.AvatarUploadResp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +23,6 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @Service
 public class ProfileService {
     private final UserMapper userMapper;
@@ -30,6 +31,7 @@ public class ProfileService {
 
     private static final String AVATAR_BUCKET = "avatars";
     private static final long AVATAR_MAX_SIZE = 5 * 1024 * 1024;
+    private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
 
     public ProfileService(UserMapper userMapper, MinioAsyncClient minioClient, PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
@@ -37,6 +39,10 @@ public class ProfileService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * 获取当前用户的头像URL
+     * @return 头像的预签名URL
+     */
     public String getAvatar() {
         // 判断用户是否存在
         Long currentUserId = SecurityUtils.getUserId();
@@ -54,12 +60,18 @@ public class ProfileService {
                             .expiry(8, TimeUnit.HOURS)
                             .build());
         } catch (Exception e) {
-            throw new BusinessException("<UNK>");
+            throw new BusinessException("获取头像URL失败");
         }
 
         return url;
     }
 
+    /**
+     * 获取头像上传的预签名URL
+     * @param fileName 文件名，用于验证扩展名
+     * @param fileSize 文件大小，用于验证大小限制
+     * @return 包含上传URL和对象名的响应
+     */
     public AvatarUploadResp getAvatarUploadUrl(String fileName, Long fileSize) {
         // 判断用户是否存在
         Long currentUserId = SecurityUtils.getUserId();
@@ -92,11 +104,15 @@ public class ProfileService {
                     .objectName(objectName)
                     .build();
         } catch (Exception e) {
-            log.error("生成 MinIO 上传链接失败", e);
+            logger.error("生成 MinIO 上传链接失败", e);
             throw new BusinessException("获取上传链接失败");
         }
     }
 
+    /**
+     * 更新用户头像。
+     * @param req 包含新头像对象名的请求
+     */
     @Transactional
     public void updateAvatar(AvatarUpdateReq req) {
         // 判断用户是否存在
@@ -109,9 +125,13 @@ public class ProfileService {
                 Wrappers.<User>lambdaUpdate()
                         .set(User::getAvatar, req.getObjectName())
                         .eq(User::getId, user.getId()));
-        if (count != 1) throw new BusinessException("<UNK>");
+        if (count != 1) throw new BusinessException("更新用户头像失败");
     }
 
+    /**
+     * 获取当前用户的个人信息。
+     * @return 用户实体
+     */
     public User getProfile() {
         Long currentUserId = SecurityUtils.getUserId();
         User user = userMapper.selectById(currentUserId);
@@ -119,12 +139,16 @@ public class ProfileService {
         return user;
     }
 
+    /**
+     * 更新用户个人信息
+     * @param req 包含新邮箱和手机号的请求
+     */
     @Transactional
     public void updateProfile(ProfileUpdateReq req) {
         // 判断用户是否存在
         Long currentUserId = SecurityUtils.getUserId();
         User user = userMapper.selectById(currentUserId);
-        if (user == null) throw new BusinessException("<UNK>");
+        if (user == null) throw new BusinessException("用户不存在");
 
         // 更新用户信息
         int count = userMapper.update(
@@ -132,9 +156,13 @@ public class ProfileService {
                         .set(User::getEmail, req.getEmail())
                         .set(User::getMobile, req.getMobile())
                         .eq(User::getId, user.getId()));
-        if (count != 1) throw new BusinessException("<UNK>");
+        if (count != 1) throw new BusinessException("更新用户信息失败");
     }
 
+    /**
+     * 更新用户密码。
+     * @param req 包含旧密码、新密码和确认密码的请求
+     */
     @Transactional
     public void updatePassword(PasswordChangeReq req) {
         // 判断用户是否存在
@@ -158,6 +186,11 @@ public class ProfileService {
         if (count != 1) throw new BusinessException("修改密码失败");
     }
 
+    /**
+     * 获取文件扩展名。
+     * @param fileName 文件名
+     * @return 小写的文件扩展名，若无扩展名则返回空字符串
+     */
     private String getFileExtension(String fileName) {
         // 处理null或空字符串的情况
         if (fileName == null || fileName.isEmpty()) return "";

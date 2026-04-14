@@ -21,6 +21,10 @@ public class ShareService {
         this.shareMapper = shareMapper;
     }
 
+    /**
+     * 列出当前用户的分享链接
+     * @return 分享链接列表
+     */
     public List<Share> listLinks() {
         // 查询分享链接列表
         Long currentUserId = SecurityUtils.getUserId();
@@ -34,6 +38,10 @@ public class ShareService {
         return shareList;
     }
 
+    /**
+     * 更新分享链接
+     * @param req 链接更新请求
+     */
     @Transactional
     public void updateLink(LinkUpdateReq req) {
         // 判断分享链接是否存在
@@ -57,6 +65,10 @@ public class ShareService {
         if (count != 1) throw new BusinessException("更新分享链接信息失败");
     }
 
+    /**
+     * 删除分享链接
+     * @param req 链接删除请求
+     */
     @Transactional
     public void deleteLinks(LinkDeletionReq req) {
         Long currentUserId = SecurityUtils.getUserId();

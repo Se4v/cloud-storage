@@ -41,9 +41,10 @@ public class UserService {
         this.userRoleMapper = userRoleMapper;
         this.passwordEncoder = passwordEncoder;
     }
-
+    
     /**
-     * 创建用户
+     * 创建新用户
+     * @param req 用户创建请求
      */
     @Transactional
     public void createUser(UserCreationReq req) {
@@ -73,7 +74,7 @@ public class UserService {
 
         Drive drive = Drive.builder()
                 .driveName("个人空间")
-                .driveType(1)
+                .driveType(DbConsts.DRIVE_TYPE_PERSONAL)
                 .nodeId(0L)
                 .userId(user.getId())
                 .totalQuota(req.getStorageQuota())
@@ -81,11 +82,12 @@ public class UserService {
                 .build();
 
         int driveCount = driveMapper.insert(drive);
-        if (driveCount != 1) throw new BusinessException("<UNK>");
+        if (driveCount != 1) throw new BusinessException("创建用户失败");
     }
 
     /**
-     * 批量删除用户（逻辑删除）
+     * 删除用户
+     * @param req 用户删除请求
      */
     @Transactional
     public void deleteUsers(UserDeletionReq req) {
@@ -98,6 +100,7 @@ public class UserService {
 
     /**
      * 更新用户信息
+     * @param req 用户更新请求
      */
     @Transactional
     public void updateUser(UserUpdateReq req) {
@@ -108,11 +111,12 @@ public class UserService {
                         .set(User::getEmail, req.getEmail())
                         .set(User::getEnabled, Boolean.TRUE.equals(req.getIsEnabled()) ? DbConsts.ENABLED_YES : DbConsts.ENABLED_NO)
                         .eq(User::getId, req.getId()));
-        if (count != 1) throw new BusinessException("更新用户失败");
+        if (count != 1) throw new BusinessException("更新用户信息失败");
     }
 
     /**
-     * 查询所有未删除的用户
+     * 列出所有用户
+     * @return 用户响应列表
      */
     public List<UserResp> listAllUsers() {
         // 筛选部门管理查看的数据
@@ -136,7 +140,7 @@ public class UserService {
         // 查询用户配额
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery()
-                        .eq(Drive::getDriveType, 1)
+                        .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL)
                         .in(Drive::getUserId, validUserIds));
         Map<Long, Long> driveMap = drives.stream()
                 .collect(Collectors.toMap(Drive::getUserId, Drive::getTotalQuota));
@@ -168,9 +172,12 @@ public class UserService {
         return resp;
     }
 
+    /**
+     * 为用户分配系统角色
+     * @param req 角色分配请求
+     */
     @Transactional
     public void assignSystemRole(SystemRoleAssignmentReq req) {
-        if (req == null) throw new BusinessException("角色分配参数不能为空");
         Long userId = req.getUserId();
         List<Long> targetRoleIds = req.getRoleIds() == null ? List.of() : req.getRoleIds() ;
 
@@ -185,7 +192,7 @@ public class UserService {
                 .collect(Collectors.toSet());
         // 目标角色ID集合
         Set<Long> targetRoleIdSet = targetRoleIds.stream()
-                .filter(id -> id != null && id > 0) // 过滤无效ID
+                .filter(id -> id != null && id > 0)
                 .collect(Collectors.toSet());
 
         // 计算需要新增的角色
@@ -209,7 +216,7 @@ public class UserService {
             int insertCount = results.stream()
                     .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
                     .sum();
-            if (insertCount != addUserRoles.size()) throw new BusinessException("<UNK>");
+            if (insertCount != addUserRoles.size()) throw new BusinessException("分配系统角色失败");
         }
 
         // 删除角色关联
@@ -218,19 +225,23 @@ public class UserService {
                     Wrappers.<UserRole>lambdaQuery()
                             .eq(UserRole::getUserId, userId)
                             .in(UserRole::getRoleId, deleteRoleIds));
-            if (deleteCount != deleteRoleIds.size()) throw new BusinessException("<UNK>");
+            if (deleteCount != deleteRoleIds.size()) throw new BusinessException("分配系统角色失败");
         }
     }
 
+    /**
+     * 重置用户密码为默认密码
+     * @param req 密码重置请求
+     */
     @Transactional
     public void resetPassword(PasswordResetReq req) {
         // 查询用户
         User user = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery()
                         .eq(User::getId, req.getUserId())
-                        .eq(User::getDeleted, 0)
-                        .eq(User::getEnabled, 1));
-        if (user == null) throw new BusinessException("<UNK>");
+                        .eq(User::getDeleted, DbConsts.DELETED_NO)
+                        .eq(User::getEnabled, DbConsts.ENABLED_YES));
+        if (user == null) throw new BusinessException("用户不存在");
 
         // 调用配置表
         Config config = configMapper.selectOne(
@@ -243,13 +254,17 @@ public class UserService {
                 Wrappers.<User>lambdaUpdate()
                         .set(User::getPassword, passwordEncoder.encode(config.getConfigValue()))
                         .eq(User::getId, req.getUserId()));
-        if (count != 1) throw new BusinessException("<UNK>");
+        if (count != 1) throw new BusinessException("用户删除失败");
     }
 
+    /**
+     * 列出所有系统角色
+     * @return 系统角色列表
+     */
     public List<Role> listSystemRole() {
         List<Role> systemRoles = roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery()
-                        .eq(Role::getType, 1)
+                        .eq(Role::getType, DbConsts.ROLE_TYPE_SYSTEM)
                         .eq(Role::getEnabled, DbConsts.ENABLED_YES)
                         .eq(Role::getDeleted, DbConsts.DELETED_NO));
         return systemRoles;

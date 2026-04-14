@@ -36,6 +36,10 @@ public class TrafficStatService {
         this.entryMapper = entryMapper;
     }
 
+    /**
+     * 获取流量概览
+     * @return 流量概览响应
+     */
     public TrafficOverviewResp getTrafficOverview() {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
@@ -68,6 +72,10 @@ public class TrafficStatService {
         return resp;
     }
 
+    /**
+     * 获取流量趋势统计
+     * @return 趋势统计响应列表
+     */
     public List<TrendStatisticsResp> getTrendStatistics() {
         List<Map<String, Object>> result = trafficMapper.selectLast7DaysTraffic();
         if (result == null || result.isEmpty()) return List.of();
@@ -92,6 +100,10 @@ public class TrafficStatService {
         return resp;
     }
 
+    /**
+     * 获取文件类型分布
+     * @return 文件类型分布响应列表
+     */
     public List<FileTypeDistributionResp> getFileTypeDistribution() {
         List<Map<String, Object>> result = entryMapper.selectFileCategoryStats();
         if (result == null || result.isEmpty()) return List.of();
