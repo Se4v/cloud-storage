@@ -105,10 +105,10 @@
                 <span class="text-sm text-slate-600 tabular-nums">{{ row.size || '-' }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="date" label="修改日期" width="180">
+            <el-table-column prop="date" label="创建日期" width="180">
                <template #default="{ row }">
                 <div class="flex items-center gap-1.5 text-sm text-slate-600">
-                  <span class="whitespace-nowrap">{{ row.date }}</span>
+                  <span class="whitespace-nowrap">{{ row.createTime }}</span>
                 </div>
               </template>
             </el-table-column>
@@ -135,8 +135,8 @@ const fileList = ref([
     id: 1,
     name: 'Idea 版本控制配置.docx',
     size: '687.5KB',
-    date: '2026-01-11 18:28',
-    type: 'document'
+    type: 'document',
+    createTime: '2026-01-11 18:28',
   }
 ])
 

@@ -405,15 +405,6 @@ const handleBatchDelete = () => {
     }
   })
 }
-
-// 分页
-const handleSizeChange = (val) => {
-  pageSize.value = val
-}
-
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-}
 </script>
 
 <style scoped>
