@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
+import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.EntryMapper;
@@ -29,9 +30,6 @@ public class PersonalService {
     private final ShareMapper shareMapper;
     private final MinioAsyncClient minioClient;
 
-    private static final int UNDELETED = 1;
-    private static final int DELETED = 2;
-    private static final int FOLDER = 2;
     private static final int EXPIRE_DAYS = 15;
     private static final List<String> PREVIEW_EXT = Arrays.asList(
             // 图像格式
@@ -50,6 +48,12 @@ public class PersonalService {
         this.minioClient = minioClient;
     }
 
+    /**
+     * 列出个人空间中的条目
+     * @param driveId 个人空间ID
+     * @param parentId 父目录ID
+     * @return 条目列表
+     */
     public List<Entry> listEntries(Long driveId, Long parentId) {
         Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
@@ -57,20 +61,25 @@ public class PersonalService {
                         .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getParentId, parentId)
                         .eq(Entry::getDriveId, driveId)
-                        .eq(Entry::getStatus, UNDELETED));
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
         if (entries == null || entries.isEmpty()) return List.of();
 
         return entries;
     }
 
+    /**
+     * 列出个人空间的文件夹树
+     * @param driveId 个人空间ID
+     * @return 文件夹树结构
+     */
     public List<FolderTreeResp> listFolders(Long driveId) {
         Long currentUserId = SecurityUtils.getUserId();
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
                         .eq(Entry::getUserId, currentUserId)
                         .eq(Entry::getDriveId, driveId)
-                        .eq(Entry::getEntryType, FOLDER)
-                        .eq(Entry::getStatus, UNDELETED));
+                        .eq(Entry::getEntryType, DbConsts.ENTRY_TYPE_FOLDER)
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
         if (entries == null || entries.isEmpty()) {
             // 返回只有个人空间根节点的列表
             FolderTreeResp personalRoot = new FolderTreeResp();
@@ -111,6 +120,10 @@ public class PersonalService {
         return List.of(personalRoot);
     }
 
+    /**
+     * 在个人空间中创建文件夹
+     * @param req 创建文件夹的请求参数
+     */
     @Transactional
     public void createFolder(FolderCreationReq req) {
         Long currentUserId = SecurityUtils.getUserId();
@@ -121,9 +134,9 @@ public class PersonalService {
                             .eq(Entry::getId, req.getParentId())
                             .eq(Entry::getDriveId, req.getDriveId())
                             .eq(Entry::getUserId, currentUserId)
-                            .eq(Entry::getEntryType, FOLDER)
-                            .eq(Entry::getStatus, UNDELETED));
-            if (parent == null) throw new BusinessException("<UNK>");
+                            .eq(Entry::getEntryType, DbConsts.ENTRY_TYPE_FOLDER)
+                            .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+            if (parent == null) throw new BusinessException("目标目录不存在");
         }
 
         // 同空间下目标目录是否存在同名条目
@@ -132,7 +145,7 @@ public class PersonalService {
                         .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getParentId, req.getParentId())
                         .eq(Entry::getEntryName, req.getFolderName()));
-        if (sameEntry != null) throw new BusinessException("Folder already exists");
+        if (sameEntry != null) throw new BusinessException("目标目录下存在同名文件夹");
 
         // 创建记录
         Entry folder = Entry.builder()
@@ -141,13 +154,17 @@ public class PersonalService {
                 .parentId(req.getParentId())
                 .storageId(0L)
                 .entryName(req.getFolderName())
-                .entryType(FOLDER)
-                .status(UNDELETED)
+                .entryType(DbConsts.ENTRY_TYPE_FOLDER)
+                .status(DbConsts.ENTRY_STATUS_UNDELETED)
                 .build();
         int count = entryMapper.insert(folder);
-        if (count != 1) throw new BusinessException("Create folder failed");
+        if (count != 1) throw new BusinessException("创建文件夹失败");
     }
 
+    /**
+     * 移动个人空间中的条目
+     * @param req 移动条目的请求参数
+     */
     @Transactional
     public void moveEntries(EntryMoveReq req) {
         Long currentUserId = SecurityUtils.getUserId();
@@ -158,9 +175,9 @@ public class PersonalService {
                             .eq(Entry::getId, req.getTargetId())
                             .eq(Entry::getDriveId, req.getDriveId())
                             .eq(Entry::getUserId, currentUserId)
-                            .eq(Entry::getEntryType, FOLDER)
-                            .eq(Entry::getStatus, UNDELETED));
-            if (entry == null) throw new BusinessException("Entry does not exist");
+                            .eq(Entry::getEntryType, DbConsts.ENTRY_TYPE_FOLDER)
+                            .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+            if (entry == null) throw new BusinessException("目标目录不存在");
         }
 
         int count = entryMapper.update(
@@ -168,9 +185,13 @@ public class PersonalService {
                         .set(Entry::getParentId, req.getTargetId())
                         .eq(Entry::getUserId, currentUserId)
                         .in(Entry::getId, req.getIds()));
-        if (count != req.getIds().size()) throw new BusinessException("Move entry failed");
+        if (count != req.getIds().size()) throw new BusinessException("移动文件失败");
     }
 
+    /**
+     * 复制个人空间中的条目
+     * @param req 复制条目的请求参数
+     */
     @Transactional
     public void copyEntry(EntryCopyReq req) {
         Long currentUserId = SecurityUtils.getUserId();
@@ -180,13 +201,13 @@ public class PersonalService {
                             .eq(Entry::getId, req.getTargetId())
                             .eq(Entry::getDriveId, req.getDriveId())
                             .eq(Entry::getUserId, currentUserId)
-                            .eq(Entry::getEntryType, FOLDER)
-                            .eq(Entry::getStatus, UNDELETED));
-            if (parent == null) throw new BusinessException("<UNK>");
+                            .eq(Entry::getEntryType, DbConsts.ENTRY_TYPE_FOLDER)
+                            .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+            if (parent == null) throw new BusinessException("目标目录不存在");
         }
 
         Entry entry = entryMapper.selectById(req.getId());
-        if (entry == null) throw new BusinessException("Entry does not exist");
+        if (entry == null) throw new BusinessException("该文件不存在");
 
         // 目标目录下是否有同名文件
         Entry sameNameEntry = entryMapper.selectOne(
@@ -211,15 +232,19 @@ public class PersonalService {
                 .build();
 
         int count = entryMapper.insert(copyEntry);
-        if (count != 1) throw new BusinessException("Move entry failed");
+        if (count != 1) throw new BusinessException("复制文件失败");
 
         int storageCount = storageMapper.update(
                 Wrappers.<Storage>lambdaUpdate()
                         .setIncrBy(Storage::getRefCount, 1)
                         .eq(Storage::getId, entry.getStorageId()));
-        if (storageCount != 1) throw new BusinessException("Move entry failed");
+        if (storageCount != 1) throw new BusinessException("复制文件失败");
     }
 
+    /**
+     * 重命名个人空间中的条目
+     * @param req 重命名条目的请求参数
+     */
     @Transactional
     public void renameEntry(EntryRenameReq req) {
         Long currentUserId = SecurityUtils.getUserId();
@@ -228,11 +253,11 @@ public class PersonalService {
                         .eq(Entry::getId, req.getId())
                         .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getUserId, currentUserId)
-                        .eq(Entry::getStatus, UNDELETED));
-        if (existedEntry == null) throw new BusinessException("Entry does not exist");
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+        if (existedEntry == null) throw new BusinessException("该文件不存在");
 
         // 新文件名校验
-        if (!validateFileName(req.getNewEntryName())) throw new BusinessException("Invalid file name");
+        if (!validateFileName(req.getNewEntryName())) throw new BusinessException("新文件名无效");
 
         // 目标父目录下是否存在同名条目
         Entry sameNameEntry = entryMapper.selectOne(
@@ -240,37 +265,45 @@ public class PersonalService {
                         .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getParentId, existedEntry.getParentId())
                         .eq(Entry::getEntryName, req.getNewEntryName()));
-        if (sameNameEntry != null) throw new BusinessException("Folder already exists");
+        if (sameNameEntry != null) throw new BusinessException("目标目录存在同名文件");
 
         // 重命名
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
                         .set(Entry::getEntryName, req.getNewEntryName())
                         .eq(Entry::getId, req.getId()));
-        if (count != 1) throw new BusinessException("Rename entry failed");
+        if (count != 1) throw new BusinessException("重命名文件失败");
     }
 
+    /**
+     * 删除个人空间中的条目
+     * @param req 删除条目的请求参数
+     */
     @Transactional
     public void deleteEntries(EntryDeletionReq req) {
         Long currentUserId = SecurityUtils.getUserId();
         // 查询要删除的条目
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getStatus, UNDELETED)
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED)
                         .in(Entry::getId, req.getIds()));
-        if (entries == null || entries.isEmpty()) throw new BusinessException("entry does not exist");
+        if (entries == null || entries.isEmpty()) throw new BusinessException("被删除的文件不存在");
 
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
-                        .set(Entry::getStatus, DELETED)
+                        .set(Entry::getStatus, DbConsts.ENTRY_STATUS_DELETED)
                         .set(Entry::getDeleterId, currentUserId)
                         .set(Entry::getDeletedAt, LocalDateTime.now())
                         .set(Entry::getExpiredAt, LocalDateTime.now().plusDays(EXPIRE_DAYS))
                         .eq(Entry::getUserId, currentUserId)
                         .in(Entry::getId, req.getIds()));
-        if (count != entries.size()) throw new BusinessException("Delete entry failed");
+        if (count != entries.size()) throw new BusinessException("删除文件失败");
     }
 
+    /**
+     * 分享个人空间中的条目
+     * @param req 分享条目的请求参数
+     */
     @Transactional
     public void shareEntry(EntryShareReq req) {
         Long currentUserId = SecurityUtils.getUserId();
@@ -279,11 +312,11 @@ public class PersonalService {
                         .eq(Entry::getId, req.getId())
                         .eq(Entry::getDriveId, req.getDriveId())
                         .eq(Entry::getUserId, currentUserId)
-                        .eq(Entry::getStatus, UNDELETED));
-        if (existedEntry == null) throw new BusinessException("文件条目不存在");
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+        if (existedEntry == null) throw new BusinessException("该文件不存在");
 
         if (req.getLinkType() == 2 && req.getAccessCode().isBlank()) {
-            throw new BusinessException("<UNK>");
+            throw new BusinessException("分享文件失败");
         }
 
         Share link = Share.builder()
@@ -296,12 +329,18 @@ public class PersonalService {
                 .linkKey(generateLinkKey())
                 .accessCode(req.getAccessCode())
                 .expiredAt(req.getExpireTime())
-                .isDeleted(0)
+                .isDeleted(DbConsts.DELETED_NO)
                 .build();
         int count = shareMapper.insert(link);
-        if (count != 1) throw new BusinessException("Create share link failed");
+        if (count != 1) throw new BusinessException("分享文件失败");
     }
 
+    /**
+     * 预览个人空间中的文件
+     * @param id 文件条目ID
+     * @param driveId 个人空间ID
+     * @return 文件的预签名URL
+     */
     public String preview(Long id, Long driveId) {
         Long currentUserId = SecurityUtils.getUserId();
         Entry entry = entryMapper.selectOne(
@@ -309,15 +348,15 @@ public class PersonalService {
                         .eq(Entry::getId, id)
                         .eq(Entry::getDriveId, driveId)
                         .eq(Entry::getUserId, currentUserId)
-                        .eq(Entry::getStatus, UNDELETED));
-        if (entry == null) throw new BusinessException("Entry does not exist");
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+        if (entry == null) throw new BusinessException("该文件不存在");
 
         if (!PREVIEW_EXT.contains(entry.getFileExt())) {
-            throw new BusinessException("Invalid file ext");
+            throw new BusinessException("不支持预览该格式文件");
         }
 
         Storage storage = storageMapper.selectById(entry.getStorageId());
-        if (storage == null) throw new BusinessException("Storage does not exist");
+        if (storage == null) throw new BusinessException("预览文件失败");
 
         String url;
         try {
@@ -339,13 +378,21 @@ public class PersonalService {
         return url;
     }
 
+    /**
+     * 验证文件名是否有效
+     * @param fileName 文件名
+     * @return 文件名有效返回true，否则返回false
+     */
     private boolean validateFileName(String fileName) {
         if (fileName == null || fileName.isEmpty() || fileName.length() > 100) return false;
-
         // 检查非法字符 \ / : * ? " < > |
         return !fileName.matches(".*[\\\\/:*?\"<>|].*");
     }
 
+    /**
+     * 生成分享链接的唯一键
+     * @return 生成的唯一键字符串
+     */
     private String generateLinkKey() {
         UUID uuid = UUID.randomUUID();
         return uuid.toString().replace("-", "");

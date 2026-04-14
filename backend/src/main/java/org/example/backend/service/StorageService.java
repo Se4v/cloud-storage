@@ -31,6 +31,10 @@ public class StorageService {
         this.minioClient = minioClient;
     }
 
+    /**
+     * 清理存储文件
+     * @param storageList 要清理的存储记录列表
+     */
     @Transactional
     public void cleanStorageFile(List<Storage> storageList) {
         List<Long> storageIds = storageList.stream()
@@ -43,6 +47,10 @@ public class StorageService {
         batchDeleteByBucket(storageList);
     }
 
+    /**
+     * 按桶分组批量删除MinIO中的存储对象
+     * @param storageList 要删除的存储记录列表
+     */
     public void batchDeleteByBucket(List<Storage> storageList) {
         if (CollectionUtils.isEmpty(storageList)) {
             return;

@@ -24,12 +24,20 @@ public class EntryService {
         this.storageMapper = storageMapper;
     }
 
+    /**
+     * 永久删除条目
+     * @param entryIds 要删除的条目ID列表
+     */
     @Transactional
     public void permanentlyDeletedEntry(List<Long> entryIds) {
         int count = entryMapper.deleteByIds(entryIds);
         if (count != entryIds.size()) throw new BusinessException("删除失败");
     }
 
+    /**
+     * 更新条目状态
+     * @param entries 要更新的条目列表
+     */
     @Transactional
     public void updateEntryStatus(List<Entry> entries) {
         // 分类为文件和文件夹，同时收集所有文件的storageId

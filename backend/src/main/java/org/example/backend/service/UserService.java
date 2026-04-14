@@ -24,24 +24,24 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserMapper userMapper;
     private final MemberMapper memberMapper;
-    private final ConfigMapper configMapper;
     private final DriveMapper driveMapper;
     private final RoleMapper roleMapper;
     private final UserRoleMapper userRoleMapper;
+    private final ConfigService configService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserMapper userMapper, MemberMapper memberMapper, ConfigMapper configMapper,
-                       DriveMapper driveMapper, RoleMapper roleMapper, UserRoleMapper userRoleMapper,
+    public UserService(UserMapper userMapper, MemberMapper memberMapper, DriveMapper driveMapper,
+                       RoleMapper roleMapper, UserRoleMapper userRoleMapper, ConfigService configService,
                        PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.memberMapper = memberMapper;
-        this.configMapper = configMapper;
         this.driveMapper = driveMapper;
         this.roleMapper = roleMapper;
         this.userRoleMapper = userRoleMapper;
+        this.configService = configService;
         this.passwordEncoder = passwordEncoder;
     }
-    
+
     /**
      * 创建新用户
      * @param req 用户创建请求
@@ -55,16 +55,11 @@ public class UserService {
                         .eq(User::getDeleted, DbConsts.DELETED_NO));
         if (existUser != null) throw new BusinessException("用户名已存在");
 
-        // 调用配置表
-        Config config = configMapper.selectOne(
-                Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getConfigKey, "default_password")
-                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
-
         // 创建用户
+        String defaultPassword = configService.getDefaultPassword();
         User user = User.builder()
                 .username(req.getUsername())
-                .password(passwordEncoder.encode(config.getConfigValue()))
+                .password(passwordEncoder.encode(defaultPassword))
                 .realName(req.getRealName())
                 .mobile(req.getMobile())
                 .build();
@@ -243,16 +238,11 @@ public class UserService {
                         .eq(User::getEnabled, DbConsts.ENABLED_YES));
         if (user == null) throw new BusinessException("用户不存在");
 
-        // 调用配置表
-        Config config = configMapper.selectOne(
-                Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getConfigKey, "default_password")
-                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
-
         // 重置密码
+        String defaultPassword = configService.getDefaultPassword();
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
-                        .set(User::getPassword, passwordEncoder.encode(config.getConfigValue()))
+                        .set(User::getPassword, passwordEncoder.encode(defaultPassword))
                         .eq(User::getId, req.getUserId()));
         if (count != 1) throw new BusinessException("用户删除失败");
     }

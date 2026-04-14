@@ -204,7 +204,16 @@ const searchQuery = ref('')
 const selectedMessages = ref([])
 
 // 消息列表
-const messageList = ref([])
+const messageList = ref([
+  {
+    id: '123',
+    title: '1234',
+    content: '1234',
+    type: 1,
+    isRead: false,
+    createTime: '2026-04-14 18:23:34'
+  }
+])
 
 // 过滤后的消息列表（仅搜索标题）
 const filteredMessageList = computed(() => {

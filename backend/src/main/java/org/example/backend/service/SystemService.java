@@ -29,10 +29,10 @@ public class SystemService {
      * @return 系统配置映射
      */
     public Map<String, String> getSystemConfigs() {
-        List<Config> configList = configMapper.selectList(
+        List<Config> configs = configMapper.selectList(
                 Wrappers.<Config>lambdaQuery()
                         .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
-        Map<String, String> configMap = configList.stream()
+        Map<String, String> configMap = configs.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getConfigValue, (a, b) -> a));
         return configMap;
     }
@@ -44,10 +44,9 @@ public class SystemService {
     @Transactional
     public void updateSystemConfigs(SystemConfigUpdateReq req) {
         // 查询配置项
-        List<Config> configList = configMapper.selectList(
-                Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
-        Map<String, Long> configMap = configList.stream()
+        List<Config> configs = configMapper.selectList(
+                Wrappers.<Config>lambdaQuery().eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
+        Map<String, Long> configMap = configs.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getId));
 
         List<Config> updateConfigList = new ArrayList<>();

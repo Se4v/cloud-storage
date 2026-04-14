@@ -505,7 +505,16 @@ const treeRef = ref(null)
 
 // 消息面板相关
 const isMessagePanelVisible = ref(false)
-const messageList = ref([])
+const messageList = ref([
+  {
+    id: '123',
+    title: '1234',
+    content: '1234',
+    type: 1,
+    isRead: false,
+    createTime: '2026-04-14 18:23:34'
+  }
+])
 
 // 加载未读消息列表
 const loadUnreadMessages = async () => {

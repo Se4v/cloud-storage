@@ -63,6 +63,7 @@ public class UploadService {
     private final EntryMapper entryMapper;
     private final DriveMapper driveMapper;
     private final TrafficMapper trafficMapper;
+    private final ConfigService configService;
 
     private static final String TASK_KEY_PREFIX = "upload:task:";
     private static final String CHUNKS_KEY_PREFIX = "upload:chunks:";
@@ -93,7 +94,7 @@ public class UploadService {
 
     public UploadService(RedissonClient redissonClient, MinioConfig minioConfig, RedisTemplate<String, Object> redisTemplate,
                          MinioAsyncClient minioAsyncClient, StorageMapper storageMapper, EntryMapper entryMapper,
-                         DriveMapper driveMapper, TrafficMapper trafficMapper) {
+                         DriveMapper driveMapper, TrafficMapper trafficMapper, ConfigService configService) {
         this.redissonClient = redissonClient;
         this.minioConfig = minioConfig;
         this.redisTemplate = redisTemplate;
@@ -102,6 +103,7 @@ public class UploadService {
         this.entryMapper = entryMapper;
         this.driveMapper = driveMapper;
         this.trafficMapper = trafficMapper;
+        this.configService = configService;
     }
 
     public UploadInitResp initUpload(UploadInitReq req) {
@@ -285,6 +287,11 @@ public class UploadService {
             locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
             if (!locked) {
                 throw new BusinessException("系统繁忙，请稍后重试");
+            }
+
+            String ext = getFileSuffix(item.getEntryName());
+            if (configService.getFileTypeBlacklist().contains(ext)) {
+                throw new BusinessException("禁止上传该类型文件");
             }
 
             LambdaQueryWrapper<Storage> storageQuery = new LambdaQueryWrapper<>();
