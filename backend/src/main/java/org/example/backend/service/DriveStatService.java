@@ -24,6 +24,10 @@ public class DriveStatService {
         this.driveMapper = driveMapper;
     }
 
+    /**
+     * 获取空间总览统计数据
+     * @return 总配额、已分配、已使用、剩余配额
+     */
     public DriveOverviewResp getDriveOverview() {
         Config config = configMapper.selectOne(
                 Wrappers.<Config>lambdaQuery()
@@ -45,6 +49,10 @@ public class DriveStatService {
         return resp;
     }
 
+    /**
+     * 获取空间使用分类统计
+     * @return 个人、企业空间分配的总配额
+     */
     public DriveUsageBreakdownResp getDriveUsageBreakdown() {
         List<Map<String, Object>> result = driveMapper.selectQuotaSumByType();
 
@@ -66,6 +74,10 @@ public class DriveStatService {
         return resp;
     }
 
+    /**
+     * 获取所有企业空间详情列表
+     * @return 企业空间名称、已分配配额、已使用、剩余配额
+     */
     public List<DriveDetailResp> getEnterpriseDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery().eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_ENTERPRISE));
@@ -85,6 +97,10 @@ public class DriveStatService {
         return resp;
     }
 
+    /**
+     * 获取所有个人空间详情列表
+     * @return 个人网盘名称、已分配配额、已使用、剩余配额
+     */
     public List<DriveDetailResp> getPersonalDriveDetails() {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery().eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL));
@@ -103,5 +119,4 @@ public class DriveStatService {
 
         return resp;
     }
-
 }

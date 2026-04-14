@@ -25,6 +25,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
     private static final String ROLE_MANAGER = "ROLE_MANAGER";
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String X_ORG_ID = "X-Org-Id";
+    private static final int BEARER_PREFIX_LENGTH = 7;
 
     public JwtFilter(RedisTemplate<String, Object> redisTemplate, JwtUtils jwtUtils) {
         this.redisTemplate = redisTemplate;
@@ -44,25 +48,25 @@ public class JwtFilter extends OncePerRequestFilter {
                                     @NotNull HttpServletResponse response,
                                     @NotNull FilterChain filterChain) throws IOException, ServletException {
         // 获取请求关键信息
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(AUTHORIZATION);
         String requestURI = request.getRequestURI();
-        String orgId = request.getHeader("X-Org-Id");
-        if (header == null || !header.startsWith("Bearer ")) {
+        String orgId = request.getHeader(X_ORG_ID);
+        if (header == null || !header.startsWith(BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         // 截取纯Token字符串
-        String token = header.substring(7);
+        String token = header.substring(BEARER_PREFIX_LENGTH);
         if (!jwtUtils.validateToken(token)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized2");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "无效token");
             return;
         }
 
         // 从Redis中获取登录用户信息
         LoginUser loginUser = (LoginUser) redisTemplate.opsForValue().get(RedisConsts.KEY_AUTH_USER + token);
         if (loginUser == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized3");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "无效token");
             return;
         }
         loginUser.setToken(token);
@@ -76,8 +80,8 @@ public class JwtFilter extends OncePerRequestFilter {
         List<Long> manageNodeIds = new ArrayList<>();
         if (loginUser.getOrgRoles() != null) {
             manageNodeIds = loginUser.getOrgRoles().entrySet().stream()
-                    .filter(entry -> entry.getValue().contains(ROLE_MANAGER)) // 1. 筛选包含管理员角色的条目
-                    .map(Map.Entry::getKey)                                  // 2. 提取节点 ID
+                    .filter(entry -> entry.getValue().contains(ROLE_MANAGER))
+                    .map(Map.Entry::getKey)
                     .toList();
         }
         loginUser.setManageNodeIds(manageNodeIds);

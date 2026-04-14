@@ -16,6 +16,10 @@ public class DriveService {
         this.driveMapper = driveMapper;
     }
 
+    /**
+     * 获取当前登录用户的个人空间使用信息
+     * @return 个人空间详情
+     */
     public Drive getPersonalDriveUsage() {
         Long currentUserId = SecurityUtils.getUserId();
         Drive drive = driveMapper.selectOne(
@@ -23,17 +27,21 @@ public class DriveService {
                         .eq(Drive::getUserId, currentUserId)
                         .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL)
                         .eq(Drive::getNodeId, 0));
-        if (drive == null) throw new BusinessException("Drive does not exist");
+        if (drive == null) throw new BusinessException("该存储空间不存在");
         return drive;
     }
 
+    /**
+     * 获取当前登录用户的个人空间ID
+     * @return 个人空间ID
+     */
     public Long getPersonalDriveId() {
         Long currentUserId = SecurityUtils.getUserId();
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery()
                         .eq(Drive::getUserId, currentUserId)
                         .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL));
-        if (drive == null) throw new BusinessException("Drive does not exist");
+        if (drive == null) throw new BusinessException("该存储空间不存在");
         return drive.getId();
     }
 }

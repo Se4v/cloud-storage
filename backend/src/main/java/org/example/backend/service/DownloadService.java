@@ -15,6 +15,8 @@ import org.example.backend.model.request.file.EntryDownloadReq;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.Storage;
 import org.example.backend.model.entity.Traffic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -27,13 +29,14 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-@Slf4j
 @Service
 public class DownloadService {
     private final MinioClient minioClient;
     private final EntryMapper entryMapper;
     private final StorageMapper storageMapper;
     private final TrafficMapper trafficMapper;
+
+    private static final Logger logger = LoggerFactory.getLogger(DownloadService.class);
 
     public DownloadService(MinioClient minioClient, EntryMapper entryMapper,
                            StorageMapper storageMapper, TrafficMapper trafficMapper) {
@@ -43,6 +46,11 @@ public class DownloadService {
         this.trafficMapper = trafficMapper;
     }
 
+    /**
+     * 文件下载
+     * @param req 下载请求参数（文件/文件夹ID列表）
+     * @return 流式响应体
+     */
     public StreamingResponseBody download(EntryDownloadReq req) {
         Long currentUserId = SecurityUtils.getUserId();
 
@@ -50,7 +58,7 @@ public class DownloadService {
             try {
                 List<DownloadTask> tasks = collectDownloadTasks(req.getIds());
                 if (tasks.isEmpty()) {
-                    throw new BusinessException("File not found");
+                    throw new BusinessException("文件不存在");
                 }
 
                 // 计算总大小并记录流量
@@ -87,14 +95,16 @@ public class DownloadService {
                     }
                 }
             } catch (Exception e) {
-                log.error("Download error: {}", e.getMessage());
-                throw new BusinessException("Download failed");
+                logger.error("下载失败: {}", e.getMessage());
+                throw new BusinessException("下载失败");
             }
         };
     }
 
     /**
-     * 获取下载文件名（在流式传输前调用）
+     * 获取下载文件的名称
+     * @param req 下载请求参数
+     * @return 文件名（单文件=原名，多文件=时间戳.zip）
      */
     public String getDownloadFileName(EntryDownloadReq req) {
         List<Entry> entries = entryMapper.selectList(
@@ -103,7 +113,7 @@ public class DownloadService {
                         .in(Entry::getId, req.getIds()));
 
         if (entries == null || entries.isEmpty()) {
-            throw new BusinessException("File not found");
+            throw new BusinessException("文件不存在");
         }
 
         // 单文件下载：直接返回文件名
@@ -116,12 +126,14 @@ public class DownloadService {
     }
 
     /**
-     * 收集所有需要下载的文件和文件夹，构建下载任务列表
+     * 收集下载任务
+     * @param entryIds 选中的文件/文件夹ID
+     * @return 下载任务列表
      */
     private List<DownloadTask> collectDownloadTasks(List<Long> entryIds) {
         List<DownloadTask> tasks = new ArrayList<>();
 
-        // 1. 批量查询根节点（状态为未删除）
+        // 批量查询根节点（状态为未删除）
         List<Entry> roots = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
                         .in(Entry::getId, entryIds)
@@ -142,7 +154,7 @@ public class DownloadService {
             return tasks;
         }
 
-        // 2. 收集文件夹ID，递归查询所有后代节点
+        // 收集文件夹ID，递归查询所有后代节点
         List<Long> folderIds = roots.stream()
                 .filter(e -> e.getEntryType() == DbConsts.ENTRY_TYPE_FOLDER)
                 .map(Entry::getId)
@@ -150,22 +162,22 @@ public class DownloadService {
 
         Map<Long, List<Entry>> childrenMap = new HashMap<>();
         if (!folderIds.isEmpty()) {
-            // 递归查询子节点，构建 parentId -> children 映射
+            // 递归查询所有后代节点，按父ID分组
             List<Entry> descendants = entryMapper.selectDescendantsByFolderId(folderIds);
             childrenMap = descendants.stream().collect(Collectors.groupingBy(Entry::getParentId));
         }
 
-        // 3. 构建 storageId -> Storage 映射
+        // 批量构建存储信息映射
         Map<Long, Storage> storageMap = buildStorageMap(roots, childrenMap);
 
-        // 4. 遍历根节点，构建下载任务tre
+        // 遍历根节点，生成完整下载任务
         for (Entry root : roots) {
             String rootPath = root.getEntryName();
             if (root.getEntryType() == DbConsts.ENTRY_TYPE_FOLDER) {
-                // 文件夹：递归遍历所有子节点，生成带路径的下载任务
+                // 递归遍历文件夹，生成带层级路径的任务
                 buildTasks(root, rootPath, childrenMap, storageMap, tasks);
             } else {
-                // 文件：直接从 storageMap 获取 objectKey
+                // 普通文件直接构建任务
                 Storage storage = storageMap.get(root.getStorageId());
                 if (storage != null) {
                     tasks.add(new DownloadTask(root.getEntryName(), storage.getBucketName(),
@@ -178,8 +190,10 @@ public class DownloadService {
     }
 
     /**
-     * 构建 storageId -> Storage 的映射
-     * 收集所有文件（包括根节点和后代节点）的 storageId，批量查询后构建映射表
+     * 构建存储ID映射表
+     * @param roots 根节点列表
+     * @param childrenMap 子节点映射
+     * @return storageId -> Storage
      */
     private Map<Long, Storage> buildStorageMap(List<Entry> roots, Map<Long, List<Entry>> childrenMap) {
         Set<Long> storageIds = new HashSet<>();
@@ -200,14 +214,11 @@ public class DownloadService {
             }
         }
 
-        if (storageIds.isEmpty()) {
-            return new HashMap<>();
-        }
+        if (storageIds.isEmpty()) return new HashMap<>();
 
         // 批量查询 Storage 记录，构建 storageId -> Storage 映射
         List<Storage> storages = storageMapper.selectList(
-                Wrappers.<Storage>lambdaQuery()
-                        .in(Storage::getId, storageIds));
+                Wrappers.<Storage>lambdaQuery().in(Storage::getId, storageIds));
 
         return storages.stream().collect(Collectors.toMap(Storage::getId, s -> s));
     }
@@ -244,24 +255,27 @@ public class DownloadService {
     }
 
     /**
-     * 将单个任务写入 ZIP 流
-     * - 空文件夹：直接写入 ZIPEntry
-     * - 文件：流式读取 MinIO 对象并写入 ZIP
+     * 将文件写入ZIP压缩包
+     * @param zos ZIP输出流
+     * @param task 下载任务
+     * @param entryNames 已存在的文件名（去重）
      */
     private void writeToZip(ZipOutputStream zos, DownloadTask task, Set<String> entryNames)
             throws Exception {
+        // 获取唯一文件名
         String entryPath = getUniqueEntryName(task.zipPath, entryNames);
         entryNames.add(entryPath);
 
         ZipEntry entry = new ZipEntry(entryPath);
+        // 空目录：仅创建目录结构
         if (task.isEmptyDir()) {
             zos.putNextEntry(entry);
             zos.closeEntry();
             return;
         }
 
+        // 写入文件到ZIP
         zos.putNextEntry(entry);
-
         try (InputStream is = minioClient.getObject(
                 GetObjectArgs.builder()
                         .bucket(task.bucketName)
@@ -273,8 +287,10 @@ public class DownloadService {
     }
 
     /**
-     * 获取唯一的 ZIP 条目名称
-     * 如果存在同名文件，自动重命名为 name(n).ext 格式
+     * 生成唯一文件名
+     * @param original 原始文件名
+     * @param existing 已存在的文件名集合
+     * @return 唯一文件名
      */
     private String getUniqueEntryName(String original, Set<String> existing) {
         if (!existing.contains(original)) return original;
@@ -295,7 +311,6 @@ public class DownloadService {
 
     /**
      * 下载任务内部类
-     * 用于封装单个文件或文件夹的下载信息
      */
     @AllArgsConstructor
     private static class DownloadTask {
