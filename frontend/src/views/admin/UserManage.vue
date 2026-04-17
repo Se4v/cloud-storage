@@ -459,10 +459,11 @@ const loadUserList = async () => {
 }
 
 // 全选逻辑（仅选中当前页）
-computed(() => {
+const isAllSelected = computed(() => {
+  const selectedIds = selectedUsers.value.map(user => user.id)
   return paginatedTableData.value.length > 0 &&
-      paginatedTableData.value.every(user => selectedUsers.value.includes(user.id))
-});
+      paginatedTableData.value.every(user => selectedIds.includes(user.id))
+})
 
 // 处理表格选择变化
 const handleSelectionChange = (selection) => {
