@@ -6,10 +6,13 @@ import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
+import org.example.backend.mapper.UserMapper;
 import org.example.backend.model.entity.Entry;
+import org.example.backend.model.entity.User;
 import org.example.backend.model.request.share.LinkDeletionReq;
 import org.example.backend.model.request.share.LinkUpdateReq;
 import org.example.backend.model.entity.Share;
+import org.example.backend.model.response.share.LinkInfoResp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +23,12 @@ import java.util.List;
 public class ShareService {
     private final ShareMapper shareMapper;
     private final EntryMapper entryMapper;
+    private final UserMapper userMapper;
 
-    public ShareService(ShareMapper shareMapper, EntryMapper entryMapper) {
+    public ShareService(ShareMapper shareMapper, EntryMapper entryMapper, UserMapper userMapper) {
         this.shareMapper = shareMapper;
         this.entryMapper = entryMapper;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -64,6 +69,21 @@ public class ShareService {
         if (entries == null || entries.isEmpty()) return List.of();
 
         return entries;
+    }
+
+    public LinkInfoResp getLinkInfo(String linkKey) {
+        Share link = shareMapper.selectOne(
+                Wrappers.<Share>lambdaQuery().eq(Share::getLinkKey, linkKey));
+        if (link == null) return null;
+        User sharer = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery().eq(User::getId, link.getUserId()));
+
+        LinkInfoResp resp = LinkInfoResp.builder()
+                .username(sharer.getUsername())
+                .expireTime(link.getExpiredAt())
+                .build();
+
+        return resp;
     }
 
     /**

@@ -230,7 +230,7 @@ public class OrgService {
         // 更新
         Drive drive = driveMapper.selectOne(
                 Wrappers.<Drive>lambdaQuery().eq(Drive::getNodeId, req.getId()));
-        if (drive == null) throw new BusinessException("节点对应的存储空间不存在");
+        if (drive == null) throw new BusinessException("更新节点失败");
         if (drive.getUsedQuota() > req.getStorageQuota()) throw new BusinessException("");
 
         int driveUpdateCount = driveMapper.update(
@@ -239,7 +239,7 @@ public class OrgService {
                         .set(Drive::getTotalQuota, req.getStorageQuota())
                         .set(Drive::getUserId, adminId)
                         .eq(Drive::getNodeId, drive.getNodeId()));
-        if (driveUpdateCount != 1) throw new BusinessException("更新节点-空间失败");
+        if (driveUpdateCount != 1) throw new BusinessException("更新节点失败");
     }
 
     /**

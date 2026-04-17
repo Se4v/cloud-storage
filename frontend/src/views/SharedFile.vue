@@ -21,11 +21,10 @@
             />
             <div>
               <div class="text-[16px] font-semibold text-slate-900 flex items-center gap-2">
-                <span>夸父*836的分享</span>
+                <span>{{ shareInfo.username }}的分享</span>
               </div>
               <div class="text-[13px] text-slate-500 mt-1 flex items-center gap-3">
-                <span>共 {{ fileList.length }} 个文件 {{ totalSize }}</span>
-                <span>1天后过期</span>
+                <span>{{ formatExpireTime }}</span>
               </div>
             </div>
           </div>
@@ -42,7 +41,6 @@
           </div>
         </div>
 
-        <!-- Breadcrumb Navigation -->
         <div class="px-6 py-3 border-b border-slate-200 flex items-center gap-2 text-sm text-slate-500 bg-slate-50/50">
           <span
             class="font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
@@ -99,17 +97,6 @@
                     </el-icon>
                   </div>
                   <span class="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">{{ row.name }}</span>
-                  
-                  <!-- Hover Actions -->
-                  <div class="hidden group-hover:flex items-center gap-2 ml-auto shrink-0">
-                    <button
-                      class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
-                      @click.stop="downloadFile(row)"
-                      title="下载"
-                    >
-                      <el-icon :size="18"><Download /></el-icon>
-                    </button>
-                  </div>
                 </div>
               </template>
             </el-table-column>
@@ -135,11 +122,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import {
   Download,
   Document,
   Folder
 } from '@element-plus/icons-vue'
+import {ElMessage} from "element-plus";
 
 const API_BASE_URL = 'http://localhost:8080'
 
@@ -153,28 +142,26 @@ const rootFolderId = ref(null)
 const currentFolderId = ref(null)
 
 // 文件列表
-const fileList = ref([
-  {
-    id: 1,
-    name: 'Idea 版本控制配置.docx',
-    size: '703488',
-    type: 1,
-    createTime: '2026-01-11 18:28',
-  }
-])
+const fileList = ref([])
 
 const selectedFiles = ref([])
 
-const totalSize = computed(() => {
-  if (fileList.value.length === 0) return '0 B'
-  // 将所有文件大小转换为BigInt并求和（文件夹不计算大小）
-  let total = 0n
-  for (const file of fileList.value) {
-    if (file.type === 1 && file.size) {
-      total += toBigInt(file.size)
-    }
-  }
-  return formatBytes(total)
+// 分享信息（从后端加载）
+const shareInfo = ref({
+  username: '', // 分享者名称
+  expireTime: ''  // 过期时间
+})
+
+// 格式化过期时间显示
+const formatExpireTime = computed(() => {
+  if (!shareInfo.value.expireTime) return ''
+  const expireDate = new Date(shareInfo.value.expireTime)
+  const now = new Date()
+  const diffMs = expireDate - now
+  if (diffMs <= 0) return '已过期'
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 1) return '1天后过期'
+  return `${diffDays}天后过期`
 })
 
 const handleSelectionChange = (val) => {
@@ -208,10 +195,37 @@ const loadFileList = async (linkKey = null, parentId = null) => {
     if (res.data.code === 200) {
       fileList.value = res.data.data || []
       selectedFiles.value = []
+    } else {
+      ElMessage.error(res.data.msg || '加载文件列表失败')
     }
   } catch (error) {
     console.error('加载文件列表失败:', error)
     fileList.value = []
+  }
+}
+
+// 加载分享信息
+const loadShareInfo = async (linkKey = null) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/share/info`, {
+      params: {
+        linkKey: linkKey.value
+      }
+    })
+    if (res.data.code === 200) {
+      shareInfo.value = res.data.data || {
+        username: '',
+        expireTime: ''
+      }
+    } else {
+      ElMessage.error(res.data.msg || '加载失败')
+    }
+  } catch (error) {
+    console.error('加载分享信息失败:', error)
+    shareInfo.value = {
+      username: '',
+      expireTime: ''
+    }
   }
 }
 
@@ -232,20 +246,64 @@ const goToPath = (index) => {
 }
 
 // 页面初始化
-onMounted(() => {
-  // TODO: 从路由参数或其他方式获取最初的文件夹ID
-  // 例如：rootFolderId.value = route.params.folderId
-  // 然后加载根目录文件列表
-  // loadFileList(linkKey, null)
+onMounted(async () => {
+  // TODO: 从路由参数或其他方式获取linkKey等参数
+  const linkKey = route.params.linkKey
+  // 加载分享信息和根目录文件列表
+  await Promise.all([
+    loadShareInfo(linkKey),
+    loadFileList(linkKey, null)
+  ])
+  // loadFileList完成后，取第一个文件夹的id作为rootFolderId
+  if (fileList.value.length > 0 && fileList.value[0].type === 2) {
+    rootFolderId.value = fileList.value[0].id
+  }
 })
 
-const handleDownload = () => {
+const handleDownload = async () => {
   const filesToDownload = selectedFiles.value.length > 0 ? selectedFiles.value : fileList.value
-  console.log('Downloading:', filesToDownload)
-}
+  if (filesToDownload.length === 0) return
 
-const downloadFile = (file) => {
-  console.log('Downloading single file:', file)
+  try {
+    const ids = filesToDownload.map(f => f.id)
+    const response = await axios.post(`${API_BASE_URL}/api/share/download`, {
+      ids: ids
+    }, {
+      responseType: 'blob'
+    })
+
+    // 从响应头中获取文件名
+    const contentDisposition = response.headers['content-disposition']
+    let filename = 'download'
+    if (contentDisposition) {
+      const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+      if (encodedMatch) {
+        filename = decodeURIComponent(encodedMatch[1])
+      } else {
+        // 回退到 filename="xxx"（英文文件名）
+        const plainMatch = contentDisposition.match(/filename="(.+?)"/)
+        if (plainMatch) {
+          filename = plainMatch[1]
+        }
+      }
+    }
+
+    // 创建下载链接
+    const blob = new Blob([response.data])
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+
+    ElMessage.success('下载成功')
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('下载失败')
+  }
 }
 
 // 辅助函数：将后端返回的字符串转换为BigInt

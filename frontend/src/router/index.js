@@ -26,7 +26,7 @@ const routes = [
         component: Login
     },
     {
-        path: '/shared',
+        path: '/s/:linkKey?',
         name: 'shareFile',
         component: SharedFile
     },
