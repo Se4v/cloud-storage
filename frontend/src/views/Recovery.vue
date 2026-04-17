@@ -212,36 +212,23 @@ const getAuthConfig = () => {
 const tableRef = ref()
 const selectedRows = ref([])
 const currentPage = ref(1)
-const pageSize = ref(10)
 const total = ref(0)
-const tableData = ref([
-  {
-    id: "1234",
-    name: "abc",
-    type: 2,
-    path: "abc",
-    deleteTime: "2024-05-23 12:23:13",
-    expireTime: "2024-05-23 12:23:13",
-    size: "123"
-  }
-])
+const tableData = ref([])
 const loading = ref(false)
 
 // 获取回收站列表
 const loadRecycleList = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/recycle`, getAuthConfig())
-    const { code, data, msg } = response.data
-    if (code === 200) {
-      tableData.value = data || []
-      total.value = tableData.value.length
-    } else {
-      ElMessage.error(msg || '获取回收站列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/recycle`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取回收站列表失败')
+      return
     }
+    tableData.value = res.data || []
+    total.value = tableData.value.length
   } catch (error) {
-    const errorMsg = error.response?.data?.msg || error.message || '获取回收站列表失败'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.message || '获取回收站列表失败')
     console.error(error)
   } finally {
     loading.value = false
@@ -279,34 +266,31 @@ const handleSelectionChange = (selection) => {
 const handleRestore = async (row) => {
   try {
     await ElMessageBox.confirm(
-        `确定要还原文件 "${row.name}" 吗？`,
-        '确认还原',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'info',
-          customClass: 'custom-message-box'
-        }
+      `确定要还原文件 "${row.name}" 吗？`,
+      '确认还原',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info',
+        customClass: 'custom-message-box'
+      }
     )
 
     loading.value = true
     const restoreData = {
       ids: [row.id]
     }
-    const response = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
-    const { code, msg } = response.data
-    if (code === 200) {
-      ElMessage.success('还原成功')
-      await loadRecycleList()
-      selectedRows.value = []
-    } else {
-      ElMessage.error(msg || '还原失败')
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '还原失败')
+      return
     }
+    ElMessage.success('还原成功')
+    await loadRecycleList()
+    selectedRows.value = []
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('还原失败')
-      console.error(error)
-    }
+    ElMessage.error(error.message || '还原失败')
+    console.error(error)
   } finally {
     loading.value = false
   }

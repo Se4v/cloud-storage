@@ -486,7 +486,6 @@ const route = useRoute()
 const loading = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
-const pageSize = ref(10)
 const total = ref(0)
 const selectedFiles = ref([])
 const tableRef = ref(null)
@@ -539,7 +538,7 @@ const folderTreeData = ref([])
 // 过滤后的文件列表
 const filteredFiles = computed(() => {
   if (!searchQuery.value) return fileList.value
-  const query = searchQuery.value.toLowerCase()
+  const query = (searchQuery.value || '').toLowerCase()
   return fileList.value.filter(file =>
       file.name.toLowerCase().includes(query)
   )
@@ -582,20 +581,20 @@ const loadFileList = async (parentId = 0) => {
 
   loading.value = true
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/personal`, {
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/personal`, {
       ...getAuthConfig(),
       params: {
         driveId: driveId.value,
         parentId: parentId
       }
     })
-    if (res.data.code === 200) {
-      fileList.value = res.data.data || []
-      total.value = fileList.value.length
-      selectedFiles.value = []
-    } else {
-      ElMessage.error(res.data.msg || '加载失败')
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载失败')
+      return
     }
+    fileList.value = res.data || []
+    total.value = fileList.value.length
+    selectedFiles.value = []
   } catch (error) {
     console.error('加载文件列表失败:', error)
     fileList.value = []
@@ -611,7 +610,7 @@ const handleOpenFile = async (file) => {
     // 进入文件夹：更新路径历史，重新加载文件列表
     pathHistory.value.push({ id: file.id, name: file.name })
     currentParentId.value = file.id
-    loadFileList(file.id)
+    await loadFileList(file.id)
   } else {
     // 预览文件：传入id获取预签名链接并在新窗口打开
     try {
@@ -834,7 +833,7 @@ const confirmCreateFolder = async () => {
       newFolderName.value = ''
       ElMessage.success('创建成功')
       // 重新加载文件列表
-      loadFileList(currentParentId.value)
+      await loadFileList(currentParentId.value)
     } else {
       ElMessage.error(response.data.msg || '创建失败')
     }
@@ -996,7 +995,7 @@ const handleCommand = async (command, row) => {
       handleShare()
       break
     case 'rename':
-      handleRenameSingle(row)
+      await handleRenameSingle(row)
       break
     case 'move':
       handleMoveSingle(row)
@@ -1026,7 +1025,7 @@ const handleRenameSingle = async (row) => {
 
     if (response.data.code === 200) {
       ElMessage.success('重命名成功')
-      loadFileList(currentParentId.value)
+      await loadFileList(currentParentId.value)
     } else {
       ElMessage.error(response.data.msg || '重命名失败')
     }
@@ -1052,7 +1051,7 @@ const handleDeleteSingle = (row) => {
       }, getAuthConfig())
       if (response.data.code === 200) {
         ElMessage.success('删除成功')
-        loadFileList(currentParentId.value)
+        await loadFileList(currentParentId.value)
       } else {
         ElMessage.error(response.data.msg || '删除失败')
       }
@@ -1126,7 +1125,7 @@ const confirmMove = async () => {
       moveVisible.value = false
       selectedTargetFolder.value = null
       selectedFiles.value = []
-      loadFileList(currentParentId.value)
+      await loadFileList(currentParentId.value)
     } else {
       ElMessage.error(response.data.msg || '移动失败')
     }
@@ -1182,7 +1181,7 @@ const confirmCopy = async () => {
       copyVisible.value = false
       selectedTargetFolder.value = null
       selectedFiles.value = []
-      loadFileList(currentParentId.value)
+      await loadFileList(currentParentId.value)
     } else {
       ElMessage.error(response.data.msg || '复制失败')
     }
@@ -1228,7 +1227,7 @@ const uploadSingleFile = async (file, initView, taskId) => {
     uploadStore.markAsSkipped(taskId)
     ElMessage.success(`文件 "${file.name}" 秒传成功`)
     // 刷新文件列表
-    loadFileList(currentParentId.value)
+    await loadFileList(currentParentId.value)
     return
   }
 
@@ -1268,7 +1267,7 @@ const uploadSmallFile = async (file, initView, taskId) => {
       uploadStore.completeTask(taskId)
       ElMessage.success(`文件 "${file.name}" 上传成功`)
       // 刷新文件列表
-      loadFileList(currentParentId.value)
+      await loadFileList(currentParentId.value)
     } else {
       uploadStore.failTask(taskId, simpleUploadRes.data.msg || '上传记录失败')
     }
@@ -1382,7 +1381,7 @@ const mergeChunks = async (sha256, fileName, taskId) => {
       uploadStore.completeTask(taskId)
       ElMessage.success(`文件 "${fileName}" 上传成功`)
       // 刷新文件列表
-      loadFileList(currentParentId.value)
+      await loadFileList(currentParentId.value)
     } else {
       uploadStore.failTask(taskId, response.data.msg || '合并分片失败')
     }
@@ -1410,7 +1409,7 @@ const handleBatchDelete = () => {
       if (response.data.code === 200) {
         ElMessage.success('删除成功')
         selectedFiles.value = []
-        loadFileList(currentParentId.value)
+        await loadFileList(currentParentId.value)
       } else {
         ElMessage.error(response.data.msg || '删除失败')
       }

@@ -293,7 +293,7 @@ const handleDelete = (row) => {
       const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids: [row.id] }, getAuthConfig())
       if (res.data.code === 200) {
         ElMessage.success('删除成功')
-        loadMessageList()
+        await loadMessageList()
       } else {
         ElMessage.error('删除失败')
       }
@@ -328,7 +328,7 @@ const handleBatchDelete = () => {
       const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids }, getAuthConfig())
       if (res.data.code === 200) {
         ElMessage.success('批量删除成功')
-        loadMessageList()
+        await loadMessageList()
         selectedMessages.value = []
       } else {
         ElMessage.error('批量删除失败')

@@ -343,16 +343,9 @@ const handleReset = async () => {
   await loadData()
 }
 
-// 分页大小变化
-const handleSizeChange = async (val) => {
-  pageSize.value = val
-  await loadData()
-}
-
 // 页码变化
 const handleCurrentChange = async (val) => {
   currentPage.value = val
-  await loadData()
 }
 </script>
 

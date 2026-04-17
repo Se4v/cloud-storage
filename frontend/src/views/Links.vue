@@ -217,7 +217,6 @@ const getAuthConfig = () => {
 const loading = ref(false)
 const saving = ref(false)
 const currentPage = ref(1)
-const pageSize = ref(10)
 const total = ref(0)
 const selectedLinks = ref([])
 const tableRef = ref(null)
