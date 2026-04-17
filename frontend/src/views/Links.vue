@@ -106,7 +106,7 @@
                 <el-tooltip content="删除链接" placement="top">
                   <button
                       class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
-                      @click="handleDelete(row)"
+                      @click="selectedLinks = [row]; handleBatchDelete()"
                   >
                     <el-icon :size="18"><Delete /></el-icon>
                   </button>
@@ -236,27 +236,20 @@ const editForm = ref({
 const loadLinkList = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/share`, getAuthConfig())
-    const { code, data, msg } = response.data
-    if (code === 200) {
-      linkList.value = data || []
-      total.value = linkList.value.length
-    } else {
-      ElMessage.error(msg || '获取列表失败')
+    const { data: res} = await axios.get(`${API_BASE_URL}/api/share`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取列表失败')
+      return
     }
+    linkList.value = res.data || []
+    total.value = linkList.value.length
   } catch (error) {
-    const errorMsg = error.response?.data?.msg || error.message || '获取分享链接列表失败'
-    ElMessage.error(errorMsg)
     console.error(error)
+    ElMessage.error(error.message || '获取分享链接列表失败')
   } finally {
     loading.value = false
   }
 }
-
-// 页面加载时获取数据
-onMounted(() => {
-  loadLinkList()
-})
 
 // 获取过期状态
 const getExpireStatus = (row) => {
@@ -300,7 +293,6 @@ const handleEdit = (row) => {
 const handleSaveEdit = async () => {
   saving.value = true
   try {
-    // 构造 UpdateLinkArgs
     const updateData = {
       id: editForm.value.id,
       linkName: editForm.value.linkName,
@@ -308,19 +300,17 @@ const handleSaveEdit = async () => {
       accessCode: editForm.value.accessCode,
       expireTime: editForm.value.expireTime
     }
-    const response = await axios.post(`${API_BASE_URL}/api/share/update`, updateData, getAuthConfig())
-    const { code, msg } = response.data
-    if (code === 200) {
-      ElMessage.success('更新成功')
-      editDialogVisible.value = false
-      await loadLinkList()
-    } else {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/share/update`, updateData, getAuthConfig())
+    if (res.code !== 200) {
       ElMessage.error(msg || '更新失败')
+      return
     }
+    ElMessage.success('更新成功')
+    editDialogVisible.value = false
+    await loadLinkList()
   } catch (error) {
-    const errorMsg = error.response?.data?.msg || error.message || '更新失败'
-    ElMessage.error(errorMsg)
     console.error(error)
+    ElMessage.error(error.message || '更新失败')
   } finally {
     saving.value = false
   }
@@ -328,82 +318,53 @@ const handleSaveEdit = async () => {
 
 // 复制链接
 const handleCopyLink = async (row) => {
-  const linkUrl = `http://localhost:8080/s/${row.linkKey}`
+  const linkUrl = `http://localhost:5173/s/${row.linkKey}`
   try {
     await navigator.clipboard.writeText(linkUrl)
     ElMessage.success(`已复制分享链接`)
-  } catch (err) {
+  } catch (error) {
     ElMessage.error('复制失败，请手动复制')
   }
 }
 
-// 删除单个
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
-      `确定要删除外链 "${row.linkName}" 吗？删除后该链接将立即失效。`,
-      '确认删除',
-      {
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedLinks.value.length) return
+
+  try {
+    const selectedNames = selectedRows.value.map(row => row.linkName)
+    const msg = `确定要删除${selectedNames.length > 1 ? `选中的${ selectedLinks.value.length }个外链吗？`
+        : `${ selectedNames[0] }"`}吗？删除后链接将立即失效。`
+    await ElMessageBox.confirm(msg, '确认删除', {
         confirmButtonText: '删除',
         cancelButtonText: '取消',
         type: 'warning',
         confirmButtonClass: '!bg-red-600 !border-red-600 hover:!bg-red-700'
       }
-  ).then(async () => {
-    try {
-      // 构造 DeleteLinkArgs
-      const deleteData = {
-        linkIds: [parseInt(row.id)]
-      }
-      const response = await axios.post(`${API_BASE_URL}/api/share/delete`, deleteData, getAuthConfig())
-      const { code, msg } = response.data
-      if (code === 200) {
-        ElMessage.success('删除成功')
-        await loadLinkList()
-      } else {
-        ElMessage.error(msg || '删除失败')
-      }
-    } catch (error) {
-      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
-      ElMessage.error(errorMsg)
-      console.error(error)
+    )
+
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/share/delete`, {
+      linkIds: selectedLinks.value.map(row => row.id)
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '删除失败')
+      return
     }
-  })
+    ElMessage.success('批量删除成功')
+    selectedLinks.value = []
+    await loadLinkList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error(error)
+      ElMessage.error(error.message || '删除失败')
+    }
+  }
 }
 
-// 批量删除
-const handleBatchDelete = () => {
-  ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedLinks.value.length} 个外链吗？`,
-      '确认删除',
-      {
-        confirmButtonText: '删除',
-        cancelButtonText: '取消',
-        type: 'warning',
-        confirmButtonClass: '!bg-red-600 !border-red-600 hover:!bg-red-700'
-      }
-  ).then(async () => {
-    try {
-      // 构造 DeleteLinkArgs
-      const linkIds = selectedLinks.value.map(item => parseInt(item.id))
-      const deleteData = {
-        linkIds: linkIds
-      }
-      const response = await axios.post(`${API_BASE_URL}/api/share/delete`, deleteData, getAuthConfig())
-      const { code, msg } = response.data
-      if (code === 200) {
-        ElMessage.success('批量删除成功')
-        selectedLinks.value = []
-        await loadLinkList()
-      } else {
-        ElMessage.error(msg || '删除失败')
-      }
-    } catch (error) {
-      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
-      ElMessage.error(errorMsg)
-      console.error(error)
-    }
-  })
-}
+// 页面加载时获取数据
+onMounted(() => {
+  loadLinkList()
+})
 </script>
 
 <style scoped>

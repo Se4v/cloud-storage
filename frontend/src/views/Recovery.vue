@@ -265,9 +265,6 @@ const handleSelectionChange = (selection) => {
 // 批量还原
 const handleBatchRestore = async () => {
   if (!selectedRows.value.length) return
-
-  const isMulti = selectedRows.value.length > 1
-
   try {
     const selectedNames = selectedRows.value.map(row => row.name)
     const msg = `确定要还原${selectedNames.length > 1 ? `选中的 ${selectedNames.length} 个文件` : `"${selectedNames[0]}"`}吗？`
@@ -304,12 +301,9 @@ const handleBatchRestore = async () => {
 // 批量彻底删除
 const handleBatchDelete = async () => {
   if (!selectedRows.value.length) return
-
-  const isMulti = selectedRows.value.length > 1
-
   try {
     const selectedNames = selectedRows.value.map(row => row.name)
-    const msg = `确定要彻底删除${selectedNames.length > 1 ? `选中的 ${selectedNames.length} 个文件吗？此操作不可恢复！`
+    const msg = `确定要彻底删除${selectedNames.length > 1 ? `选中的${selectedNames.length}个文件吗？`
         : `"${selectedNames[0]}"`}吗？此操作不可恢复！`
     await ElMessageBox.confirm(msg, '确认彻底删除', {
         confirmButtonText: '彻底删除',
