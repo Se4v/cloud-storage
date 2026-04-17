@@ -117,7 +117,7 @@
                 <el-tooltip content="删除" placement="top" :show-after="500">
                   <button
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    @click.stop="handleDelete(row)"
+                    @click.stop="selectedMessages = [row]; handleBatchDelete()"
                   >
                     <el-icon :size="16"><Delete /></el-icon>
                   </button>
@@ -239,13 +239,13 @@ const handleSelectionChange = (selection) => {
 const loadMessageList = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/notice`, getAuthConfig())
-    if (response.data.code === 200) {
-      messageList.value = response.data.data || []
-      total.value = messageList.value.length
-    } else {
-      ElMessage.error('加载消息列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/notice`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载消息列表失败')
+      return
     }
+    messageList.value = res.data || []
+    total.value = messageList.value.length
   } catch (error) {
     console.error('加载消息列表失败:', error)
     ElMessage.error('加载消息列表失败')
@@ -262,82 +262,56 @@ const handleSearch = () => {
 // 标记单条消息为已读
 const markAsRead = async (message) => {
   try {
-    const res = await axios.post(`${API_BASE_URL}/api/notice/read`, { ids: [message.id] }, getAuthConfig())
-    if (res.data.code === 200) {
-      message.isRead = 1
-      ElMessage.success('已标记为已读')
-    } else {
-      ElMessage.error('标记已读失败')
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/notice/read`, { ids: [message.id] }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '标记已读失败')
+      return
     }
+    message.isRead = 1
+    ElMessage.success('已标记为已读')
   } catch (error) {
     console.error('标记已读失败:', error)
     ElMessage.error('标记已读失败')
   }
 }
 
-// 删除单条消息
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    `确定要删除消息 "${row.title}" 吗？`,
-    '确认删除',
-    {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-      confirmButtonClass: '!bg-red-600 !border-red-600 !rounded-lg',
-      cancelButtonClass: '!rounded-lg',
-      customClass: '!rounded-xl'
-    }
-  ).then(async () => {
-    try {
-      const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids: [row.id] }, getAuthConfig())
-      if (res.data.code === 200) {
-        ElMessage.success('删除成功')
-        await loadMessageList()
-      } else {
-        ElMessage.error('删除失败')
-      }
-    } catch (error) {
-      console.error('删除失败:', error)
-      ElMessage.error('删除失败')
-    }
-  })
-}
-
 // 批量删除
-const handleBatchDelete = () => {
-  if (selectedMessages.value.length === 0) {
+const handleBatchDelete = async () => {
+  if (!selectedMessages.value.length) {
     ElMessage.warning('请先选择要删除的消息')
     return
   }
-  
-  ElMessageBox.confirm(
-    `确定要删除选中的 ${selectedMessages.value.length} 条消息吗？`,
-    '确认批量删除',
-    {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-      confirmButtonClass: '!bg-red-600 !border-red-600 !rounded-lg',
-      cancelButtonClass: '!rounded-lg',
-      customClass: '!rounded-xl'
+
+  try {
+    await ElMessageBox.confirm(
+        `确定要删除选中的 ${selectedMessages.value.length} 条消息吗？`,
+        '确认批量删除',
+        {
+          confirmButtonText: '删除',
+          cancelButtonText: '取消',
+          type: 'warning',
+          confirmButtonClass: '!bg-red-600 !border-red-600 !rounded-lg',
+          cancelButtonClass: '!rounded-lg',
+          customClass: '!rounded-xl'
+        }
+    )
+
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/notice/delete`, {
+      ids: selectedMessages.value.map(item => item.id)
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '批量删除失败')
+      return
     }
-  ).then(async () => {
-    try {
-      const ids = selectedMessages.value.map(item => item.id)
-      const res = await axios.post(`${API_BASE_URL}/api/notice/delete`, { ids }, getAuthConfig())
-      if (res.data.code === 200) {
-        ElMessage.success('批量删除成功')
-        await loadMessageList()
-        selectedMessages.value = []
-      } else {
-        ElMessage.error('批量删除失败')
-      }
-    } catch (error) {
+    ElMessage.success('批量删除成功')
+    await loadMessageList()
+    selectedMessages.value = []
+  } catch (error) {
+    if (error !== 'cancel') {
       console.error('批量删除失败:', error)
-      ElMessage.error('批量删除失败')
+      ElMessage.error('网络错误或系统异常')
     }
-  })
+  }
 }
 
 // 分页
