@@ -158,7 +158,7 @@
                       <el-icon class="mr-2"><Lock /></el-icon>
                       重置密码
                     </el-dropdown-item>
-                    <el-dropdown-item divided @click="selectedUsers = [row.id]; handleBatchDelete()" class="text-red-600">
+                    <el-dropdown-item divided @click="selectedUsers = [row]; handleBatchDelete()" class="text-red-600">
                       <el-icon class="mr-2"><Delete /></el-icon>
                       删除用户
                     </el-dropdown-item>
@@ -466,7 +466,7 @@ computed(() => {
 
 // 处理表格选择变化
 const handleSelectionChange = (selection) => {
-  selectedUsers.value = selection.map(item => item.id)
+  selectedUsers.value = selection
 }
 
 // 格式化存储空间
@@ -532,7 +532,7 @@ const handleBatchDelete = async () => {
   if (!selectedUsers.value.length) return
   try {
     const selectedNames = selectedUsers.value.map(row => row.username)
-    const msg = `确定要删除${selectedNames.length > 1 ? `选中的${selectedNames.value.length}个用户`
+    const msg = `确定要删除${selectedNames.length > 1 ? `选中的${selectedNames.length}个用户`
             : `用户"${selectedNames[0]}"`}吗？此操作不可恢复`
     await ElMessageBox.confirm(msg, '批量删除', {
         confirmButtonText: '删除',
@@ -541,7 +541,9 @@ const handleBatchDelete = async () => {
         dangerouslyUseHTMLString: true
       }
     )
-    const { data: res } = await axios.post(`${API_BASE_URL}/api/user/delete`, { userIds: selectedUsers.value }, getAuthConfig())
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/user/delete`, {
+      userIds: selectedUsers.value.map(row => row.id)
+    }, getAuthConfig())
     if (res.code !== 200) {
       ElMessage.error(res.data.msg || '批量删除失败')
       return
