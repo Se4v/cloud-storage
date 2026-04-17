@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -51,8 +50,8 @@ public class DownloadService {
      * @param req 下载请求参数（文件/文件夹ID列表）
      * @return 流式响应体
      */
-    public StreamingResponseBody download(EntryDownloadReq req) {
-        Long currentUserId = SecurityUtils.getUserId();
+    public StreamingResponseBody download(EntryDownloadReq req, boolean needTrafficRecord) {
+
 
         return outputStream -> {
             try {
@@ -61,20 +60,23 @@ public class DownloadService {
                     throw new BusinessException("文件不存在");
                 }
 
-                // 计算总大小并记录流量
-                long totalSize = tasks.stream()
-                        .filter(task -> !task.isEmptyDir())
-                        .mapToLong(task -> task.size)
-                        .sum();
+                if (needTrafficRecord) {
+                    // 计算总大小并记录流量
+                    long totalSize = tasks.stream()
+                            .filter(task -> !task.isEmptyDir())
+                            .mapToLong(task -> task.size)
+                            .sum();
 
-                Traffic traffic = Traffic.builder()
-                        .userId(currentUserId)
-                        .storageId(null)
-                        .type(2)
-                        .fileSize(totalSize)
-                        .status(1)
-                        .build();
-                trafficMapper.insert(traffic);
+                    Long currentUserId = SecurityUtils.getUserId();
+                    Traffic traffic = Traffic.builder()
+                            .userId(currentUserId)
+                            .storageId(null)
+                            .type(2)
+                            .fileSize(totalSize)
+                            .status(1)
+                            .build();
+                    trafficMapper.insert(traffic);
+                }
 
                 if (tasks.size() == 1 && !tasks.get(0).isEmptyDir()) {
                     DownloadTask task = tasks.get(0);
@@ -123,6 +125,18 @@ public class DownloadService {
 
         // 多文件/文件夹下载：返回zip文件名
         return "file-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".zip";
+    }
+
+    /**
+     * 获取文件的content-type
+     * @param req 下载请求参数
+     * @return content-type
+     */
+    public String getFileContentType(EntryDownloadReq req) {
+        Entry entry = entryMapper.selectById(req.getIds().get(0));
+        if (entry == null) return "application/octet-stream";
+        Storage storage = storageMapper.selectById(entry.getStorageId());
+        return storage.getMimeType();
     }
 
     /**

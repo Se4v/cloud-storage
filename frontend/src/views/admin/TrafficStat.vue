@@ -534,57 +534,57 @@ const pieChartOption = computed(() => ({
 // 加载统计数据
 const loadTrafficOverview = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/traffic/overview`, getAuthConfig())
-    if (res.data.code === 200) {
-      const data = res.data.data
-      stats.value = {
-        totalQuota: toBigInt(data.totalQuota),
-        usedQuota: toBigInt(data.usedQuota),
-        todayUpload: toBigInt(data.todayUpload),
-        todayDownload: toBigInt(data.todayDownload)
-      }
-    } else {
-      ElMessage.error(res.data.msg || '加载流量概览失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/traffic/overview`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载流量概览失败')
+      return
+    }
+    const data = res.data
+    stats.value = {
+      totalQuota: toBigInt(data.totalQuota),
+      usedQuota: toBigInt(data.usedQuota),
+      todayUpload: toBigInt(data.todayUpload),
+      todayDownload: toBigInt(data.todayDownload)
     }
   } catch (error) {
     console.error('加载流量概览失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载流量概览失败')
+    ElMessage.error(error.message || '加载流量概览失败')
   }
 }
 
 // 加载趋势数据
 const loadTrendData = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/traffic/trend`, getAuthConfig())
-    if (res.data.code === 200) {
-      trafficData.value = res.data.data || []
-    } else {
-      ElMessage.error(res.data.msg || '加载趋势数据失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/traffic/trend`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载趋势数据失败')
+      return
     }
+    trafficData.value = res.data || []
   } catch (error) {
     console.error('加载趋势数据失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载趋势数据失败')
+    ElMessage.error(error.message || '加载趋势数据失败')
   }
 }
 
 // 加载文件类型分布数据
 const loadFileTypeDistribution = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/traffic/distribution`, getAuthConfig())
-    if (res.data.code === 200) {
-      const data = res.data.data || []
-      fileTypeData.value = data.map((item, index) => ({
-        name: item.name,
-        percent: item.percent,
-        size: formatBytes(toBigInt(item.size)),
-        color: colorPalette[index % colorPalette.length]
-      }))
-    } else {
+    const { data: res} = await axios.get(`${API_BASE_URL}/api/traffic/distribution`, getAuthConfig())
+    if (res.code !== 200) {
       ElMessage.error(res.data.msg || '加载文件类型分布失败')
+      return
     }
+    const data = res.data || []
+    fileTypeData.value = data.map((item, index) => ({
+      name: item.name,
+      percent: item.percent,
+      size: formatBytes(toBigInt(item.size)),
+      color: colorPalette[index % colorPalette.length]
+    }))
   } catch (error) {
     console.error('加载文件类型分布失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载文件类型分布失败')
+    ElMessage.error(error.message || '加载文件类型分布失败')
   }
 }
 

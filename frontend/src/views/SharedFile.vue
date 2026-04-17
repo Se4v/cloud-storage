@@ -121,29 +121,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
-import {
-  Download,
-  Document,
-  Folder
-} from '@element-plus/icons-vue'
-import {ElMessage} from "element-plus";
+import { useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
+import { ref, computed, onMounted } from 'vue'
+import { Download, Document, Folder } from '@element-plus/icons-vue'
 
 const API_BASE_URL = 'http://localhost:8080'
 
+const route = useRoute()
+
 // 面包屑路径历史
 const pathHistory = ref([])
-
 // 根文件夹ID（页面加载时保存最初的文件夹ID）
 const rootFolderId = ref(null)
-
 // 当前所在目录的 folderId（根目录为 null 或 0）
 const currentFolderId = ref(null)
-
 // 文件列表
 const fileList = ref([])
-
 const selectedFiles = ref([])
 
 // 分享信息（从后端加载）
@@ -186,46 +181,36 @@ const handleOpenFile = (file) => {
 // 加载文件列表
 const loadFileList = async (linkKey = null, parentId = null) => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/share/file`, {
-      params: {
-        linkKey: linkKey.value,
-        parentId: parentId
-      }
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/share/file`, {
+      params: { linkKey: linkKey, parentId: parentId }
     })
-    if (res.data.code === 200) {
-      fileList.value = res.data.data || []
-      selectedFiles.value = []
-    } else {
-      ElMessage.error(res.data.msg || '加载文件列表失败')
+    if (data.code === 200) {
+      ElMessage.error(res.msg || '加载文件列表失败')
+      return
     }
+    fileList.value = res.data || []
+    selectedFiles.value = []
   } catch (error) {
     console.error('加载文件列表失败:', error)
+    ElMessage.error(error.message || '网络异常')
     fileList.value = []
   }
 }
 
 // 加载分享信息
-const loadShareInfo = async (linkKey = null) => {
+const loadShareInfo = async (linkKey) => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/share/info`, {
-      params: {
-        linkKey: linkKey.value
-      }
-    })
-    if (res.data.code === 200) {
-      shareInfo.value = res.data.data || {
-        username: '',
-        expireTime: ''
-      }
-    } else {
-      ElMessage.error(res.data.msg || '加载失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/share/info`, { params: { linkKey: linkKey} })
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载失败')
+      shareInfo.value = { username: '', expireTime: '' }
+      return
     }
+    shareInfo.value = res.data || { username: '', expireTime: '' }
   } catch (error) {
     console.error('加载分享信息失败:', error)
-    shareInfo.value = {
-      username: '',
-      expireTime: ''
-    }
+    ElMessage.error(error.message || '网络异常')
+    shareInfo.value = { username: '', expireTime: '' }
   }
 }
 
@@ -247,7 +232,6 @@ const goToPath = (index) => {
 
 // 页面初始化
 onMounted(async () => {
-  // TODO: 从路由参数或其他方式获取linkKey等参数
   const linkKey = route.params.linkKey
   // 加载分享信息和根目录文件列表
   await Promise.all([
@@ -261,43 +245,28 @@ onMounted(async () => {
 })
 
 const handleDownload = async () => {
-  const filesToDownload = selectedFiles.value.length > 0 ? selectedFiles.value : fileList.value
-  if (filesToDownload.length === 0) return
+  const filesToDownload = selectedFiles.value.length ? selectedFiles.value : fileList.value
+  if (!filesToDownload.length) return
 
   try {
     const ids = filesToDownload.map(f => f.id)
-    const response = await axios.post(`${API_BASE_URL}/api/share/download`, {
-      ids: ids
-    }, {
-      responseType: 'blob'
-    })
+    const res = await axios.post(`${API_BASE_URL}/api/share/download`, { ids: ids }, { responseType: 'blob' })
 
     // 从响应头中获取文件名
-    const contentDisposition = response.headers['content-disposition']
-    let filename = 'download'
-    if (contentDisposition) {
-      const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
-      if (encodedMatch) {
-        filename = decodeURIComponent(encodedMatch[1])
-      } else {
-        // 回退到 filename="xxx"（英文文件名）
-        const plainMatch = contentDisposition.match(/filename="(.+?)"/)
-        if (plainMatch) {
-          filename = plainMatch[1]
-        }
-      }
-    }
+    const disposition = res.headers['content-disposition']
+    const filenameRegex = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"/
+    const match = disposition?.match(filenameRegex)
+    const filename = match?.[1] ? decodeURIComponent(match[1]) : match?.[2] || 'download'
 
     // 创建下载链接
-    const blob = new Blob([response.data])
-    const downloadUrl = window.URL.createObjectURL(blob)
+    const url = window.URL.createObjectURL(res.data)
     const link = document.createElement('a')
-    link.href = downloadUrl
+    link.href = url
     link.download = filename
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    window.URL.revokeObjectURL(downloadUrl)
+    window.URL.revokeObjectURL(url)
 
     ElMessage.success('下载成功')
   } catch (error) {

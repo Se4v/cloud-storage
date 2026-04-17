@@ -92,14 +92,18 @@ public class ShareLinkController {
     public ResponseEntity<StreamingResponseBody> download(@RequestBody EntryDownloadReq req) {
         String fileName = downloadService.getDownloadFileName(req);
 
-        StreamingResponseBody stream = downloadService.download(req);
+        StreamingResponseBody stream = downloadService.download(req, false);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
+        if (req.getIds().size() == 1) {
+            String mimeType = downloadService.getFileContentType(req);
+            headers.setContentType(MediaType.parseMediaType(mimeType));
+        } else if (req.getIds().size() > 1) {
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        }
+        headers.setContentDisposition(ContentDisposition.builder("attachment")
                 .filename(fileName, StandardCharsets.UTF_8)
-                .build();
-        headers.setContentDisposition(contentDisposition);
+                .build());
 
         return ResponseEntity.ok().headers(headers).body(stream);
     }

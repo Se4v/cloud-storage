@@ -326,8 +326,8 @@ public class EnterpriseService {
      */
     @Transactional
     public void shareEntry(EntryShareReq req) {
-        Long currentUserId = SecurityUtils.getUserId();
-        if (!isMemberOfOrganization(req.getDriveId(), currentUserId)) throw new BusinessException("未授权操作");
+        Long currentOrgId = SecurityUtils.getOrgId();
+        if (!isMemberOfOrganization(req.getDriveId(), currentOrgId)) throw new BusinessException("未授权操作");
 
         Entry existedEntry = entryMapper.selectOne(
                 Wrappers.<Entry>lambdaQuery()
@@ -340,12 +340,12 @@ public class EnterpriseService {
             throw new BusinessException("分享文件失败");
         }
 
-        Long currentOrgId = SecurityUtils.getOrgId();
+        Long currentUserId = SecurityUtils.getUserId();
         Share link = Share.builder()
                 .driveId(existedEntry.getDriveId())
                 .entryId(existedEntry.getId())
                 .entryType(existedEntry.getEntryType())
-                .userId(currentOrgId)
+                .userId(currentUserId)
                 .linkName(req.getLinkName())
                 .linkType(req.getLinkType())
                 .linkKey(generateLinkKey())

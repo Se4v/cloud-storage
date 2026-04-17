@@ -48,7 +48,7 @@ public class AuthService {
      */
     public String login(AuthReq req) {
         // 防止重复登录
-        String existingToken = (String) redisTemplate.opsForValue().get(RedisConsts.KEY_AUTH_USER + req.getUsername());
+        String existingToken = (String) redisTemplate.opsForValue().get(RedisConsts.KEY_AUTH_TOKEN + req.getUsername());
         if (existingToken != null) {
             return existingToken;
         }

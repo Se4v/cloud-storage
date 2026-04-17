@@ -393,35 +393,35 @@ const searchQuery = ref('')
 // 加载数据
 const loadOverview = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/drive-stat/overview`, getAuthConfig())
-    if (res.data.code === 200) {
-      const data = res.data.data
-      totalQuota.value = toBigInt(data.totalQuota)
-      allocatedQuota.value = toBigInt(data.allocatedQuota)
-      usedQuota.value = toBigInt(data.usedQuota)
-      remainingQuota.value = toBigInt(data.remainingQuota)
-    } else {
-      ElMessage.error(res.data.msg || '加载存储概览失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/drive-stat/overview`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载存储概览失败')
+      return
     }
+    const data = res.data
+    totalQuota.value = toBigInt(data.totalQuota)
+    allocatedQuota.value = toBigInt(data.allocatedQuota)
+    usedQuota.value = toBigInt(data.usedQuota)
+    remainingQuota.value = toBigInt(data.remainingQuota)
   } catch (error) {
     console.error('加载存储概览失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载存储概览失败')
+    ElMessage.error(error.message || '加载存储概览失败')
   }
 }
 
 const loadBreakdown = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/drive-stat/breakdown`, getAuthConfig())
-    if (res.data.code === 200) {
-      const data = res.data.data
-      enterpriseQuota.value = toBigInt(data.enterpriseQuota)
-      personalQuota.value = toBigInt(data.personalQuota)
-    } else {
-      ElMessage.error(res.data.msg || '加载容量占比失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/drive-stat/breakdown`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载容量占比失败')
+      return
     }
+    const data = res.data
+    enterpriseQuota.value = toBigInt(data.enterpriseQuota)
+    personalQuota.value = toBigInt(data.personalQuota)
   } catch (error) {
     console.error('加载容量占比失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载容量占比失败')
+    ElMessage.error(error.message || '加载容量占比失败')
   }
 }
 
@@ -439,29 +439,29 @@ const convertTableData = (data) => {
 
 const loadEnterpriseData = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/drive-stat/enterprise`, getAuthConfig())
-    if (res.data.code === 200) {
-      enterpriseTableData.value = convertTableData(res.data.data)
-    } else {
-      ElMessage.error(res.data.msg || '加载企业空间数据失败')
+    const { data: res} = await axios.get(`${API_BASE_URL}/api/drive-stat/enterprise`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载企业空间数据失败')
+      return
     }
+    enterpriseTableData.value = convertTableData(res.data)
   } catch (error) {
     console.error('加载企业空间数据失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载企业空间数据失败')
+    ElMessage.error(error.message || '加载企业空间数据失败')
   }
 }
 
 const loadPersonalData = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/drive-stat/personal`, getAuthConfig())
-    if (res.data.code === 200) {
-      personalTableData.value = convertTableData(res.data.data)
-    } else {
-      ElMessage.error(res.data.msg || '加载个人空间数据失败')
+    const { data: res} = await axios.get(`${API_BASE_URL}/api/drive-stat/personal`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载个人空间数据失败')
+      return
     }
+    personalTableData.value = convertTableData(res.data)
   } catch (error) {
     console.error('加载个人空间数据失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载个人空间数据失败')
+    ElMessage.error(error.message || '加载个人空间数据失败')
   }
 }
 
