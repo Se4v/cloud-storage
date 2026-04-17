@@ -54,7 +54,7 @@ public class RecycleController {
      * 清空回收站所有条目
      * @return 统一响应结果
      */
-    @PostMapping("/clear")
+    @GetMapping("/clear")
     public Result<?> clearEntries() {
         recycleService.clearEntries();
         return Result.success();

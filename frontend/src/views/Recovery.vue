@@ -133,14 +133,14 @@
               <div class="flex items-center justify-center gap-1">
                 <button
                     class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
-                    @click="handleRestore(row)"
+                    @click="selectedRows = [row]; handleBatchRestore()"
                     title="还原"
                 >
                   <el-icon :size="18"><RefreshLeft /></el-icon>
                 </button>
                 <button
                     class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
-                    @click="handleDelete(row)"
+                    @click="selectedRows = [row]; handleBatchDelete()"
                     title="彻底删除"
                 >
                   <el-icon :size="18"><Delete /></el-icon>
@@ -262,91 +262,16 @@ const handleSelectionChange = (selection) => {
   selectedRows.value = selection
 }
 
-// 还原单个
-const handleRestore = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要还原文件 "${row.name}" 吗？`,
-      '确认还原',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'info',
-        customClass: 'custom-message-box'
-      }
-    )
-
-    loading.value = true
-    const restoreData = {
-      ids: [row.id]
-    }
-    const { data: res } = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
-    if (res.code !== 200) {
-      ElMessage.error(res.msg || '还原失败')
-      return
-    }
-    ElMessage.success('还原成功')
-    await loadRecycleList()
-    selectedRows.value = []
-  } catch (error) {
-    ElMessage.error(error.message || '还原失败')
-    console.error(error)
-  } finally {
-    loading.value = false
-  }
-}
-
-// 彻底删除单个
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-        `确定要彻底删除 "${row.name}" 吗？此操作不可恢复！`,
-        '确认彻底删除',
-        {
-          confirmButtonText: '彻底删除',
-          cancelButtonText: '取消',
-          type: 'error',
-          customClass: 'custom-message-box'
-        }
-    )
-
-    loading.value = true
-    const deleteData = {
-      ids: [row.id]
-    }
-    const response = await axios.post(`${API_BASE_URL}/api/recycle/delete`, deleteData, getAuthConfig())
-    const { code, msg } = response.data
-    if (code === 200) {
-      ElMessage.success('已彻底删除')
-      await loadRecycleList()
-      selectedRows.value = []
-    } else {
-      ElMessage.error(msg || '删除失败')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
-      ElMessage.error(errorMsg)
-      console.error(error)
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
 // 批量还原
 const handleBatchRestore = async () => {
-  if (selectedRows.value.length === 0) return
+  if (!selectedRows.value.length) return
 
   const isMulti = selectedRows.value.length > 1
 
   try {
-    await ElMessageBox.confirm(
-        isMulti
-            ? `确定要还原选中的 ${selectedRows.value.length} 个文件吗？`
-            : `确定要还原 "${selectedRows.value[0].name}" 吗？`,
-        '确认还原',
-        {
+    const selectedNames = selectedRows.value.map(row => row.name)
+    const msg = `确定要还原${selectedNames.length > 1 ? `选中的 ${selectedNames.length} 个文件` : `"${selectedNames[0]}"`}吗？`
+    await ElMessageBox.confirm(msg, '确认还原', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'info',
@@ -355,25 +280,21 @@ const handleBatchRestore = async () => {
     )
 
     loading.value = true
-    const ids = selectedRows.value.map(row => row.id)
-    const restoreData = {
-      ids: ids
+    const { data: res} = await axios.post(`${API_BASE_URL}/api/recycle/restore`,  {
+      ids: selectedRows.value.map(row => row.id)
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '还原失败')
+      return
     }
-    const response = await axios.post(`${API_BASE_URL}/api/recycle/restore`, restoreData, getAuthConfig())
-    const { code, msg } = response.data
-    if (code === 200) {
-      ElMessage.success('还原成功')
-      await loadRecycleList()
-      selectedRows.value = []
-      tableRef.value?.clearSelection()
-    } else {
-      ElMessage.error(msg || '还原失败')
-    }
+    ElMessage.success('还原成功')
+    await loadRecycleList()
+    selectedRows.value = []
+    tableRef.value?.clearSelection()
   } catch (error) {
     if (error !== 'cancel') {
-      const errorMsg = error.response?.data?.msg || error.message || '还原失败'
-      ElMessage.error(errorMsg)
       console.error(error)
+      ElMessage.error(error.message || '还原失败')
     }
   } finally {
     loading.value = false
@@ -382,44 +303,38 @@ const handleBatchRestore = async () => {
 
 // 批量彻底删除
 const handleBatchDelete = async () => {
-  if (selectedRows.value.length === 0) return
+  if (!selectedRows.value.length) return
 
   const isMulti = selectedRows.value.length > 1
 
   try {
-    await ElMessageBox.confirm(
-        isMulti
-            ? `确定要彻底删除选中的 ${selectedRows.value.length} 个文件吗？此操作不可恢复！`
-            : `确定要彻底删除 "${selectedRows.value[0].name}" 吗？此操作不可恢复！`,
-        '确认彻底删除',
-        {
-          confirmButtonText: '彻底删除',
-          cancelButtonText: '取消',
-          type: 'error',
-          customClass: 'custom-message-box'
-        }
+    const selectedNames = selectedRows.value.map(row => row.name)
+    const msg = `确定要彻底删除${selectedNames.length > 1 ? `选中的 ${selectedNames.length} 个文件吗？此操作不可恢复！`
+        : `"${selectedNames[0]}"`}吗？此操作不可恢复！`
+    await ElMessageBox.confirm(msg, '确认彻底删除', {
+        confirmButtonText: '彻底删除',
+        cancelButtonText: '取消',
+        type: 'error',
+        customClass: 'custom-message-box'
+      }
     )
 
     loading.value = true
-    const ids = selectedRows.value.map(row => row.id)
-    const deleteData = {
-      ids: ids
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/recycle/delete`, {
+      ids: selectedRows.value.map(row => row.id)
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '删除失败')
+      return
     }
-    const response = await axios.post(`${API_BASE_URL}/api/recycle/delete`, deleteData, getAuthConfig())
-    const { code, msg } = response.data
-    if (code === 200) {
-      ElMessage.success('已彻底删除')
-      await loadRecycleList()
-      selectedRows.value = []
-      tableRef.value?.clearSelection()
-    } else {
-      ElMessage.error(msg || '删除失败')
-    }
+    ElMessage.success('已彻底删除')
+    await loadRecycleList()
+    selectedRows.value = []
+    tableRef.value?.clearSelection()
   } catch (error) {
     if (error !== 'cancel') {
-      const errorMsg = error.response?.data?.msg || error.message || '删除失败'
-      ElMessage.error(errorMsg)
       console.error(error)
+      ElMessage.error(error.message || '还原失败')
     }
   } finally {
     loading.value = false
@@ -428,7 +343,7 @@ const handleBatchDelete = async () => {
 
 // 清空所有
 const handleClearAll = async () => {
-  if (tableData.value.length === 0) {
+  if (!tableData.value.length) {
     ElMessage.info('回收站已是空的')
     return
   }
@@ -446,27 +361,24 @@ const handleClearAll = async () => {
     )
 
     loading.value = true
-    const response = await axios.post(`${API_BASE_URL}/api/recycle/clear`, {}, getAuthConfig())
-    const { code, msg } = response.data
-    if (code === 200) {
-      ElMessage.success('回收站已清空')
-      await loadRecycleList()
-      selectedRows.value = []
-      tableRef.value?.clearSelection()
-    } else {
-      ElMessage.error(msg || '清空失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/recycle/clear`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '清空失败')
+      return
     }
+    ElMessage.success('回收站已清空')
+    await loadRecycleList()
+    selectedRows.value = []
+    tableRef.value?.clearSelection()
   } catch (error) {
     if (error !== 'cancel') {
-      const errorMsg = error.response?.data?.msg || error.message || '清空失败'
-      ElMessage.error(errorMsg)
       console.error(error)
+      ElMessage.error(error.message || '还原失败')
     }
   } finally {
     loading.value = false
   }
 }
-
 </script>
 
 <style scoped>

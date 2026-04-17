@@ -439,7 +439,7 @@ const convertTableData = (data) => {
 
 const loadEnterpriseData = async () => {
   try {
-    const { data: res} = await axios.get(`${API_BASE_URL}/api/drive-stat/enterprise`, getAuthConfig())
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/drive-stat/enterprise`, getAuthConfig())
     if (res.code !== 200) {
       ElMessage.error(res.msg || '加载企业空间数据失败')
       return
