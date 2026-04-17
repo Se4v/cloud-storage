@@ -332,8 +332,8 @@ const handleBatchDelete = async () => {
   if (!selectedLinks.value.length) return
 
   try {
-    const selectedNames = selectedRows.value.map(row => row.linkName)
-    const msg = `确定要删除${selectedNames.length > 1 ? `选中的${ selectedLinks.value.length }个外链吗？`
+    const selectedNames = selectedLinks.value.map(row => row.linkName)
+    const msg = `确定要删除${selectedNames.length > 1 ? `选中的${ selectedNames.value.length }个外链吗？`
         : `${ selectedNames[0] }"`}吗？删除后链接将立即失效。`
     await ElMessageBox.confirm(msg, '确认删除', {
         confirmButtonText: '删除',

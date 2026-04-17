@@ -158,7 +158,7 @@
                       <el-icon class="mr-2"><Lock /></el-icon>
                       重置密码
                     </el-dropdown-item>
-                    <el-dropdown-item divided @click="handleDelete(row)" class="text-red-600">
+                    <el-dropdown-item divided @click="selectedUsers = [row.id]; handleBatchDelete()" class="text-red-600">
                       <el-icon class="mr-2"><Delete /></el-icon>
                       删除用户
                     </el-dropdown-item>
@@ -443,47 +443,30 @@ const loading = ref(false)
 const loadUserList = async () => {
   loading.value = true
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/user/all`, getAuthConfig())
-    if (res.data.code === 200) {
-      tableData.value = res.data.data || []
-      total.value = tableData.value.length
-    } else {
-      ElMessage.error(res.data.msg || '加载用户列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/user/all`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载用户列表失败')
+      return
     }
+    tableData.value = res.data.data || []
+    total.value = tableData.value.length
   } catch (error) {
     console.error('加载用户列表失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载用户列表失败')
+    ElMessage.error(error.message || '加载用户列表失败')
   } finally {
     loading.value = false
   }
 }
 
-// 页面加载时获取数据
-onMounted(() => {
-  loadUserList()
-})
-
 // 全选逻辑（仅选中当前页）
-const isAllSelected = computed(() => {
-  return paginatedTableData.value.length > 0 && 
-    paginatedTableData.value.every(user => selectedUsers.value.includes(user.id))
-})
+computed(() => {
+  return paginatedTableData.value.length > 0 &&
+      paginatedTableData.value.every(user => selectedUsers.value.includes(user.id))
+});
 
 // 处理表格选择变化
 const handleSelectionChange = (selection) => {
   selectedUsers.value = selection.map(item => item.id)
-}
-
-const toggleSelectAll = () => {
-  if (isAllSelected.value) {
-    // 取消选中当前页的所有用户
-    const currentPageIds = paginatedTableData.value.map(item => item.id)
-    selectedUsers.value = selectedUsers.value.filter(id => !currentPageIds.includes(id))
-  } else {
-    // 选中当前页的所有用户
-    const currentPageIds = paginatedTableData.value.map(item => item.id)
-    selectedUsers.value = [...new Set([...selectedUsers.value, ...currentPageIds])]
-  }
 }
 
 // 格式化存储空间
@@ -539,11 +522,6 @@ const handleReset = () => {
 }
 
 // 分页
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  handleSearch()
-}
-
 const handleCurrentChange = (val) => {
   currentPage.value = val
   handleSearch()
@@ -551,30 +529,30 @@ const handleCurrentChange = (val) => {
 
 // 批量删除
 const handleBatchDelete = async () => {
-  if (selectedUsers.value.length === 0) return
+  if (!selectedUsers.value.length) return
   try {
-    await ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedUsers.value.length} 个用户吗？<br><span class="text-xs text-slate-500">此操作不可恢复</span>`,
-      '批量删除',
-      {
+    const selectedNames = selectedUsers.value.map(row => row.username)
+    const msg = `确定要删除${selectedNames.length > 1 ? `选中的${selectedNames.value.length}个用户`
+            : `用户"${selectedNames[0]}"`}吗？此操作不可恢复`
+    await ElMessageBox.confirm(msg, '批量删除', {
         confirmButtonText: '删除',
         cancelButtonText: '取消',
         type: 'error',
         dangerouslyUseHTMLString: true
       }
     )
-    const res = await axios.post(`${API_BASE_URL}/api/user/delete`, { userIds: selectedUsers.value }, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('批量删除成功')
-      selectedUsers.value = []
-      await loadUserList()
-    } else {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/user/delete`, { userIds: selectedUsers.value }, getAuthConfig())
+    if (res.code !== 200) {
       ElMessage.error(res.data.msg || '批量删除失败')
+      return
     }
+    ElMessage.success('批量删除成功')
+    selectedUsers.value = []
+    await loadUserList()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('批量删除失败:', error)
-      ElMessage.error(error.response?.data?.msg || '批量删除失败')
+      ElMessage.error(error.message || '批量删除失败')
     }
   }
 }
@@ -642,13 +620,13 @@ const handleSaveUser = async () => {
         isEnabled: userForm.isEnabled
       }
       const res = await axios.post(`${API_BASE_URL}/api/user/update`, submitData, getAuthConfig())
-      if (res.data.code === 200) {
-        ElMessage.success('修改成功')
-        userDialogVisible.value = false
-        await loadUserList()
-      } else {
-        ElMessage.error(res.data.msg || '修改失败')
+      if (res.data.code !== 200) {
+        ElMessage.error(res.msg || '修改失败')
+        return
       }
+      ElMessage.success('修改成功')
+      userDialogVisible.value = false
+      await loadUserList()
     } else {
       // 创建用户
       const submitData = {
@@ -657,18 +635,18 @@ const handleSaveUser = async () => {
         mobile: userForm.mobile,
         storageQuota: storageQuotaBytes
       }
-      const res = await axios.post(`${API_BASE_URL}/api/user/create`, submitData, getAuthConfig())
-      if (res.data.code === 200) {
-        ElMessage.success('创建成功')
-        userDialogVisible.value = false
-        await loadUserList()
-      } else {
-        ElMessage.error(res.data.msg || '创建失败')
+      const { data: res } = await axios.post(`${API_BASE_URL}/api/user/create`, submitData, getAuthConfig())
+      if (res.code !== 200) {
+        ElMessage.error(res.msg || '创建失败')
+        return
       }
+      ElMessage.success('创建成功')
+      userDialogVisible.value = false
+      await loadUserList()
     }
   } catch (error) {
     console.error('保存用户失败:', error)
-    ElMessage.error(error.response?.data?.msg || '保存用户失败')
+    ElMessage.error(error.message || '保存用户失败')
   } finally {
     saving.value = false
   }
@@ -686,16 +664,16 @@ const rolesLoaded = ref(false)
 const loadRoleList = async () => {
   if (rolesLoaded.value) return
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/user/role`, getAuthConfig())
-    if (res.data.code === 200) {
-      allRoles.value = res.data.data || []
-      rolesLoaded.value = true
-    } else {
+    const { data: res} = await axios.get(`${API_BASE_URL}/api/user/role`, getAuthConfig())
+    if (res.code !== 200) {
       ElMessage.error(res.data.msg || '加载角色列表失败')
+      return
     }
+    allRoles.value = res.data.data || []
+    rolesLoaded.value = true
   } catch (error) {
     console.error('加载角色列表失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载角色列表失败')
+    ElMessage.error(error.message || '加载角色列表失败')
   }
 }
 
@@ -721,21 +699,20 @@ const saveRoles = async () => {
   if (!currentUser.value) return
   roleSaving.value = true
   try {
-    const res = await axios.post(`${API_BASE_URL}/api/user/assign`, {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/user/assign`, {
       userId: currentUser.value.id,
       roleIds: selectedRoles.value
     }, getAuthConfig())
-    if (res.data.code === 200) {
-      // 更新本地数据
-      currentUser.value.roles = [...selectedRoles.value]
-      ElMessage.success('角色分配成功')
-      roleDrawerVisible.value = false
-    } else {
+    if (res.code !== 200) {
       ElMessage.error(res.data.msg || '角色分配失败')
+      return
     }
+    currentUser.value.roles = [...selectedRoles.value]
+    ElMessage.success('角色分配成功')
+    roleDrawerVisible.value = false
   } catch (error) {
     console.error('角色分配失败:', error)
-    ElMessage.error(error.response?.data?.msg || '角色分配失败')
+    ElMessage.error(error.message || '角色分配失败')
   } finally {
     roleSaving.value = false
   }
@@ -745,7 +722,7 @@ const saveRoles = async () => {
 const handleResetPassword = async (row) => {
   try {
     await ElMessageBox.confirm(
-      `确定要重置用户 "${row.username}" 的密码吗？<br><span class="text-xs text-slate-500">重置后的默认密码将发送至用户手机</span>`,
+      `确定要重置用户 "${row.username}" 的密码吗？重置后的默认密码将发送至用户手机`,
       '重置密码',
       {
         confirmButtonText: '确定重置',
@@ -754,47 +731,24 @@ const handleResetPassword = async (row) => {
         dangerouslyUseHTMLString: true
       }
     )
-    const res = await axios.post(`${API_BASE_URL}/api/user/reset`, { userId: row.id }, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('密码重置成功')
-    } else {
-      ElMessage.error(res.data.msg || '重置密码失败')
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/user/reset`, { userId: row.id }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '重置密码失败')
+      return
     }
+    ElMessage.success('密码重置成功')
   } catch (error) {
     if (error !== 'cancel') {
       console.error('重置密码失败:', error)
-      ElMessage.error(error.response?.data?.msg || '重置密码失败')
+      ElMessage.error(error.message || '重置密码失败')
     }
   }
 }
 
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除用户 "${row.username}" 吗？<br><span class="text-xs text-slate-500">此操作将删除该用户的所有数据，且不可恢复</span>`,
-      '删除用户',
-      {
-        confirmButtonText: '删除',
-        cancelButtonText: '取消',
-        type: 'error',
-        dangerouslyUseHTMLString: true
-      }
-    )
-    const res = await axios.post(`${API_BASE_URL}/api/user/delete`, { userIds: [row.id] }, getAuthConfig())
-    if (res.data.code === 200) {
-      selectedUsers.value = selectedUsers.value.filter(id => id !== row.id)
-      ElMessage.success('删除成功')
-      await loadUserList()
-    } else {
-      ElMessage.error(res.data.msg || '删除失败')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除用户失败:', error)
-      ElMessage.error(error.response?.data?.msg || '删除失败')
-    }
-  }
-}
+// 页面加载时获取数据
+onMounted(() => {
+  loadUserList()
+})
 </script>
 
 <style scoped>
