@@ -360,42 +360,37 @@ const passwordRules = {
 // 获取个人信息
 const loadProfile = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/profile`, getAuthConfig())
-    const { code, data, msg } = response.data
-    
-    if (code === 200 && data) {
-      userInfo.userId = data.userId
-      userInfo.username = data.username
-      userInfo.realName = data.realName
-      userInfo.email = data.email
-      userInfo.mobile = data.mobile || ''
-      
-      // 通过 getAvatar 接口获取头像预签名链接
-      try {
-        const avatarRes = await axios.get(`${API_BASE_URL}/api/profile/avatar`, getAuthConfig())
-        if (avatarRes.data.code === 200) {
-          userInfo.avatar = avatarRes.data.data
-        } else {
-          userInfo.avatar = ''
-        }
-      } catch (avatarError) {
-        console.error('获取头像链接失败:', avatarError)
-        userInfo.avatar = ''
-      }
-    } else {
-      ElMessage.error(msg || '获取个人信息失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/profile`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取个人信息失败')
+      return
     }
+    if (!res.data) return
+
+    // 通过 getAvatar 接口获取头像预签名链接
+    let avatarUrl = ''
+    try {
+      const { data: avatarRes } = await axios.get(`${API_BASE_URL}/api/profile/avatar`, getAuthConfig())
+      if (avatarRes.code === 200) {
+        avatarUrl = avatarRes.data
+      }
+    } catch (e) {
+      console.error('获取头像链接失败:', e)
+    }
+
+    Object.assign(userInfo, {
+      userId: res.data.userId,
+      username: res.data.username,
+      realName: res.data.realName,
+      email: res.data.email,
+      mobile: res.data.mobile || '',
+      avatar: avatarUrl
+    })
   } catch (error) {
     console.error('获取个人信息失败:', error)
-    const errorMsg = error.response?.data?.msg || error.message || '获取个人信息失败，请检查网络连接'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.message || '获取个人信息失败，请检查网络连接')
   }
 }
-
-// 页面加载时获取个人信息
-onMounted(() => {
-  loadProfile()
-})
 
 // 触发头像上传
 const triggerUpload = () => {
@@ -501,26 +496,21 @@ const saveField = async (field) => {
 
   saving.value = true
   try {
-    // 构建更新参数
-    const updateData = {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/profile`, {
       email: field === 'email' ? tempValue.value : userInfo.email,
       mobile: field === 'mobile' ? tempValue.value : userInfo.mobile
-    }
+    }, getAuthConfig())
     
-    const response = await axios.post(`${API_BASE_URL}/api/profile`, updateData, getAuthConfig())
-    const { code, msg } = response.data
-    
-    if (code === 200) {
-      userInfo[field] = tempValue.value
-      ElMessage.success('修改成功')
-      editingField.value = ''
-    } else {
-      ElMessage.error(msg || '保存失败，请重试')
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '保存失败，请重试')
+      return
     }
+    userInfo[field] = tempValue.value
+    ElMessage.success('修改成功')
+    editingField.value = ''
   } catch (error) {
     console.error('保存失败:', error)
-    const errorMsg = error.response?.data?.msg || error.message || '保存失败，请重试'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.message || '保存失败，请重试')
   } finally {
     saving.value = false
   }
@@ -536,38 +526,42 @@ const cancelEdit = () => {
 const handleUpdatePassword = async () => {
   if (!passwordFormRef.value) return
 
-  await passwordFormRef.value.validate(async (valid) => {
-    if (valid) {
-      passwordLoading.value = true
-      try {
-        const passwordData = {
-          oldPassword: passwordForm.oldPassword,
-          newPassword: passwordForm.newPassword,
-          confirmPassword: passwordForm.confirmPassword
-        }
-        
-        const response = await axios.post(`${API_BASE_URL}/api/profile/password`, passwordData, getAuthConfig())
-        const { code, msg } = response.data
-        
-        if (code === 200) {
-          ElMessage.success('密码修改成功，请重新登录')
-          // 清空表单
-          passwordForm.oldPassword = ''
-          passwordForm.newPassword = ''
-          passwordForm.confirmPassword = ''
-        } else {
-          ElMessage.error(msg || '密码修改失败')
-        }
-      } catch (error) {
-        console.error('密码修改失败:', error)
-        const errorMsg = error.response?.data?.msg || error.message || '密码修改失败'
-        ElMessage.error(errorMsg)
-      } finally {
-        passwordLoading.value = false
-      }
+  try {
+    await passwordFormRef.value.validate()
+
+    passwordLoading.value = true
+
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/profile/password`, {
+      oldPassword: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword,
+      confirmPassword: passwordForm.confirmPassword
+    }, getAuthConfig())
+
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '密码修改失败')
+      return
     }
-  })
+
+    ElMessage.success('密码修改成功，请重新登录')
+    Object.assign(passwordForm, {
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    })
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('密码修改失败:', error)
+      ElMessage.error(error.message || '密码修改失败')
+    }
+  } finally {
+    passwordLoading.value = false
+  }
 }
+
+// 页面加载时获取个人信息
+onMounted(() => {
+  loadProfile()
+})
 </script>
 
 <style scoped>

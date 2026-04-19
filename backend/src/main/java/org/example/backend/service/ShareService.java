@@ -3,18 +3,21 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
+import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
 import org.example.backend.mapper.UserMapper;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.entity.User;
+import org.example.backend.model.request.share.LinkCheckReq;
 import org.example.backend.model.request.share.LinkDeletionReq;
 import org.example.backend.model.request.share.LinkUpdateReq;
 import org.example.backend.model.entity.Share;
 import org.example.backend.model.response.share.LinkInfoResp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,44 +49,6 @@ public class ShareService {
         if (shareList == null || shareList.isEmpty()) return List.of();
 
         return shareList;
-    }
-
-    public List<Entry> listEntries(String linkKey, Long parentId) {
-        if (linkKey != null) {
-            Share link = shareMapper.selectOne(
-                    Wrappers.<Share>lambdaQuery()
-                            .eq(Share::getLinkKey, linkKey)
-                            .eq(Share::getIsDeleted, DbConsts.DELETED_NO)
-                            .gt(Share::getExpiredAt, LocalDateTime.now()));
-            if (link == null) return List.of();
-            List<Entry> entries = entryMapper.selectList(
-                    Wrappers.<Entry>lambdaQuery()
-                            .eq(Entry::getId, link.getEntryId())
-                            .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
-            return entries;
-        }
-        List<Entry> entries = entryMapper.selectList(
-                Wrappers.<Entry>lambdaQuery()
-                        .eq(Entry::getParentId, parentId)
-                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
-        if (entries == null || entries.isEmpty()) return List.of();
-
-        return entries;
-    }
-
-    public LinkInfoResp getLinkInfo(String linkKey) {
-        Share link = shareMapper.selectOne(
-                Wrappers.<Share>lambdaQuery().eq(Share::getLinkKey, linkKey));
-        if (link == null) return null;
-        User sharer = userMapper.selectOne(
-                Wrappers.<User>lambdaQuery().eq(User::getId, link.getUserId()));
-
-        LinkInfoResp resp = LinkInfoResp.builder()
-                .username(sharer.getUsername())
-                .expireTime(link.getExpiredAt())
-                .build();
-
-        return resp;
     }
 
     /**
@@ -127,5 +92,51 @@ public class ShareService {
                         .eq(Share::getUserId, currentUserId)
                         .in(Share::getId, req.getLinkIds()));
         if (count != req.getLinkIds().size()) throw new BusinessException("删除分享链接失败");
+    }
+
+    public List<Entry> listEntries(String linkKey, Long parentId) {
+        if (linkKey != null) {
+            Share link = shareMapper.selectOne(
+                    Wrappers.<Share>lambdaQuery()
+                            .eq(Share::getLinkKey, linkKey)
+                            .eq(Share::getIsDeleted, DbConsts.DELETED_NO)
+                            .gt(Share::getExpiredAt, LocalDateTime.now()));
+            if (link == null) return List.of();
+            List<Entry> entries = entryMapper.selectList(
+                    Wrappers.<Entry>lambdaQuery()
+                            .eq(Entry::getId, link.getEntryId())
+                            .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+            return entries;
+        }
+        List<Entry> entries = entryMapper.selectList(
+                Wrappers.<Entry>lambdaQuery()
+                        .eq(Entry::getParentId, parentId)
+                        .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
+        if (entries == null || entries.isEmpty()) return List.of();
+
+        return entries;
+    }
+
+    public LinkInfoResp getLinkInfo(String linkKey) {
+        Share link = shareMapper.selectOne(
+                Wrappers.<Share>lambdaQuery().eq(Share::getLinkKey, linkKey));
+        if (link == null) return null;
+        User sharer = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery().eq(User::getId, link.getUserId()));
+
+        LinkInfoResp resp = LinkInfoResp.builder()
+                .username(sharer.getUsername())
+                .expireTime(link.getExpiredAt())
+                .linkType(link.getLinkType())
+                .build();
+
+        return resp;
+    }
+
+    public void checkAccessCode(LinkCheckReq req) {
+        Share link = shareMapper.selectOne(
+                Wrappers.<Share>lambdaQuery().eq(Share::getLinkKey, req.getLinkKey()));
+        if (!link.getAccessCode().equals(req.getAccessCode()))
+            throw new BusinessException("<UNK>");
     }
 }

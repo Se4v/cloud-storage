@@ -177,15 +177,15 @@ const getTypeLabel = (type) => {
 const loadPermissions = async () => {
   loading.value = true
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/perm/all`, getAuthConfig())
-    if (res.data.code === 200) {
-      permissionList.value = res.data.data || []
-    } else {
-      ElMessage.error(res.data.msg || '获取权限列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/perm/all`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取权限列表失败')
+      return
     }
+    permissionList.value = res.data || []
   } catch (error) {
     console.error('获取权限列表失败:', error)
-    ElMessage.error(error.response?.data?.msg || '获取权限列表失败')
+    ElMessage.error(error.message || '获取权限列表失败')
   } finally {
     loading.value = false
   }

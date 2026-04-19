@@ -309,7 +309,6 @@ const storageLegend = computed(() => [
 
 // 环形图配置
 const pieOption = computed(() => {
-  const total = storageData.value[0].value + storageData.value[1].value
   return {
     tooltip: {
       trigger: 'item',

@@ -315,29 +315,24 @@ const newFileExt = ref('')
 // 加载系统设置
 const loadSystemConfig = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/system`, getAuthConfig())
-    if (res.data.code === 200) {
-      const data = res.data.data
-      // 后端返回的都是 String 类型，需要转换
-      form.loginFailThreshold = parseInt(data.loginFailThreshold) || 5
-      form.defaultPassword = data.defaultPassword || '123456'
-      form.defaultStorageQuota = parseInt(data.defaultStorageQuota) || 10737418240
-      form.maxFileSize = parseInt(data.maxFileSize) || 500
-      form.storageWarningThreshold = parseInt(data.storageWarningThreshold) || 80
-      form.fileTypeBlacklist = data.fileTypeBlacklist || ['.exe', '.bat', '.sh', '.php']
-    } else {
-      ElMessage.error(res.data.msg || '获取系统设置失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/system`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取系统设置失败')
+      return
     }
+    const data = res.data
+    // 后端返回的都是 String 类型，需要转换
+    form.loginFailThreshold = parseInt(data.loginFailThreshold) || 5
+    form.defaultPassword = data.defaultPassword || '123456'
+    form.defaultStorageQuota = parseInt(data.defaultStorageQuota) || 10737418240
+    form.maxFileSize = parseInt(data.maxFileSize) || 500
+    form.storageWarningThreshold = parseInt(data.storageWarningThreshold) || 80
+    form.fileTypeBlacklist = data.fileTypeBlacklist || ['.exe', '.bat', '.sh', '.php']
   } catch (error) {
     console.error('获取系统设置失败:', error)
-    ElMessage.error(error.response?.data?.msg || '获取系统设置失败')
+    ElMessage.error(error.message || '获取系统设置失败')
   }
 }
-
-// 页面加载时获取系统设置
-onMounted(() => {
-  loadSystemConfig()
-})
 
 // 获取阈值颜色
 const getThresholdColor = (threshold) => {
@@ -418,19 +413,24 @@ const handleSave = async () => {
       fileTypeBlacklist: form.fileTypeBlacklist
     }
     
-    const res = await axios.post(`${API_BASE_URL}/api/system/update`, submitData, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('系统设置保存成功')
-    } else {
-      ElMessage.error(res.data.msg || '保存失败')
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/system/update`, submitData, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '保存失败')
+      return
     }
+    ElMessage.success('系统设置保存成功')
   } catch (error) {
     console.error('保存系统设置失败:', error)
-    ElMessage.error(error.response?.data?.msg || '保存失败')
+    ElMessage.error(error.message || '保存失败')
   } finally {
     saving.value = false
   }
 }
+
+// 页面加载时获取系统设置
+onMounted(() => {
+  loadSystemConfig()
+})
 </script>
 
 <style scoped>
