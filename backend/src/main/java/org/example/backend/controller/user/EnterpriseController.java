@@ -1,5 +1,6 @@
 package org.example.backend.controller.user;
 
+import org.example.backend.common.annotation.OperationLog;
 import org.example.backend.common.result.Result;
 import org.example.backend.model.entity.Entry;
 import org.example.backend.model.request.file.*;
@@ -37,6 +38,7 @@ public class EnterpriseController {
      * @param req 上传初始化请求参数
      * @return 上传初始化响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "UPLOAD", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:upload')")
     @PostMapping("/init-upload")
     public Result<?> initUpload(@RequestBody UploadInitReq req) {
@@ -85,6 +87,7 @@ public class EnterpriseController {
      * @param req 文件下载请求参数
      * @return 文件流响应实体
      */
+    @OperationLog(module = "企业空间模块", action = "DOWNLOAD", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:dowanload')")
     @PostMapping("/download")
     public ResponseEntity<StreamingResponseBody> download(@RequestBody EntryDownloadReq req) {
@@ -142,6 +145,7 @@ public class EnterpriseController {
      * @param req 文件夹创建请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "MKDIR", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:mkdir')")
     @PostMapping("/create")
     public Result<?> createFolder(@RequestBody FolderCreationReq req) {
@@ -154,6 +158,7 @@ public class EnterpriseController {
      * @param req 文件移动请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "MOVE", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:move')")
     @PostMapping("/move")
     public Result<?> moveEntries(@RequestBody EntryMoveReq req) {
@@ -166,6 +171,7 @@ public class EnterpriseController {
      * @param req 文件复制请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "COPY", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:copy')")
     @PostMapping("/copy")
     public Result<?> copyEntry(@RequestBody EntryCopyReq req) {
@@ -178,6 +184,7 @@ public class EnterpriseController {
      * @param req 重命名请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "RENAME", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:rename')")
     @PostMapping("/rename")
     public Result<?> renameEntry(@RequestBody EntryRenameReq req) {
@@ -190,6 +197,7 @@ public class EnterpriseController {
      * @param req 删除请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "DELETE", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:delete')")
     @PostMapping("/delete")
     public Result<?> deleteEntries(@RequestBody EntryDeletionReq req) {
@@ -202,6 +210,7 @@ public class EnterpriseController {
      * @param req 文件分享请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "企业空间模块", action = "SHARE", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:share')")
     @PostMapping("/share")
     public Result<?> shareEntry(@RequestBody EntryShareReq req) {
@@ -215,6 +224,7 @@ public class EnterpriseController {
      * @param driveId 空间ID
      * @return 文件预览URL
      */
+    @OperationLog(module = "企业空间模块", action = "PREVIEW", targetType = "FILE")
     @PreAuthorize("hasAuthority('file:view')")
     @GetMapping("/preview")
     public Result<?> preview(@RequestParam("id") Long id, @RequestParam("driveId") Long driveId) {

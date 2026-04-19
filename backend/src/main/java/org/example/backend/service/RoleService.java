@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.mapper.*;
@@ -13,9 +14,7 @@ import org.example.backend.model.entity.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,6 +54,14 @@ public class RoleService {
                         .eq(Role::getDeleted, DbConsts.DELETED_NO));
         if (sameName > 0) throw new BusinessException("角色名称已存在");
 
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("创建角色");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("code", req.getCode());
+        logMap.put("name", req.getName());
+        logMap.put("type", req.getType());
+        LogContextHolder.addDetailProperty("role_create", logMap);
+
         // 创建角色
         Role role = Role.builder()
                 .name(req.getName())
@@ -89,6 +96,21 @@ public class RoleService {
                         .set(Role::getDeleted, DbConsts.DELETED_YES)
                         .in(Role::getId, req.getRoleIds()));
         if (roleDeleteCount == 0) throw new BusinessException("删除角色失败");
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量删除" + req.getRoleIds().size() + "个角色");
+        List<Role> roles = roleMapper.selectList(Wrappers.<Role>lambdaQuery().in(Role::getId, req.getRoleIds()));
+        List<Map<String,Object>> logs = roles.stream()
+                .map(role -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", role.getId());
+                    map.put("code", role.getCode());
+                    map.put("name", role.getName());
+                    map.put("type", role.getType());
+                    return map;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("role_delete", logs);
 
         // 删除组织角色关联
         memberMapper.update(
@@ -132,6 +154,16 @@ public class RoleService {
                             .ne(Role::getId, req.getId()));
             if (sameName > 0) throw new BusinessException("角色名称已存在");
         }
+
+        LogContextHolder.setTargetId(req.getId());
+        LogContextHolder.setTargetName("更新角色信息");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("oldCode", existingRole.getCode());
+        logMap.put("newCode", req.getCode());
+        logMap.put("oldName", existingRole.getName());
+        logMap.put("newName", req.getName());
+        logMap.put("enabled", req.getIsEnabled());
+        LogContextHolder.addDetailProperty("role_update", logMap);
 
         // 更新角色
         int count = roleMapper.update(
@@ -185,6 +217,14 @@ public class RoleService {
         Set<Long> deletePermissionIds = existingPermissionIds.stream()
                 .filter(id -> !targetPermissionIdSet.contains(id))
                 .collect(Collectors.toSet());
+
+        LogContextHolder.setTargetId(req.getRoleId());
+        LogContextHolder.setTargetName("角色分配权限");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("roleId", roleId);
+        logMap.put("originPermIds", existingPermissionIds);
+        logMap.put("newPermIds", targetPermissionIds);
+        LogContextHolder.addDetailProperty("role_assign", logMap);
 
         // 新增权限关联
         if (!addPermissionIds.isEmpty()) {

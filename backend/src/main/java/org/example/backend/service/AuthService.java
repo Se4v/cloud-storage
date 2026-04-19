@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.constant.RedisConsts;
 import org.example.backend.common.exception.BusinessException;
@@ -62,6 +63,10 @@ public class AuthService {
             throw new BusinessException("用户名或密码错误");
         }
 
+        LogContextHolder.setTargetId(user.getId());
+        LogContextHolder.setTargetName(user.getUsername());
+        LogContextHolder.addDetailProperty("loginType", req.getLoginType());
+
         // 生成JWT Token
         String token = jwtUtils.generateToken(user.getId(), user.getUsername());
 
@@ -113,6 +118,10 @@ public class AuthService {
         String tokenKey = RedisConsts.KEY_AUTH_USER + SecurityUtils.getToken();
         String usernameKey = RedisConsts.KEY_AUTH_TOKEN + SecurityUtils.getUsername();
         redisTemplate.delete(Arrays.asList(tokenKey, usernameKey));
+
+        LogContextHolder.setTargetId(SecurityUtils.getUserId());
+        LogContextHolder.setTargetName(SecurityUtils.getUsername());
+
         SecurityContextHolder.clearContext();
     }
 }

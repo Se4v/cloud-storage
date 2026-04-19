@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -67,6 +68,17 @@ public class MemberService {
                         .eq(Node::getIsDeleted, DbConsts.DELETED_NO));
         if (node == null) throw new BusinessException("创建成员失败");
 
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("创建成员");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("userId", user.getId());
+        logMap.put("username", user.getUsername());
+        logMap.put("roleId", role.getId());
+        logMap.put("roleName", role.getName());
+        logMap.put("nodeId", node.getId());
+        logMap.put("nodeName",node.getNodeName());
+        LogContextHolder.addDetailProperty("member_create", logMap);
+
         Member member = Member.builder()
                 .userId(user.getId())
                 .nodeId(req.getNodeId())
@@ -82,6 +94,21 @@ public class MemberService {
      */
     @Transactional
     public void deleteMembers(MemberDeletionReq req) {
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量删除" + req.getMemberIds().size() + "个成员");
+        List<Member> members = memberMapper.selectList(Wrappers.<Member>lambdaQuery().in(Member::getId, req.getMemberIds()));
+        List<Map<String, Object>> logs = members.stream()
+                .map(member -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", member.getId());
+                    map.put("userid", member.getUserId());
+                    map.put("roleId", member.getRoleId());
+                    map.put("nodeId", member.getNodeId());
+                    return map;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("member_delete", logs);
+
         int count = memberMapper.update(
                 Wrappers.<Member>lambdaUpdate()
                         .set(Member::getDeleted, DbConsts.DELETED_YES)
@@ -101,6 +128,16 @@ public class MemberService {
                         .eq(Member::getId, req.getMemberId())
                         .eq(Member::getDeleted, DbConsts.DELETED_NO));
         if (member == null) throw new BusinessException("更新成员信息失败");
+
+        LogContextHolder.setTargetId(member.getId());
+        LogContextHolder.setTargetName("更新成员信息");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("userId", member.getUserId());
+        logMap.put("oldRoleId", member.getRoleId());
+        logMap.put("newRoleId", req.getRoleId());
+        logMap.put("oldNodeId", member.getNodeId());
+        logMap.put("newNodeId", req.getNodeId());
+        LogContextHolder.addDetailProperty("member_update", logMap);
 
         // 更新信息
         int count = memberMapper.update(

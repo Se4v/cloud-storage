@@ -1,5 +1,6 @@
 package org.example.backend.controller.admin;
 
+import org.example.backend.common.annotation.OperationLog;
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.perm.PermAssignmentReq;
 import org.example.backend.model.request.role.RoleCreationReq;
@@ -28,6 +29,7 @@ public class RoleManageController {
      * @param req 角色创建请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "角色管理模块", action = "CREATE", targetType = "ORLE")
     @PostMapping("/create")
     public Result<?> createRole(@RequestBody RoleCreationReq req) {
         roleService.createRole(req);
@@ -39,6 +41,7 @@ public class RoleManageController {
      * @param req 角色删除请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "角色管理模块", action = "DELETE", targetType = "ORLE")
     @PostMapping("/delete")
     public Result<?> deleteRoles(@RequestBody RoleDeletionReq req) {
         roleService.deleteRoles(req);
@@ -49,7 +52,9 @@ public class RoleManageController {
      * 更新角色信息
      * @param req 角色更新请求参数
      * @return 统一响应结果
-     */    @PostMapping("/update")
+     */
+    @OperationLog(module = "角色管理模块", action = "UPDATE", targetType = "ORLE")
+    @PostMapping("/update")
     public Result<?> updateRole(@RequestBody RoleUpdateReq req) {
         roleService.updateRole(req);
         return Result.success();
@@ -80,6 +85,7 @@ public class RoleManageController {
      * @param req 权限分配请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "角色管理模块", action = "ASSIGN", targetType = "ORLE")
     @PostMapping("/assign")
     public Result<?> assignPermissions(@RequestBody PermAssignmentReq req) {
         roleService.assignPermissions(req);

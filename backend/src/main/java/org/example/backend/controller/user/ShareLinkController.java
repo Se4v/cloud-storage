@@ -138,6 +138,11 @@ public class ShareLinkController {
         return ResponseEntity.ok().headers(headers).body(stream);
     }
 
+    /**
+     * 校验提取码
+     * @param req 校验提取码请求参数
+     * @return 统一响应结果
+     */
     @PostMapping("/check")
     public Result<?> checkAccessCode(@RequestBody LinkCheckReq req) {
         shareService.checkAccessCode(req);

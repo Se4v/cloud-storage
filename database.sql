@@ -204,7 +204,7 @@ CREATE TABLE `sys_log` (
     `request_uri`       varchar(128) NOT NULL DEFAULT '' COMMENT '请求路径',
     `detail`            json NULL COMMENT '操作详情(JSON格式)',
     `status`            tinyint unsigned NOT NULL DEFAULT 1 COMMENT '状态:0-失败; 1-成功',
-    `error_msg`         text NULL DEFAULT '' COMMENT '错误信息',
+    `error_msg`         text NULL COMMENT '错误信息',
     `client_ip`         varchar(64) NOT NULL DEFAULT '' COMMENT 'IP地址',
     `cost_time`         bigint unsigned NOT NULL DEFAULT 0 COMMENT '执行耗时(毫秒)',
     `created_at`        datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

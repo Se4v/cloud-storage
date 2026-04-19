@@ -1,6 +1,7 @@
 package org.example.backend.controller.admin;
 
 import jakarta.annotation.Resource;
+import org.example.backend.common.annotation.OperationLog;
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.member.MemberCreationReq;
 import org.example.backend.model.request.member.MemberDeletionReq;
@@ -29,6 +30,7 @@ public class MemberManageController {
      * @param req 成员创建请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "成员管理模块", action = "CREATE", targetType = "MEMBER")
     @PostMapping("/create")
     public Result<?> createMember(@RequestBody MemberCreationReq req) {
         memberService.createMember(req);
@@ -40,6 +42,7 @@ public class MemberManageController {
      * @param req 成员删除请求参数（支持批量）
      * @return 统一响应结果
      */
+    @OperationLog(module = "成员管理模块", action = "DELETE", targetType = "MEMBER")
     @PostMapping("/delete")
     public Result<?> deleteMembers(@RequestBody MemberDeletionReq req) {
         memberService.deleteMembers(req);
@@ -51,6 +54,7 @@ public class MemberManageController {
      * @param req 成员更新请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "成员管理模块", action = "UPDATE", targetType = "MEMBER")
     @PostMapping("/update")
     public Result<?> updateMember(@RequestBody MemberUpdateReq req) {
         memberService.updateMember(req);

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioAsyncClient;
 import io.minio.http.Method;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -147,6 +148,14 @@ public class PersonalService {
                         .eq(Entry::getEntryName, req.getFolderName()));
         if (sameEntry != null) throw new BusinessException("目标目录下存在同名文件夹");
 
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName(req.getFolderName());
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("driveId", req.getDriveId());
+        logMap.put("parentId", req.getParentId());
+        logMap.put("folderName", req.getFolderName());
+        LogContextHolder.addDetailProperty("mkdir", logMap);
+
         // 创建记录
         Entry folder = Entry.builder()
                 .driveId(req.getDriveId())
@@ -179,6 +188,21 @@ public class PersonalService {
                             .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
             if (entry == null) throw new BusinessException("目标目录不存在");
         }
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量移动" + req.getIds().size() + "个文件");
+        List<Entry> entries = entryMapper.selectList(Wrappers.<Entry>lambdaQuery().in(Entry::getId, req.getIds()));
+        List<Map<String, Object>> files = entries.stream()
+                .map(file -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", file.getId());
+                    map.put("nama", file.getEntryName());
+                    map.put("type", file.getEntryType());
+                    map.put("targetParentId", req.getTargetId());
+                    return map;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("batch_move", files);
 
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
@@ -218,6 +242,16 @@ public class PersonalService {
         String entryName = sameNameEntry == null ?
                 entry.getEntryName() :
                 entry.getEntryName() + "-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName(entry.getEntryName());
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("driveId", req.getDriveId());
+        logMap.put("parentId", entry.getParentId());
+        logMap.put("entryId", entry.getId());
+        logMap.put("entryName", entry.getEntryName());
+        logMap.put("newEntryName", entryName);
+        LogContextHolder.addDetailProperty("copy", logMap);
 
         Entry copyEntry = Entry.builder()
                 .driveId(entry.getDriveId())
@@ -267,6 +301,15 @@ public class PersonalService {
                         .eq(Entry::getEntryName, req.getNewEntryName()));
         if (sameNameEntry != null) throw new BusinessException("目标目录存在同名文件");
 
+        LogContextHolder.setTargetId(existedEntry.getId());
+        LogContextHolder.setTargetName(existedEntry.getEntryName());
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("driveId", req.getDriveId());
+        logMap.put("parentId", existedEntry.getParentId());
+        logMap.put("oldEntryName", existedEntry.getEntryName());
+        logMap.put("newEntryName", req.getNewEntryName());
+        LogContextHolder.addDetailProperty("rename", logMap);
+
         // 重命名
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
@@ -288,6 +331,22 @@ public class PersonalService {
                         .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED)
                         .in(Entry::getId, req.getIds()));
         if (entries == null || entries.isEmpty()) throw new BusinessException("被删除的文件不存在");
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量删除" + req.getIds().size() + "个文件");
+        List<Map<String, Object>> files = entries.stream()
+                .map(entry -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("driveId", entry.getDriveId());
+                    map.put("parentId", entry.getParentId());
+                    map.put("entryId", entry.getId());
+                    map.put("entryName", entry.getEntryName());
+                    map.put("entryType", entry.getEntryType());
+                    map.put("fileSize", entry.getFileSize());
+                    return map;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("batch_delete", files);
 
         int count = entryMapper.update(
                 Wrappers.<Entry>lambdaUpdate()
@@ -318,6 +377,19 @@ public class PersonalService {
         if (req.getLinkType() == 2 && req.getAccessCode().isBlank()) {
             throw new BusinessException("分享文件失败");
         }
+
+        LogContextHolder.setTargetId(existedEntry.getId());
+        LogContextHolder.setTargetName(existedEntry.getEntryName());
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("driveId", req.getDriveId());
+        logMap.put("parentId", existedEntry.getParentId());
+        logMap.put("entryId", existedEntry.getId());
+        logMap.put("entryName", existedEntry.getEntryName());
+        logMap.put("entryType", existedEntry.getEntryType());
+        logMap.put("linkName", req.getLinkName());
+        logMap.put("linkType", req.getLinkType());
+        logMap.put("expireTime", req.getExpireTime().toString());
+        LogContextHolder.addDetailProperty("share", logMap);
 
         Share link = Share.builder()
                 .driveId(existedEntry.getDriveId())
@@ -357,6 +429,15 @@ public class PersonalService {
 
         Storage storage = storageMapper.selectById(entry.getStorageId());
         if (storage == null) throw new BusinessException("预览文件失败");
+
+        LogContextHolder.setTargetId(entry.getId());
+        LogContextHolder.setTargetName(entry.getEntryName());
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("driveId", entry.getDriveId());
+        logMap.put("parentId", entry.getParentId());
+        logMap.put("entryId", entry.getId());
+        logMap.put("entryName", entry.getEntryName());
+        LogContextHolder.addDetailProperty("preview", logMap);
 
         String url;
         try {

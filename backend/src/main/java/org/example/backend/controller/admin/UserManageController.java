@@ -1,5 +1,6 @@
 package org.example.backend.controller.admin;
 
+import org.example.backend.common.annotation.OperationLog;
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.role.SystemRoleAssignmentReq;
 import org.example.backend.model.request.user.PasswordResetReq;
@@ -28,6 +29,7 @@ public class UserManageController {
      * @param req 用户创建请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "用户管理模块", action = "CREATE", targetType = "USER")
     @PostMapping("/create")
     public Result<?> createUser(@RequestBody UserCreationReq req) {
         userService.createUser(req);
@@ -39,6 +41,7 @@ public class UserManageController {
      * @param req 用户删除请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "用户管理模块", action = "DELETE", targetType = "USER")
     @PostMapping("/delete")
     public Result<?> deleteUsers(@RequestBody UserDeletionReq req) {
         userService.deleteUsers(req);
@@ -50,6 +53,7 @@ public class UserManageController {
      * @param req 用户更新请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "用户管理模块", action = "DELETE", targetType = "USER")
     @PostMapping("/update")
     public Result<?> updateUser(@RequestBody UserUpdateReq req) {
         userService.updateUser(req);
@@ -71,6 +75,7 @@ public class UserManageController {
      * @param req 系统角色分配请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "用户管理模块", action = "ASSIGN", targetType = "USER")
     @PostMapping("/assign")
     public Result<?> assignSystemRole(@RequestBody SystemRoleAssignmentReq req) {
         userService.assignSystemRole(req);

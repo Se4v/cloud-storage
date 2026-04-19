@@ -1,5 +1,6 @@
 package org.example.backend.controller.admin;
 
+import org.example.backend.common.annotation.OperationLog;
 import org.example.backend.common.result.Result;
 import org.example.backend.model.request.notice.NodeCreationReq;
 import org.example.backend.model.request.org.OrgNodeDeletionReq;
@@ -24,6 +25,7 @@ public class OrgManageController {
      * @param req 节点创建请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "组织管理模块", action = "CREATE", targetType = "ORG")
     @PostMapping("/create")
     public Result<?> createOrgNode(@RequestBody NodeCreationReq req) {
         orgService.createOrgNode(req);
@@ -35,6 +37,7 @@ public class OrgManageController {
      * @param req 节点删除请求参数（支持批量）
      * @return 统一响应结果
      */
+    @OperationLog(module = "组织管理模块", action = "DELETE", targetType = "ORG")
     @PostMapping("/delete")
     public Result<?> deleteOrgNodes(@RequestBody OrgNodeDeletionReq req) {
         orgService.deleteOrgNodes(req);
@@ -46,6 +49,7 @@ public class OrgManageController {
      * @param req 节点更新请求参数
      * @return 统一响应结果
      */
+    @OperationLog(module = "组织管理模块", action = "UPDATE", targetType = "ORG")
     @PostMapping("/update")
     public Result<?> updateOrgNode(@RequestBody OrgNodeUpdateReq req) {
         orgService.updateOrgNode(req);

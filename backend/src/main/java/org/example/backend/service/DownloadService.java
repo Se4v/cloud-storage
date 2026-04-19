@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import lombok.AllArgsConstructor;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -51,8 +52,6 @@ public class DownloadService {
      * @return 流式响应体
      */
     public StreamingResponseBody download(EntryDownloadReq req, boolean needTrafficRecord) {
-
-
         return outputStream -> {
             try {
                 List<DownloadTask> tasks = collectDownloadTasks(req.getIds());
@@ -117,6 +116,19 @@ public class DownloadService {
         if (entries == null || entries.isEmpty()) {
             throw new BusinessException("文件不存在");
         }
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量下载" + entries.size() + "个文件");
+        List<Map<String, Object>> files = entries.stream()
+                .map(file -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", file.getId());
+                    map.put("name", file.getEntryName());
+                    map.put("type", file.getEntryType());
+                    return map;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("batch_download", files);
 
         // 单文件下载：直接返回文件名
         if (entries.size() == 1 && entries.get(0).getEntryType() == DbConsts.ENTRY_TYPE_FILE) {

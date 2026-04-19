@@ -9,6 +9,7 @@ import io.minio.StatObjectArgs;
 import io.minio.http.Method;
 import io.minio.messages.Part;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.config.MinioConfig;
@@ -142,6 +143,19 @@ public class UploadService {
                         .build());
             }
         }
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量上传" + req.getItems().size() + "个文件");
+        List<Map<String,Object>> fileList = req.getItems().stream()
+                .map(file -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("sha256", file.getSha256());
+                    map.put("name", file.getEntryName());
+                    map.put("size", file.getFileSize());
+                    return map;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("batch_upload", fileList);
 
         return UploadInitResp.builder()
                 .items(items)

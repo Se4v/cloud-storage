@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.executor.BatchResult;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -55,6 +56,14 @@ public class UserService {
                         .eq(User::getDeleted, DbConsts.DELETED_NO));
         if (existUser != null) throw new BusinessException("用户名已存在");
 
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("创建用户");
+        Map<String,Object> logMap = new HashMap<>();
+        logMap.put("username", req.getUsername());
+        logMap.put("realName", req.getRealName());
+        logMap.put("mobile", req.getMobile());
+        LogContextHolder.addDetailProperty("user_create", logMap);
+
         // 创建用户
         String defaultPassword = configService.getDefaultPassword();
         User user = User.builder()
@@ -86,6 +95,20 @@ public class UserService {
      */
     @Transactional
     public void deleteUsers(UserDeletionReq req) {
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量删除" + req.getUserIds().size() + "个用户");
+        List<User> users = userMapper.selectByIds(req.getUserIds());
+        List<Map<String,Object>> logs = users.stream()
+                .map(user -> {
+                    Map<String,Object> log = new HashMap<>();
+                    log.put("id", user.getId());
+                    log.put("username", user.getUsername());
+                    log.put("realName", user.getRealName());
+                    return log;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("user_delete", logs);
+
         int count = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
                         .set(User::getDeleted, DbConsts.DELETED_YES)
@@ -99,14 +122,45 @@ public class UserService {
      */
     @Transactional
     public void updateUser(UserUpdateReq req) {
-        int count = userMapper.update(
+        User user = userMapper.selectById(req.getId());
+        if (user == null) throw new BusinessException("该用户不存在");
+
+        int userCount = userMapper.update(
                 Wrappers.<User>lambdaUpdate()
                         .set(User::getRealName, req.getRealName())
                         .set(User::getMobile, req.getMobile())
                         .set(User::getEmail, req.getEmail())
                         .set(User::getEnabled, Boolean.TRUE.equals(req.getIsEnabled()) ? DbConsts.ENABLED_YES : DbConsts.ENABLED_NO)
                         .eq(User::getId, req.getId()));
-        if (count != 1) throw new BusinessException("更新用户信息失败");
+        if (userCount != 1) throw new BusinessException("更新用户信息失败");
+
+        Drive drive = driveMapper.selectOne(
+                Wrappers.<Drive>lambdaQuery()
+                        .eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL)
+                        .eq(Drive::getUserId, user.getId()));
+        if (drive == null) throw new BusinessException("用户的个人空间不存在");
+        if (drive.getUsedQuota() > req.getStorageQuota()) throw new BusinessException("新容量小于已使用容量");
+
+        LogContextHolder.setTargetId(req.getId());
+        LogContextHolder.setTargetName("更新用户信息");
+        Map<String,Object> logMap = new HashMap<>();
+        logMap.put("id", req.getId());
+        logMap.put("oldRealName", user.getRealName());
+        logMap.put("newRealName", req.getRealName());
+        logMap.put("oldMobile", user.getMobile());
+        logMap.put("newMobile", req.getMobile());
+        logMap.put("oldEmail", user.getEmail());
+        logMap.put("newEmail", req.getEmail());
+        logMap.put("oldQuota", drive.getTotalQuota());
+        logMap.put("newQuota", req.getStorageQuota());
+        logMap.put("enabled", req.getIsEnabled());
+        LogContextHolder.addDetailProperty("user_update", logMap);
+
+        int driveCount = driveMapper.update(
+                Wrappers.<Drive>lambdaUpdate()
+                        .setIncrBy(Drive::getTotalQuota, req.getStorageQuota())
+                        .eq(Drive::getId, drive.getId()));
+        if (driveCount != 1) throw new BusinessException("更新用户信息失败");
     }
 
     /**
@@ -198,6 +252,14 @@ public class UserService {
         Set<Long> deleteRoleIds = existingRoleIds.stream()
                 .filter(id -> !targetRoleIdSet.contains(id))
                 .collect(Collectors.toSet());
+
+        LogContextHolder.setTargetId(req.getUserId());
+        LogContextHolder.setTargetName("用户分配角色");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("userId", req.getUserId());
+        logMap.put("originRoleIds", existingRoleIds);
+        logMap.put("newRoleIds", targetRoleIds);
+        LogContextHolder.addDetailProperty("user_assign", logMap);
 
         // 新增角色关联
         if (!addRoleIds.isEmpty()) {

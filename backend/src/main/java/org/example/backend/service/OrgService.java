@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.example.backend.aspect.LogContextHolder;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -119,6 +120,15 @@ public class OrgService {
                         .eq(Node::getNodeName, req.getName()));
         if (sameName > 0) throw new BusinessException("同一父节点下已存在相同名称的部门");
 
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("创建组织节点");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("name", req.getName());
+        logMap.put("parentId", req.getParentId());
+        logMap.put("type", req.getType());
+        logMap.put("quota", req.getStorageQuota());
+        LogContextHolder.addDetailProperty("org_create", logMap);
+
         // 创建节点
         Node node = Node.builder()
                 .nodeName(req.getName())
@@ -158,19 +168,32 @@ public class OrgService {
      */
     @Transactional
     public void deleteOrgNodes(OrgNodeDeletionReq req) {
-        List<Long> nodeIds = req.getNodeIds();
-
         // 校验是否存在子节点
         long childCount = nodeMapper.selectCount(
-                Wrappers.<Node>lambdaQuery().in(Node::getParentId, nodeIds));
+                Wrappers.<Node>lambdaQuery().in(Node::getParentId, req.getNodeIds()));
         if (childCount > 0) throw new BusinessException("请先删除该节点下的所有子节点");
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("批量删除" + req.getNodeIds().size() + "个组织节点");
+        List<Node> nodes = nodeMapper.selectByIds(req.getNodeIds());
+        List<Map<String,Object>> logs = nodes.stream()
+                .map(node -> {
+                    Map<String, Object> log = new HashMap<>();
+                    log.put("id", node.getId());
+                    log.put("name", node.getNodeName());
+                    log.put("type", node.getNodeType());
+                    log.put("parentId", node.getParentId());
+                    return log;
+                })
+                .toList();
+        LogContextHolder.addDetailProperty("org_delete", logs);
 
         // 删除节点
         int updateCount = nodeMapper.update(
                 Wrappers.<Node>lambdaUpdate()
                         .set(Node::getIsDeleted, DbConsts.DELETED_YES)
-                        .in(Node::getId, nodeIds));
-        if (updateCount != nodeIds.size()) throw new BusinessException("删除节点失败");
+                        .in(Node::getId, req.getNodeIds()));
+        if (updateCount != req.getNodeIds().size()) throw new BusinessException("删除节点失败");
     }
 
     /**
@@ -232,6 +255,19 @@ public class OrgService {
                 Wrappers.<Drive>lambdaQuery().eq(Drive::getNodeId, req.getId()));
         if (drive == null) throw new BusinessException("更新节点失败");
         if (drive.getUsedQuota() > req.getStorageQuota()) throw new BusinessException("");
+
+        LogContextHolder.setTargetId(0L);
+        LogContextHolder.setTargetName("更新组织节点信息");
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("nodeId", req.getId());
+        logMap.put("oldName", existingNode.getNodeName());
+        logMap.put("newName", req.getName());
+        logMap.put("oldType", existingNode.getNodeType());
+        logMap.put("type", req.getType());
+        logMap.put("oldQuota", drive.getTotalQuota());
+        logMap.put("newQuota", req.getStorageQuota());
+        logMap.put("enabled", req.getIsEnabled());
+        LogContextHolder.addDetailProperty("org_update", logMap);
 
         int driveUpdateCount = driveMapper.update(
                 Wrappers.<Drive>lambdaUpdate()

@@ -10,7 +10,33 @@
     </div>
 
     <div class="flex-1 overflow-auto p-6 w-full max-w-[1200px] mx-auto">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
+      <!-- 提取码弹窗 -->
+      <div v-if="showAccessCodeDialog" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px] flex flex-col items-center justify-center p-8">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+          <el-icon :size="32" class="text-blue-600"><Lock /></el-icon>
+        </div>
+        <h2 class="text-xl font-semibold text-slate-900 mb-2">加密分享</h2>
+        <p class="text-sm text-slate-500 mb-6">该分享需要输入提取码才能访问</p>
+        <div class="flex items-center gap-3 w-full max-w-sm">
+          <el-input
+            v-model="accessCode"
+            placeholder="请输入提取码"
+            maxlength="6"
+            show-word-limit
+            class="flex-1"
+            @keyup.enter="verifyAccessCode"
+          />
+          <button
+            @click="verifyAccessCode"
+            class="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            确认
+          </button>
+        </div>
+      </div>
+
+      <!-- 文件列表 -->
+      <div v-else class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
 
         <div class="px-6 py-5 border-b border-slate-200 flex flex-wrap gap-4 items-center justify-between bg-white">
           <div class="flex items-center gap-4">
@@ -125,7 +151,7 @@ import axios from 'axios'
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { ref, computed, onMounted } from 'vue'
-import { Download, Document, Folder } from '@element-plus/icons-vue'
+import { Download, Document, Folder, Lock } from '@element-plus/icons-vue'
 
 const API_BASE_URL = 'http://localhost:8080'
 
@@ -144,8 +170,16 @@ const selectedFiles = ref([])
 // 分享信息（从后端加载）
 const shareInfo = ref({
   username: '', // 分享者名称
-  expireTime: ''  // 过期时间
+  expireTime: '',  // 过期时间
+  linkType: 1 // 链接类型：1-公开链接，2-加密链接
 })
+
+// 是否显示提取码弹窗
+const showAccessCodeDialog = ref(false)
+// 用户输入的提取码
+const accessCode = ref('')
+// 当前linkKey
+const currentLinkKey = ref('')
 
 // 格式化过期时间显示
 const formatExpireTime = computed(() => {
@@ -203,14 +237,14 @@ const loadShareInfo = async (linkKey) => {
     const { data: res } = await axios.get(`${API_BASE_URL}/api/share/info`, { params: { linkKey: linkKey} })
     if (res.code !== 200) {
       ElMessage.error(res.msg || '加载失败')
-      shareInfo.value = { username: '', expireTime: '' }
+      shareInfo.value = { username: '', expireTime: '', linkType: 1 }
       return
     }
-    shareInfo.value = res.data || { username: '', expireTime: '' }
+    shareInfo.value = res.data || { username: '', expireTime: '', linkType: 1 }
   } catch (error) {
     console.error('加载分享信息失败:', error)
     ElMessage.error(error.message || '网络异常')
-    shareInfo.value = { username: '', expireTime: '' }
+    shareInfo.value = { username: '', expireTime: '', linkType: 1 }
   }
 }
 
@@ -230,17 +264,52 @@ const goToPath = (index) => {
   loadFileList(null, targetId)
 }
 
+// 验证提取码
+const verifyAccessCode = async () => {
+  if (!accessCode.value.trim()) {
+    ElMessage.warning('请输入提取码')
+    return
+  }
+  try {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/share/check`, {
+      linkKey: currentLinkKey.value,
+      accessCode: accessCode.value.trim()
+    })
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '提取码错误')
+      return
+    }
+    // 验证成功，隐藏弹窗并加载文件列表
+    showAccessCodeDialog.value = false
+    await loadFileList(currentLinkKey.value, null)
+    // 取第一个文件夹的id作为rootFolderId
+    if (fileList.value.length > 0 && fileList.value[0].type === 2) {
+      rootFolderId.value = fileList.value[0].id
+    }
+  } catch (error) {
+    console.error('验证提取码失败:', error)
+    ElMessage.error(error.message || '网络异常')
+  }
+}
+
 // 页面初始化
 onMounted(async () => {
   const linkKey = route.params.linkKey
-  // 加载分享信息和根目录文件列表
-  await Promise.all([
-    loadShareInfo(linkKey),
-    loadFileList(linkKey, null)
-  ])
-  // loadFileList完成后，取第一个文件夹的id作为rootFolderId
-  if (fileList.value.length > 0 && fileList.value[0].type === 2) {
-    rootFolderId.value = fileList.value[0].id
+  currentLinkKey.value = linkKey
+  // 先加载分享信息
+  await loadShareInfo(linkKey)
+  
+  // 根据linkType决定后续操作
+  if (shareInfo.value.linkType === 1) {
+    // 公开链接，直接加载文件列表
+    await loadFileList(linkKey, null)
+    // 取第一个文件夹的id作为rootFolderId
+    if (fileList.value.length > 0 && fileList.value[0].type === 2) {
+      rootFolderId.value = fileList.value[0].id
+    }
+  } else if (shareInfo.value.linkType === 2) {
+    // 加密链接，显示提取码弹窗
+    showAccessCodeDialog.value = true
   }
 })
 
