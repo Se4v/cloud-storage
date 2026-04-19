@@ -31,7 +31,7 @@ public class LogManageController {
                         .username(log.getUsername())
                         .realName(log.getRealName())
                         .operationType(log.getAction())
-                        .detail(log.getDetail())
+                        .operationObject(log.getTargetType())
                         .operationTime(log.getCreatedAt())
                         .success(log.getStatus())
                         .build())

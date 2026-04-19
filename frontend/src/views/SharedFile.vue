@@ -234,7 +234,7 @@ const loadFileList = async (linkKey = null, parentId = null) => {
 // 加载分享信息
 const loadShareInfo = async (linkKey) => {
   try {
-    const { data: res } = await axios.get(`${API_BASE_URL}/api/share/info`, { params: { linkKey: linkKey} })
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/share/info`, { params: { linkKey: linkKey } })
     if (res.code !== 200) {
       ElMessage.error(res.msg || '加载失败')
       shareInfo.value = { username: '', expireTime: '', linkType: 1 }

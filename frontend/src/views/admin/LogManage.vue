@@ -111,6 +111,24 @@
       </div>
     </div>
 
+    <!-- 详情对话框 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="日志详情"
+      width="600px"
+      class="!rounded-xl"
+      :close-on-click-modal="false"
+    >
+      <div class="space-y-4">
+        <div class="border-t border-slate-200 pt-4">
+          <span class="text-slate-500 text-sm block mb-2">详细记录：</span>
+          <div class="bg-slate-50 rounded-lg p-4">
+            <pre class="text-sm text-slate-700 whitespace-pre-wrap break-all">{{ currentLog || '暂无详细记录' }}</pre>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
     <!-- 数据表格 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <el-table
@@ -127,7 +145,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作类型" min-width="100">
+        <el-table-column label="操作类型" min-width="90">
           <template #default="{ row }">
             <span
               :class="[
@@ -140,21 +158,30 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作详情" min-width="280">
+        <el-table-column label="操作对象" min-width="120">
           <template #default="{ row }">
-            <div class="max-w-md">
-              <p class="text-slate-700 truncate" :title="row.detail">{{ row.detail }}</p>
-            </div>
+            <span class="text-slate-700">{{ row.operationObject || '-' }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作时间" min-width="160">
+        <el-table-column label="操作详情" min-width="80">
+          <template #default="{ row }">
+            <button
+              @click="handleViewDetail(row)"
+              class="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
+            >
+              详细
+            </button>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作时间" min-width="150">
           <template #default="{ row }">
             <span class="text-slate-900">{{ row.operationTime }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" min-width="100">
+        <el-table-column label="状态" min-width="80">
           <template #default="{ row }">
             <span
               :class="[
@@ -279,12 +306,40 @@ const tableData = ref([
     username: 'sdasd',
     realName: 'dasda',
     operationType: "LOGIN",
-    detail: "123",
+    operationObject: "用户系统",
     operationTime: '123',
     success: 1
   }
 ])
 const loading = ref(false)
+
+// 详情对话框相关
+const detailDialogVisible = ref(false)
+const detailLoading = ref(false)
+const currentLog = ref(null)
+
+// 查看详情
+const handleViewDetail = async (row) => {
+  detailDialogVisible.value = true
+  detailLoading.value = true
+
+  try {
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/log/detail`, {
+      ...getAuthConfig(),
+      params: {
+        id: row.id
+      }
+    })
+    if (res.code === 200) {
+      currentLog.value = res.data
+    }
+  } catch (error) {
+    console.error('获取日志详情失败:', error)
+    currentLog.value = null
+  } finally {
+    detailLoading.value = false
+  }
+}
 
 // 加载数据
 const loadData = async () => {

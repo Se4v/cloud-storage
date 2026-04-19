@@ -13,7 +13,7 @@ public class LogResp {
     private String username;
     private String realName;
     private String operationType;
-    private String detail;
+    private String operationObject;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime operationTime;
     private Integer success;
