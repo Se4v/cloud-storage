@@ -16,5 +16,5 @@ public class LogResp {
     private String detail;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime operationTime;
-    private Boolean success;
+    private Integer success;
 }

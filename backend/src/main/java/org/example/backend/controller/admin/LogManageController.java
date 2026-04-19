@@ -5,6 +5,7 @@ import org.example.backend.model.response.log.LogResp;
 import org.example.backend.service.LogService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,9 +33,20 @@ public class LogManageController {
                         .operationType(log.getAction())
                         .detail(log.getDetail())
                         .operationTime(log.getCreatedAt())
-                        .success(log.getStatus() == 1)
+                        .success(log.getStatus())
                         .build())
                 .toList();
         return Result.success(resp);
+    }
+
+    /**
+     * 获取单条日志记录
+     * @param id 日志ID
+     * @return 详细日志记录
+     */
+    @GetMapping("/detail")
+    public Result<?> getLogDetail(@RequestParam Long id) {
+        String logJson = logService.getLogDetail(id);
+        return Result.success(logJson);
     }
 }
