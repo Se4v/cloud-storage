@@ -65,8 +65,8 @@
               class="w-full h-9 pl-9 pr-8 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer appearance-none"
             >
               <option value="">全部状态</option>
-              <option :value="true">成功</option>
-              <option :value="false">失败</option>
+              <option :value="1">成功</option>
+              <option :value="0">失败</option>
             </select>
             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <el-icon class="text-slate-400" :size="14"><ArrowDown /></el-icon>
@@ -159,7 +159,7 @@
             <span
               :class="[
                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                row.success
+                row.success === 1
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-red-50 text-red-700 border-red-200'
               ]"
@@ -167,10 +167,10 @@
               <span
                 :class="[
                   'w-1.5 h-1.5 rounded-full mr-1.5',
-                  row.success ? 'bg-emerald-500' : 'bg-red-500'
+                  row.success === 1 ? 'bg-emerald-500' : 'bg-red-500'
                 ]"
               ></span>
-              {{ row.success ? '成功' : '失败' }}
+              {{ row.success === 1 ? '成功' : '失败' }}
             </span>
           </template>
         </el-table-column>
@@ -273,7 +273,17 @@ const getOperationTypeClass = (type) => {
 }
 
 // 表格数据
-const tableData = ref([])
+const tableData = ref([
+  {
+    id: 123,
+    username: 'sdasd',
+    realName: 'dasda',
+    operationType: "LOGIN",
+    detail: "123",
+    operationTime: '123',
+    success: 1
+  }
+])
 const loading = ref(false)
 
 // 加载数据
