@@ -300,17 +300,7 @@ const getOperationTypeClass = (type) => {
 }
 
 // 表格数据
-const tableData = ref([
-  {
-    id: 123,
-    username: 'sdasd',
-    realName: 'dasda',
-    operationType: "LOGIN",
-    operationObject: "用户系统",
-    operationTime: '123',
-    success: 1
-  }
-])
+const tableData = ref([])
 const loading = ref(false)
 
 // 详情对话框相关

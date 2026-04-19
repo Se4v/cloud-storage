@@ -280,7 +280,7 @@ const handleSelectionChange = (selection) => {
 // 编辑
 const handleEdit = (row) => {
   editForm.value = {
-    id: parseInt(row.id),
+    id: row.id,
     linkName: row.linkName,
     linkType: row.linkType,
     accessCode: row.linkType === 2 ? (row.accessCode || '******') : '',
