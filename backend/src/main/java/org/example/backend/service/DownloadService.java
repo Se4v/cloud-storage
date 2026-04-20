@@ -69,7 +69,7 @@ public class DownloadService {
                     Long currentUserId = SecurityUtils.getUserId();
                     Traffic traffic = Traffic.builder()
                             .userId(currentUserId)
-                            .storageId(null)
+                            .storageId(0L)
                             .type(2)
                             .fileSize(totalSize)
                             .status(1)

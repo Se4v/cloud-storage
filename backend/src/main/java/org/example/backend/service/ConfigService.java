@@ -53,6 +53,6 @@ public class ConfigService {
     }
 
     public List<String> getFileTypeBlacklist() {
-        return List.of(configCache.getOrDefault("file_type_blacklist", null).split(","));
+        return List.of(configCache.getOrDefault("file_type_blacklist", "").split(","));
     }
 }

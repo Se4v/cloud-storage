@@ -448,7 +448,7 @@ const loadUserList = async () => {
       ElMessage.error(res.msg || '加载用户列表失败')
       return
     }
-    tableData.value = res.data.data || []
+    tableData.value = res.data || []
     total.value = tableData.value.length
   } catch (error) {
     console.error('加载用户列表失败:', error)
@@ -667,12 +667,12 @@ const rolesLoaded = ref(false)
 const loadRoleList = async () => {
   if (rolesLoaded.value) return
   try {
-    const { data: res} = await axios.get(`${API_BASE_URL}/api/user/role`, getAuthConfig())
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/user/role`, getAuthConfig())
     if (res.code !== 200) {
-      ElMessage.error(res.data.msg || '加载角色列表失败')
+      ElMessage.error(res.msg || '加载角色列表失败')
       return
     }
-    allRoles.value = res.data.data || []
+    allRoles.value = res.data || []
     rolesLoaded.value = true
   } catch (error) {
     console.error('加载角色列表失败:', error)
@@ -707,7 +707,7 @@ const saveRoles = async () => {
       roleIds: selectedRoles.value
     }, getAuthConfig())
     if (res.code !== 200) {
-      ElMessage.error(res.data.msg || '角色分配失败')
+      ElMessage.error(res.msg || '角色分配失败')
       return
     }
     currentUser.value.roles = [...selectedRoles.value]

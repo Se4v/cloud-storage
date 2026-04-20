@@ -753,7 +753,7 @@ const handleFileChange = async (event) => {
     const initResponse = await axios.post(`${API_BASE_URL}/api/personal/init-upload`, {
       driveId: driveId.value,
       parentId: currentParentId.value,
-      argList: uploadArgs
+      items: uploadArgs
     }, getAuthConfig())
 
     if (initResponse.data.code !== 200) {
@@ -769,7 +769,7 @@ const handleFileChange = async (event) => {
     }
 
     const initResult = initResponse.data.data
-    const viewList = initResult.viewList || []
+    const viewList = initResult.items || []
 
     // 处理每个文件的上传
     for (const view of viewList) {
@@ -1359,7 +1359,7 @@ const reportUploadedChunks = async (chunks) => {
   
   try {
     const response = await axios.post(`${API_BASE_URL}/api/personal/upload-chunk`, {
-      argList: chunks
+      items: chunks
     }, getAuthConfig())
 
     if (response.data.code !== 200) {

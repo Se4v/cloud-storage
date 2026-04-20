@@ -12,14 +12,13 @@ import org.example.backend.model.response.share.LinkInfoResp;
 import org.example.backend.model.response.share.ShareLinkResp;
 import org.example.backend.service.DownloadService;
 import org.example.backend.service.ShareService;
-import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -131,9 +130,8 @@ public class ShareLinkController {
         } else if (req.getIds().size() > 1) {
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         }
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename(fileName, StandardCharsets.UTF_8)
-                .build());
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName);
 
         return ResponseEntity.ok().headers(headers).body(stream);
     }

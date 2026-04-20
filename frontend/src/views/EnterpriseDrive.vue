@@ -728,7 +728,7 @@ const handleFileChange = async (event) => {
     const initResponse = await axios.post(`${API_BASE_URL}/api/enterprise/init-upload`, {
       driveId: driveId.value,
       parentId: currentParentId.value,
-      argList: uploadArgs
+      items: uploadArgs
     }, getAuthConfig())
 
     if (initResponse.data.code !== 200) {
@@ -744,7 +744,7 @@ const handleFileChange = async (event) => {
     }
 
     const initResult = initResponse.data.data
-    const viewList = initResult.viewList || []
+    const viewList = initResult.items || []
 
     // 处理每个文件的上传
     for (const view of viewList) {
@@ -824,39 +824,26 @@ const handleBatchDownload = async () => {
 
   try {
     const ids = selectedFiles.value.map(f => f.id)
-    const response = await axios.post(`${API_BASE_URL}/api/enterprise/download`, {
+    const res = await axios.post(`${API_BASE_URL}/api/enterprise/download`, {
       ids: ids
     }, {
       ...getAuthConfig(),
       responseType: 'blob'
     })
 
-    // 从响应头中获取文件名
-    const contentDisposition = response.headers['content-disposition']
-    let filename = 'download'
-    if (contentDisposition) {
-      const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
-      if (encodedMatch) {
-        filename = decodeURIComponent(encodedMatch[1])
-      } else {
-        // 回退到 filename="xxx"（英文文件名）
-        const plainMatch = contentDisposition.match(/filename="(.+?)"/)
-        if (plainMatch) {
-          filename = plainMatch[1]
-        }
-      }
-    }
+    const disposition = res.headers['content-disposition']
+    const filenameRegex = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"/
+    const match = disposition?.match(filenameRegex)
+    const filename = match?.[1] ? decodeURIComponent(match[1]) : match?.[2] || 'download'
 
-    // 创建下载链接
-    const blob = new Blob([response.data])
-    const downloadUrl = window.URL.createObjectURL(blob)
+    const url = window.URL.createObjectURL(res.data)
     const link = document.createElement('a')
-    link.href = downloadUrl
+    link.href = url
     link.download = filename
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    window.URL.revokeObjectURL(downloadUrl)
+    window.URL.revokeObjectURL(url)
 
     ElMessage.success('下载成功')
   } catch (error) {
@@ -1335,7 +1322,7 @@ const reportUploadedChunks = async (chunks) => {
 
   try {
     const response = await axios.post(`${API_BASE_URL}/api/enterprise/upload-chunk`, {
-      argList: chunks
+      items: chunks
     }, getAuthConfig())
 
     if (response.data.code !== 200) {

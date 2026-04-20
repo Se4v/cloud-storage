@@ -1,8 +1,10 @@
 package org.example.backend.config;
 
+import jakarta.servlet.DispatcherType;
 import org.example.backend.common.security.filter.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -51,6 +53,8 @@ public class SecurityConfig {
                 // 配置请求授权规则
                 .authorizeHttpRequests(auth -> {
                     // 配置白名单接口
+                    auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+                    auth.dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll();
                     auth.requestMatchers(
                             "/api/auth/login",
                             "/api/user/**",
@@ -65,7 +69,8 @@ public class SecurityConfig {
                             "/api/traffic/**",
                             "/api/share/file",
                             "/api/share/info",
-                            "/api/share/download"
+                            "/api/share/download",
+                            "/api/share/check"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

@@ -218,7 +218,7 @@ const loadFileList = async (linkKey = null, parentId = null) => {
     const { data: res } = await axios.get(`${API_BASE_URL}/api/share/file`, {
       params: { linkKey: linkKey, parentId: parentId }
     })
-    if (data.code === 200) {
+    if (res.code !== 200) {
       ElMessage.error(res.msg || '加载文件列表失败')
       return
     }

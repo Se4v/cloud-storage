@@ -1,12 +1,15 @@
 package org.example.backend.common.util;
 
 import org.example.backend.common.security.LoginUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
 public class SecurityUtils {
+    private static final Logger logger = LoggerFactory.getLogger(SecurityUtils.class);
     /**
      * 获取当前登录的完整用户信息
      * @return 登录用户实体对象
@@ -25,7 +28,16 @@ public class SecurityUtils {
      * @return 用户ID
      */
     public static Long getUserId() {
-        return getLoginUser().getUserId();
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
+                LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+                return loginUser.getUserId();
+            }
+        } catch (Exception e) {
+            logger.error("SecurityUtils: userId不存在");
+        }
+        return 0L;
     }
 
     /**
@@ -33,7 +45,16 @@ public class SecurityUtils {
      * @return 用户名
      */
     public static String getUsername() {
-        return getLoginUser().getUsername();
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
+                LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+                return loginUser.getUsername();
+            }
+        } catch (Exception e) {
+            logger.error("SecurityUtils: username不存在");
+        }
+        return "";
     }
 
     /**
@@ -41,7 +62,16 @@ public class SecurityUtils {
      * @return 真实姓名
      */
     public static String getRealName() {
-        return getLoginUser().getRealName();
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
+                LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+                return loginUser.getRealName();
+            }
+        } catch (Exception e) {
+            logger.error("SecurityUtils: realName不存在");
+        }
+        return "";
     }
 
     /**

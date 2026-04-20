@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -99,9 +100,8 @@ public class PersonalController {
         } else if (req.getIds().size() > 1) {
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         }
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename(fileName, StandardCharsets.UTF_8)
-                .build());
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        headers.set("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
 
         return ResponseEntity.ok().headers(headers).body(stream);
     }
