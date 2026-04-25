@@ -26,18 +26,21 @@
 
       <!-- 右侧：搜索 -->
       <div class="flex items-center gap-3">
-        <el-input
-            v-model="searchQuery"
-            placeholder="搜索组织名称..."
-            clearable
-            class="w-64 !rounded-lg"
-            @input="handleSearch"
-            @keyup.enter="handleSearch"
-        >
-          <template #prefix>
-            <el-icon class="text-slate-400"><Search /></el-icon>
-          </template>
-        </el-input>
+        <div class="relative w-full sm:w-64">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <el-icon class="text-slate-400" :size="16">
+              <Search />
+            </el-icon>
+          </div>
+          <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索组织名称..."
+              class="w-full h-9 pl-9 pr-4 rounded-md border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              @input="handleSearch"
+              @keyup.enter="handleSearch"
+          />
+        </div>
         <button
           @click="handleSearch"
           class="inline-flex items-center justify-center gap-2 h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"

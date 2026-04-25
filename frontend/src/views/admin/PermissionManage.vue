@@ -4,20 +4,19 @@
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6">
       <div class="flex flex-wrap items-center gap-4">
         <!-- 搜索框 -->
-        <div class="flex-1 min-w-[300px] max-w-md">
-          <div class="relative w-full">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <el-icon :size="16" class="text-slate-400">
-                <Search />
-              </el-icon>
-            </div>
-            <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="搜索权限名称或代码..."
-                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900/30 transition-all"
-            />
+        <div class="relative w-full sm:w-64">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <el-icon class="text-slate-400" :size="16">
+              <Search />
+            </el-icon>
           </div>
+          <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索权限名称或代码..."
+              class="w-full h-9 pl-9 pr-4 rounded-md border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              @keyup.enter="handleSearch"
+          />
         </div>
 
         <!-- 查询按钮 -->
