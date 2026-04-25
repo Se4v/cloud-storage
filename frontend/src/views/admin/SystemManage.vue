@@ -70,7 +70,7 @@
               </label>
               <div class="relative">
                 <input
-                    v-model.number="form.maxFileSize"
+                    v-model.number="displayMaxFileSize"
                     type="number"
                     min="1"
                     class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -221,11 +221,29 @@ const getAuthConfig = () => {
   }
 }
 
+// 辅助函数：将后端返回的字符串转换为 BigInt（参考 TrafficStat.vue）
+const toBigInt = (value) => {
+  if (value === null || value === undefined) return 0n
+  if (typeof value === 'bigint') return value
+  if (typeof value === 'number') return BigInt(Math.floor(value))
+  if (typeof value === 'string') {
+    const cleanValue = value.replace(/["']/g, '').trim()
+    if (cleanValue === '' || cleanValue === 'null') return 0n
+    try {
+      return BigInt(cleanValue)
+    } catch (e) {
+      console.error('无法转换为BigInt:', value, e)
+      return 0n
+    }
+  }
+  return 0n
+}
+
 // 表单数据
 const form = reactive({
   defaultPassword: '123456',
-  totalQuota: 10737418240, // 10 GB in bytes (10 * 1024 * 1024 * 1024)
-  maxFileSize: 500,
+  totalQuota: 10n * 1024n * 1024n * 1024n, // 10 GB in bytes
+  maxFileSize: 500n * 1024n * 1024n,       // 500 MB in bytes
   storageWarningThreshold: 80,
   fileTypeBlacklist: ['.exe', '.bat', '.sh', '.php']
 })
@@ -234,11 +252,19 @@ const form = reactive({
 const displayStorageQuota = computed({
   get: () => {
     // 将字节转换为 GB 显示
-    return Math.round(form.totalQuota / 1024 / 1024 / 1024)
+    return Number(form.totalQuota / (1024n * 1024n * 1024n))
   },
   set: (value) => {
     // 将 GB 转换为字节存储
-    form.totalQuota = value * 1024 * 1024 * 1024
+    form.totalQuota = BigInt(Math.round(Number(value))) * 1024n * 1024n * 1024n
+  }
+})
+
+// 显示用的单文件最大限制（MB）
+const displayMaxFileSize = computed({
+  get: () => Number(form.maxFileSize / (1024n * 1024n)),
+  set: (value) => {
+    form.maxFileSize = BigInt(Math.round(Number(value))) * 1024n * 1024n
   }
 })
 
@@ -261,8 +287,8 @@ const loadSystemConfig = async () => {
     const data = res.data
     // 后端返回的都是 String 类型，需要转换
     form.defaultPassword = data.defaultPassword || '123456'
-    form.totalQuota = parseInt(data.totalQuota) || 10737418240
-    form.maxFileSize = parseInt(data.maxFileSize) || 500
+    form.totalQuota = toBigInt(data.totalQuota) || 10n * 1024n * 1024n * 1024n
+    form.maxFileSize = toBigInt(data.maxFileSize) || 500n * 1024n * 1024n
     form.storageWarningThreshold = parseInt(data.storageWarningThreshold) || 80
     form.fileTypeBlacklist = data.fileTypeBlacklist || ['.exe', '.bat', '.sh', '.php']
   } catch (error) {
@@ -316,7 +342,7 @@ const handleSave = async () => {
     return
   }
   
-  if (!form.maxFileSize || form.maxFileSize < 1) {
+  if (!displayMaxFileSize.value || displayMaxFileSize.value < 1) {
     ElMessage.error('请输入有效的单文件最大上传限制')
     return
   }
