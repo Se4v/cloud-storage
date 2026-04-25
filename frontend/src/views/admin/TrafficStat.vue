@@ -7,7 +7,7 @@
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">总存储</p>
-            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatStorage(stats.totalQuota) }}</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatBytes(stats.totalQuota) }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
             <el-icon class="text-blue-600" :size="24"><Box /></el-icon>
@@ -26,7 +26,7 @@
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">今日上传量</p>
-            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatStorage(stats.todayUpload) }}</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatBytes(stats.todayUpload) }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
             <el-icon class="text-emerald-600" :size="24"><Upload /></el-icon>
@@ -49,7 +49,7 @@
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500">今日下载量</p>
-            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatStorage(stats.todayDownload) }}</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2">{{ formatBytes(stats.todayDownload) }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
             <el-icon class="text-purple-600" :size="24"><Download /></el-icon>
@@ -267,11 +267,6 @@ const usagePercent = computed(() => {
   return Math.round(Number((stats.value.usedQuota * 100n) / stats.value.totalQuota))
 })
 
-// 格式化存储
-const formatStorage = (bytes) => {
-  return formatBytes(bytes)
-}
-
 // 近7天流量数据（MB）
 const trafficData = ref([])
 
@@ -279,25 +274,25 @@ const trafficData = ref([])
 const weeklyUploadTotal = computed(() => {
   if (!trafficData.value || trafficData.value.length === 0) return '0 GB'
   const total = trafficData.value.reduce((sum, d) => sum + (d.upload || 0), 0)
-  return (total / 1024).toFixed(2) + ' GB'
+  return (total / 1048576).toFixed(2) + ' GB'
 })
 
 const weeklyDownloadTotal = computed(() => {
   if (!trafficData.value || trafficData.value.length === 0) return '0 GB'
   const total = trafficData.value.reduce((sum, d) => sum + (d.download || 0), 0)
-  return (total / 1024).toFixed(2) + ' GB'
+  return (total / 1048576).toFixed(2) + ' GB'
 })
 
 const uploadPeak = computed(() => {
   if (!trafficData.value || trafficData.value.length === 0) return '0 MB'
   const max = Math.max(...trafficData.value.map(d => d.upload || 0))
-  return max + ' MB'
+  return (max / 1024).toFixed(2) + ' MB'
 })
 
 const downloadPeak = computed(() => {
   if (!trafficData.value || trafficData.value.length === 0) return '0 MB'
   const max = Math.max(...trafficData.value.map(d => d.download || 0))
-  return max + ' MB'
+  return (max / 1024).toFixed(2) + ' MB'
 })
 
 // 计算今日vs昨日上传量变化百分比
@@ -571,7 +566,7 @@ const loadTrendData = async () => {
 // 加载文件类型分布数据
 const loadFileTypeDistribution = async () => {
   try {
-    const { data: res} = await axios.get(`${API_BASE_URL}/api/traffic/distribution`, getAuthConfig())
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/traffic/distribution`, getAuthConfig())
     if (res.code !== 200) {
       ElMessage.error(res.data.msg || '加载文件类型分布失败')
       return

@@ -139,13 +139,13 @@
         header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
         row-class-name="hover:bg-slate-50/50 transition-colors"
       >
-        <el-table-column label="用户名" min-width="120">
+        <el-table-column label="用户名" min-width="100" align="left">
           <template #default="{ row }">
-            <span class="font-medium text-slate-900">{{ row.username }}</span>
+            <span class="font-medium text-slate-900" >{{ row.username }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作类型" min-width="90">
+        <el-table-column label="操作类型" min-width="100" align="left">
           <template #default="{ row }">
             <span
               :class="[
@@ -158,13 +158,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作对象" min-width="120">
+        <el-table-column label="操作对象" min-width="100" align="left">
           <template #default="{ row }">
             <span class="text-slate-700">{{ row.operationObject || '-' }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作详情" min-width="80">
+        <el-table-column label="操作详情" min-width="100" align="left">
           <template #default="{ row }">
             <button
               @click="handleViewDetail(row)"
@@ -175,13 +175,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作时间" min-width="150">
+        <el-table-column label="操作时间" min-width="140" align="left">
           <template #default="{ row }">
             <span class="text-slate-900">{{ row.operationTime }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" min-width="80">
+        <el-table-column label="状态" min-width="100" align="left">
           <template #default="{ row }">
             <span
               :class="[
@@ -300,7 +300,13 @@ const getOperationTypeClass = (type) => {
 }
 
 // 表格数据
-const tableData = ref([])
+const tableData = ref([
+  {
+    id: 123,
+    username: '12345',
+    realName: '的撒'
+  }
+])
 const loading = ref(false)
 
 // 详情对话框相关

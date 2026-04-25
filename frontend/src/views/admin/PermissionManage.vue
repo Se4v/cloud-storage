@@ -40,13 +40,13 @@
         header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
         row-class-name="hover:bg-slate-50/80 transition-colors"
       >
-        <el-table-column label="权限信息" min-width="200">
+        <el-table-column label="权限信息" min-width="180" align="left">
           <template #default="{ row }">
             <div class="text-sm font-medium text-slate-900">{{ row.name }}</div>
           </template>
         </el-table-column>
 
-        <el-table-column label="权限代码" min-width="200">
+        <el-table-column label="权限代码" min-width="180" align="left">
           <template #default="{ row }">
             <code class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-mono rounded border border-slate-200">
               {{ row.code }}
@@ -54,7 +54,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="类型" min-width="120">
+        <el-table-column label="类型" min-width="180" align="left">
           <template #default="{ row }">
             <span :class="[
               'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
@@ -198,20 +198,21 @@ const handleSearch = () => {
 <style scoped>
 /* 分页器样式覆盖 */
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: #2563eb;
-  border-radius: 6px;
+  background-color: #2563eb !important;
+  border-radius: 6px !important;
 }
 
 :deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
-  color: #2563eb;
+  color: #2563eb !important;
 }
 
 /* 下拉框样式调整 */
 :deep(.el-select) {
-  width: 7rem !important;
+  width: 7rem;
 }
 
 :deep(.el-select .el-input__wrapper) {
+  width: 100% !important; /* 确保 wrapper 填满 select 的 7rem */
   border-radius: 0.5rem;
   box-shadow: 0 0 0 1px #e2e8f0 inset;
 }

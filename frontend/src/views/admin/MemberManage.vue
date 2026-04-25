@@ -73,7 +73,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="部门" min-width="180">
+        <el-table-column label="部门" min-width="180" align="left">
           <template #default="{ row }">
             <div class="flex items-center gap-2 text-slate-600">
               <el-icon class="text-slate-400"><OfficeBuilding /></el-icon>
@@ -82,13 +82,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="角色" width="160">
+        <el-table-column label="角色" width="160" align="left">
           <template #default="{ row }">
             <span class="text-slate-700">{{ row.roleName || '未分配' }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="150" align="left">
           <template #default="{ row }">
             <div class="flex items-center gap-2">
               <el-button

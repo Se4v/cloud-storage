@@ -67,7 +67,7 @@
       >
         <el-table-column type="selection" width="48" align="center" />
 
-        <el-table-column label="角色名称" min-width="160">
+        <el-table-column label="角色名称" min-width="160" align="left">
           <template #default="{ row }">
             <div>
               <div class="font-medium text-slate-900">{{ row.name }}</div>
@@ -75,7 +75,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="角色代码" min-width="160">
+        <el-table-column label="角色代码" min-width="160" align="left">
           <template #default="{ row }">
             <code class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-mono border border-slate-200">
               {{ row.code }}
@@ -83,7 +83,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="类型" min-width="120">
+        <el-table-column label="类型" min-width="120" align="left">
           <template #default="{ row }">
             <span
                 :class="[
@@ -98,7 +98,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" min-width="100">
+        <el-table-column label="状态" min-width="100" align="left">
           <template #default="{ row }">
             <span
                 :class="[
@@ -119,13 +119,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="创建时间" min-width="140">
+        <el-table-column label="创建时间" min-width="140" align="left">
           <template #default="{ row }">
             <span class="text-sm text-slate-600">{{ row.createTime }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" min-width="140" fixed="right">
+        <el-table-column label="操作" min-width="140" align="left">
           <template #default="{ row }">
             <div class="flex items-center justify-end gap-2">
               <button

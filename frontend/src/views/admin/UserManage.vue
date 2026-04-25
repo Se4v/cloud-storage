@@ -75,7 +75,7 @@
       >
         <el-table-column type="selection" width="48" align="center" />
 
-        <el-table-column label="用户" min-width="160">
+        <el-table-column label="用户" min-width="160" align="left">
           <template #default="{ row }">
             <div class="flex flex-col">
               <span class="font-medium text-slate-900">{{ row.username }}</span>
@@ -84,7 +84,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="联系方式" min-width="160">
+        <el-table-column label="联系方式" min-width="160" align="left">
           <template #default="{ row }">
             <div class="flex flex-col">
               <span class="text-slate-900">{{ row.mobile || '-' }}</span>
@@ -93,13 +93,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="空间配额" min-width="100">
+        <el-table-column label="空间配额" min-width="100" align="left">
           <template #default="{ row }">
             <span class="text-slate-700 font-medium">{{ formatStorage(row.storageQuota) }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" min-width="100">
+        <el-table-column label="状态" min-width="100" align="left">
           <template #default="{ row }">
             <span
               :class="[
@@ -120,7 +120,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="140" fixed="right" align="right">
+        <el-table-column label="操作" width="140" align="left">
           <template #default="{ row }">
             <div class="flex items-center justify-end gap-1">
               <button

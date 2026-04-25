@@ -65,13 +65,13 @@
         >
           <el-table-column type="selection" width="50" align="center" />
 
-          <el-table-column label="组织名称" min-width="160" flex="2">
+          <el-table-column label="组织名称" min-width="160" flex="2" align="left">
             <template #default="{ row }">
               <span class="font-medium text-slate-900">{{ row.name }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column label="类型" min-width="100">
+          <el-table-column label="类型" min-width="100" align="left">
             <template #default="{ row }">
               <el-tag
                   :type="getTypeType(row.type)"
@@ -84,7 +84,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="父节点" min-width="160" flex="2">
+          <el-table-column label="父节点" min-width="160" flex="2" align="left">
             <template #default="{ row }">
               <div class="flex items-center gap-2 text-slate-600">
                 <el-icon class="text-slate-400"><Link /></el-icon>
@@ -93,13 +93,13 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="空间配额" min-width="120">
+          <el-table-column label="空间配额" min-width="120" align="left">
             <template #default="{ row }">
               <span class="text-slate-600 text-sm font-medium">{{ formatStorageQuota(row.storageQuota) }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column label="状态" min-width="100">
+          <el-table-column label="状态" min-width="100" align="left">
             <template #default="{ row }">
               <span
                 :class="[
@@ -120,7 +120,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column label="操作" width="150" align="left">
             <template #default="{ row }">
               <div class="flex items-center gap-2">
                 <el-button

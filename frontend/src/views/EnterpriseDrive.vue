@@ -498,14 +498,7 @@ const pathHistory = ref([])
 const currentParentId = ref(0)
 
 // 文件列表
-const fileList = ref([
-  {
-    id: 123,
-    name: 'asda',
-    size: 1234,
-    createTime: '2312'
-  }
-])
+const fileList = ref([])
 
 // 对话框状态
 const createFolderVisible = ref(false)

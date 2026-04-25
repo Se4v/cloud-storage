@@ -340,9 +340,7 @@ const handleBatchDelete = async () => {
         cancelButtonText: '取消',
         type: 'warning',
         confirmButtonClass: '!bg-red-600 !border-red-600 hover:!bg-red-700'
-      }
-    )
-
+      })
     const { data: res } = await axios.post(`${API_BASE_URL}/api/share/delete`, {
       linkIds: selectedLinks.value.map(row => row.id)
     }, getAuthConfig())
