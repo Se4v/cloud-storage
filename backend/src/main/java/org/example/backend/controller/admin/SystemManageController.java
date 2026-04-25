@@ -26,17 +26,15 @@ public class SystemManageController {
     public Result<SystemConfigResp> getSystemConfigs() {
         Map<String, String> configMap = systemService.getSystemConfigs();
 
-        String loginFailThreshold = configMap.getOrDefault("login_fail_threshold", "0");
         String defaultPassword = configMap.getOrDefault("default_password", "");
-        String defaultStorageQuota = configMap.getOrDefault("default_storage_quota", "0");
+        String totalQuota = configMap.getOrDefault("total_quota", "0");
         String maxFileSize = configMap.getOrDefault("max_file_size", "0");
         String storageWarningThreshold = configMap.getOrDefault("storage_warning_threshold", "0");
         List<String> fileTypeBlacklist = List.of(configMap.getOrDefault("file_type_blacklist", "").split(","));
 
         SystemConfigResp resp = SystemConfigResp.builder()
-                .loginFailThreshold(loginFailThreshold)
                 .defaultPassword(defaultPassword)
-                .defaultStorageQuota(defaultStorageQuota)
+                .totalQuota(totalQuota)
                 .maxFileSize(maxFileSize)
                 .storageWarningThreshold(storageWarningThreshold)
                 .fileTypeBlacklist(fileTypeBlacklist)

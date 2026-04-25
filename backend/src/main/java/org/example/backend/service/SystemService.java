@@ -50,11 +50,6 @@ public class SystemService {
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getId));
 
         List<Config> updateConfigList = new ArrayList<>();
-        updateConfigList.add(Config.builder()
-                .id(configMap.get("login_fail_threshold"))
-                .configKey("login_fail_threshold")
-                .configValue(req.getLoginFailThreshold())
-                .build());
 
         updateConfigList.add(Config.builder()
                 .id(configMap.get("default_password"))
@@ -63,9 +58,9 @@ public class SystemService {
                 .build());
 
         updateConfigList.add(Config.builder()
-                .id(configMap.get("default_storage_quota"))
-                .configKey("default_storage_quota")
-                .configValue(req.getDefaultStorageQuota())
+                .id(configMap.get("total_quota"))
+                .configKey("total_quota")
+                .configValue(req.getTotalQuota())
                 .build());
 
         updateConfigList.add(Config.builder()

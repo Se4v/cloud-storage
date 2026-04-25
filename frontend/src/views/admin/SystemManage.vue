@@ -4,38 +4,18 @@
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
       <form @submit.prevent="handleSave" class="p-6 space-y-8">
         
-        <!-- 安全设置组 -->
+        <!-- 系统设置组 -->
         <div class="space-y-6">
           <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
             <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
               <el-icon class="text-blue-600" :size="18"><Lock /></el-icon>
             </div>
             <div>
-              <h2 class="text-base font-semibold text-slate-900">安全设置</h2>
+              <h2 class="text-base font-semibold text-slate-900">系统设置</h2>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pl-0 md:pl-10">
-            <!-- 登录失败次数阈值 -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-700">
-                登录失败次数阈值
-                <span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <input
-                  v-model.number="form.loginFailThreshold"
-                  type="number"
-                  min="1"
-                  max="10"
-                  class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="请输入次数"
-                />
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">次</span>
-              </div>
-              <p class="text-xs text-slate-500">连续登录失败超过此次数将锁定账号</p>
-            </div>
-
             <!-- 重置后的默认密码 -->
             <div class="space-y-2">
               <label class="block text-sm font-medium text-slate-700">
@@ -62,21 +42,7 @@
               </div>
               <p class="text-xs text-slate-500">管理员重置用户密码后的默认密码</p>
             </div>
-          </div>
-        </div>
 
-        <!-- 存储设置组 -->
-        <div class="space-y-6">
-          <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <el-icon class="text-emerald-600" :size="18"><Box /></el-icon>
-            </div>
-            <div>
-              <h2 class="text-base font-semibold text-slate-900">存储设置</h2>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pl-0 md:pl-10">
             <!-- 默认空间存储容量大小 -->
             <div class="space-y-2">
               <label class="block text-sm font-medium text-slate-700">
@@ -85,11 +51,11 @@
               </label>
               <div class="relative">
                 <input
-                  v-model.number="displayStorageQuota"
-                  type="number"
-                  min="1"
-                  class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="请输入容量"
+                    v-model.number="displayStorageQuota"
+                    type="number"
+                    min="1"
+                    class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="请输入容量"
                 />
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">GB</span>
               </div>
@@ -104,11 +70,11 @@
               </label>
               <div class="relative">
                 <input
-                  v-model.number="form.maxFileSize"
-                  type="number"
-                  min="1"
-                  class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="请输入大小"
+                    v-model.number="form.maxFileSize"
+                    type="number"
+                    min="1"
+                    class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="请输入大小"
                 />
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">MB</span>
               </div>
@@ -116,48 +82,23 @@
             </div>
 
             <!-- 存储空间预警阈值 -->
-            <div class="space-y-2 md:col-span-2">
+            <div class="space-y-2">
               <label class="block text-sm font-medium text-slate-700">
                 存储空间预警阈值
                 <span class="text-red-500">*</span>
               </label>
-              <div class="flex items-center gap-4">
-                <div class="relative flex-1 max-w-[200px]">
-                  <input
+              <div class="relative">
+                <input
                     v-model.number="form.storageWarningThreshold"
                     type="number"
                     min="1"
                     max="100"
-                    class="w-full h-10 px-3 pr-12 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    class="w-full h-10 px-3 pr-16 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="请输入百分比"
-                  />
-                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">%</span>
-                </div>
-                <!-- 可视化进度条 -->
-                <div class="flex-1 max-w-[300px] h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    class="h-full rounded-full transition-all duration-300"
-                    :class="getThresholdColor(form.storageWarningThreshold)"
-                    :style="{ width: form.storageWarningThreshold + '%' }"
-                  ></div>
-                </div>
-                <span class="text-sm text-slate-600 w-28">
-                  超过 {{ form.storageWarningThreshold }}% 时预警
-                </span>
+                />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">%</span>
               </div>
               <p class="text-xs text-slate-500">用户存储空间使用达到此百分比时发送预警通知</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 文件类型设置组 -->
-        <div class="space-y-6">
-          <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-              <el-icon class="text-amber-600" :size="18"><Document /></el-icon>
-            </div>
-            <div>
-              <h2 class="text-base font-semibold text-slate-900">文件类型设置</h2>
             </div>
           </div>
 
@@ -167,19 +108,19 @@
               <label class="block text-sm font-medium text-slate-700">
                 文件类型黑名单
               </label>
-              
+
               <!-- 标签展示 -->
               <div class="flex flex-wrap gap-2 min-h-[40px] p-3 rounded-md border border-slate-200 bg-slate-50/50">
                 <span
-                  v-for="(ext, index) in form.fileTypeBlacklist"
-                  :key="index"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-200 text-sm text-slate-700 shadow-sm"
+                    v-for="(ext, index) in form.fileTypeBlacklist"
+                    :key="index"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-200 text-sm text-slate-700 shadow-sm"
                 >
                   {{ ext }}
                   <button
-                    type="button"
-                    @click="removeFileExt(index)"
-                    class="text-slate-400 hover:text-red-500 transition-colors"
+                      type="button"
+                      @click="removeFileExt(index)"
+                      class="text-slate-400 hover:text-red-500 transition-colors"
                   >
                     <el-icon :size="14"><Close /></el-icon>
                   </button>
@@ -196,18 +137,18 @@
                     <span class="text-slate-400 text-sm">.</span>
                   </div>
                   <input
-                    v-model="newFileExt"
-                    type="text"
-                    class="w-full h-10 pl-6 pr-4 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="输入扩展名，如：exe"
-                    @keyup.enter="addFileExt"
+                      v-model="newFileExt"
+                      type="text"
+                      class="w-full h-10 pl-6 pr-4 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="输入扩展名，如：exe"
+                      @keyup.enter="addFileExt"
                   />
                 </div>
                 <button
-                  type="button"
-                  @click="addFileExt"
-                  :disabled="!newFileExt.trim()"
-                  class="h-10 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1"
+                    type="button"
+                    @click="addFileExt"
+                    :disabled="!newFileExt.trim()"
+                    class="h-10 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1"
                 >
                   <el-icon :size="16"><Plus /></el-icon>
                   添加
@@ -218,12 +159,12 @@
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-slate-500">快捷添加：</span>
                 <button
-                  v-for="ext in commonFileExts"
-                  :key="ext"
-                  type="button"
-                  @click="quickAddExt(ext)"
-                  :disabled="form.fileTypeBlacklist.includes('.' + ext)"
-                  class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+                    v-for="ext in commonFileExts"
+                    :key="ext"
+                    type="button"
+                    @click="quickAddExt(ext)"
+                    :disabled="form.fileTypeBlacklist.includes('.' + ext)"
+                    class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
                 >
                   .{{ ext }}
                 </button>
@@ -257,8 +198,6 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import {
   Lock,
-  Box,
-  Document,
   Plus,
   Close,
   View,
@@ -284,9 +223,8 @@ const getAuthConfig = () => {
 
 // 表单数据
 const form = reactive({
-  loginFailThreshold: 5,
   defaultPassword: '123456',
-  defaultStorageQuota: 10737418240, // 10 GB in bytes (10 * 1024 * 1024 * 1024)
+  totalQuota: 10737418240, // 10 GB in bytes (10 * 1024 * 1024 * 1024)
   maxFileSize: 500,
   storageWarningThreshold: 80,
   fileTypeBlacklist: ['.exe', '.bat', '.sh', '.php']
@@ -296,11 +234,11 @@ const form = reactive({
 const displayStorageQuota = computed({
   get: () => {
     // 将字节转换为 GB 显示
-    return Math.round(form.defaultStorageQuota / 1024 / 1024 / 1024)
+    return Math.round(form.totalQuota / 1024 / 1024 / 1024)
   },
   set: (value) => {
     // 将 GB 转换为字节存储
-    form.defaultStorageQuota = value * 1024 * 1024 * 1024
+    form.totalQuota = value * 1024 * 1024 * 1024
   }
 })
 
@@ -322,9 +260,8 @@ const loadSystemConfig = async () => {
     }
     const data = res.data
     // 后端返回的都是 String 类型，需要转换
-    form.loginFailThreshold = parseInt(data.loginFailThreshold) || 5
     form.defaultPassword = data.defaultPassword || '123456'
-    form.defaultStorageQuota = parseInt(data.defaultStorageQuota) || 10737418240
+    form.totalQuota = parseInt(data.totalQuota) || 10737418240
     form.maxFileSize = parseInt(data.maxFileSize) || 500
     form.storageWarningThreshold = parseInt(data.storageWarningThreshold) || 80
     form.fileTypeBlacklist = data.fileTypeBlacklist || ['.exe', '.bat', '.sh', '.php']
@@ -332,13 +269,6 @@ const loadSystemConfig = async () => {
     console.error('获取系统设置失败:', error)
     ElMessage.error(error.message || '获取系统设置失败')
   }
-}
-
-// 获取阈值颜色
-const getThresholdColor = (threshold) => {
-  if (threshold >= 90) return 'bg-red-500'
-  if (threshold >= 70) return 'bg-amber-500'
-  return 'bg-emerald-500'
 }
 
 // 添加文件扩展名
@@ -375,10 +305,6 @@ const removeFileExt = (index) => {
 // 保存设置
 const handleSave = async () => {
   // 表单验证
-  if (!form.loginFailThreshold || form.loginFailThreshold < 1) {
-    ElMessage.error('请输入有效的登录失败次数阈值')
-    return
-  }
   
   if (!form.defaultPassword) {
     ElMessage.error('请输入重置后的默认密码')
@@ -405,9 +331,8 @@ const handleSave = async () => {
   try {
     // 构造提交数据（后端要求 String 类型）
     const submitData = {
-      loginFailThreshold: String(form.loginFailThreshold),
       defaultPassword: form.defaultPassword,
-      defaultStorageQuota: String(form.defaultStorageQuota),
+      totalQuota: String(form.totalQuota),
       maxFileSize: String(form.maxFileSize),
       storageWarningThreshold: String(form.storageWarningThreshold),
       fileTypeBlacklist: form.fileTypeBlacklist

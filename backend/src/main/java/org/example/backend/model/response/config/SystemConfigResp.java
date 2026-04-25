@@ -8,9 +8,8 @@ import java.util.List;
 @Data
 @Builder
 public class SystemConfigResp {
-    private String loginFailThreshold;
     private String defaultPassword;
-    private String defaultStorageQuota;
+    private String totalQuota;
     private String maxFileSize;
     private String storageWarningThreshold;
     private List<String> fileTypeBlacklist;

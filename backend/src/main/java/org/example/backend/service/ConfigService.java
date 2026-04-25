@@ -48,10 +48,6 @@ public class ConfigService {
         return configCache.getOrDefault("default_password", "");
     }
 
-    public Long getDefaultStorageQuota() {
-        return Long.valueOf(configCache.getOrDefault("default_storage_quota", null));
-    }
-
     public List<String> getFileTypeBlacklist() {
         return List.of(configCache.getOrDefault("file_type_blacklist", "").split(","));
     }
