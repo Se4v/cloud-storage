@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -29,6 +30,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String X_ORG_ID = "X-Org-Id";
     private static final int BEARER_PREFIX_LENGTH = 7;
+    private static final long RENEW_THRESHOLD = 30 * 60;
+    private static final long MAX_EXPIRE_SECONDS = 3600;
 
     public JwtFilter(RedisTemplate<String, Object> redisTemplate, JwtUtils jwtUtils) {
         this.redisTemplate = redisTemplate;
@@ -61,6 +64,12 @@ public class JwtFilter extends OncePerRequestFilter {
         if (!jwtUtils.validateToken(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "无效token");
             return;
+        }
+
+        // 自动续期
+        Long ttl = redisTemplate.getExpire(RedisConsts.KEY_AUTH_USER + token, TimeUnit.SECONDS);
+        if (ttl < RENEW_THRESHOLD) {
+            redisTemplate.expire(RedisConsts.KEY_AUTH_USER + token, MAX_EXPIRE_SECONDS, TimeUnit.SECONDS);
         }
 
         // 从Redis中获取登录用户信息

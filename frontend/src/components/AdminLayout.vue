@@ -168,7 +168,6 @@ import {
   Notebook,
   SwitchButton,
   Lock,
-  Box,
   Tools,
   SetUp,
   Avatar
@@ -193,11 +192,11 @@ const getAuthConfig = () => {
   }
 }
 
-const currentMenu = ref('space-stats')
+const currentMenu = ref('drive-stats')
 
 // 数据报表菜单
 const reportMenu = [
-  { key: 'space-stats', label: '空间统计', icon: DataLine, route: '/admin/space-stats' },
+  { key: 'drive-stats', label: '空间统计', icon: DataLine, route: '/admin/drive-stats' },
   { key: 'traffic-stats', label: '流量统计', icon: Histogram, route: '/admin/traffic-stats' }
 ]
 
@@ -212,7 +211,7 @@ const managementMenu = [
 
 // 网盘配置菜单
 const configMenu = [
-  { key: 'system-settings', label: '系统设置', icon: SetUp, route: '/admin/settings' }
+  { key: 'system-settings', label: '系统设置', icon: SetUp, route: '/admin/system' }
 ]
 
 // 安全与审计菜单

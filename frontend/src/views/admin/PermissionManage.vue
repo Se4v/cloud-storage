@@ -20,24 +20,6 @@
           </div>
         </div>
 
-        <!-- 类型筛选 -->
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-slate-500">类型：</span>
-          <el-select
-              v-model="currentType"
-              placeholder="全部类型"
-              class="w-28"
-              size="default"
-          >
-            <el-option
-                v-for="type in typeFilters"
-                :key="type.value"
-                :label="type.label"
-                :value="type.value"
-            />
-          </el-select>
-        </div>
-
         <!-- 查询按钮 -->
         <button
             @click="handleSearch"
@@ -137,13 +119,6 @@ const getAuthConfig = () => {
 
 // 权限类型定义（后端返回 1-菜单, 2-操作, 3-数据）
 const permissionTypes = [
-  { value: 1, label: '菜单', code: 'menu' },
-  { value: 2, label: '操作', code: 'operation' },
-  { value: 3, label: '数据', code: 'data' }
-]
-
-const typeFilters = [
-  { value: 'all', label: '全部' },
   { value: 1, label: '菜单', code: 'menu' },
   { value: 2, label: '操作', code: 'operation' },
   { value: 3, label: '数据', code: 'data' }

@@ -1,128 +1,109 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Login from '@/views/login.vue';
-import DriveLayout from '@/components/DriveLayout.vue';
-import PersonalDrive from "@/views/PersonalDrive.vue";
-import EnterpriseDrive from "@/views/EnterpriseDrive.vue";
-import Links from "@/views/Links.vue";
-import Profile from '@/views/Profile.vue';
-import Recovery from "@/views/Recovery.vue";
-import AdminLayout from "@/components/AdminLayout.vue";
-import UserManage from "@/views/admin/UserManage.vue";
-import PermissionManage from "@/views/admin/PermissionManage.vue";
-import RoleManage from "@/views/admin/RoleManage.vue";
-import OrgManage from "@/views/admin/OrgManage.vue";
-import LogManage from "@/views/admin/LogManage.vue";
-import SystemManage from "@/views/admin/SystemManage.vue";
-import DriveStat from "@/views/admin/DriveStat.vue";
-import TrafficStat from "@/views/admin/TrafficStat.vue";
-import MemberManage from "@/views/admin/MemberManage.vue";
-import Notice from "@/views/Notice.vue";
-import SharedFile from "@/views/SharedFile.vue";
 
 const routes = [
     {
         path: '/login',
         name: 'Login',
-        component: Login
-    },
-    {
-        path: '/s/:linkKey',
-        name: 'shareFile',
-        component: SharedFile
+        component: () => import('@/views/Login.vue')
     },
     {
         path: '/drive',
-        name: 'drive',
-        component: DriveLayout,
+        name: 'UserLayout',
+        component: () => import('@/components/UserLayout.vue'),
         children: [
             {
                 path: 'personal/:driveId?',
                 name: 'PersonalDrive',
-                component: PersonalDrive
+                component: () => import('@/views/PersonalDrive.vue')
             },
             {
                 path: 'enterprise/:driveId?',
                 name: 'EnterpriseDrive',
-                component: EnterpriseDrive
+                component: () => import('@/views/EnterpriseDrive.vue')
             },
             {
-                path: 'links',
-                name: 'Links',
-                component: Links
+                path: 'share',
+                name: 'ShareManage',
+                component: () => import('@/views/ShareManage.vue')
             },
             {
-                path: 'recovery',
-                name: 'Recovery',
-                component: Recovery
+                path: 'recycle',
+                name: 'Recycle',
+                component: () => import('@/views/Recycle.vue')
             },
             {
                 path: 'notice',
                 name: 'Notice',
-                component: Notice
+                component: () => import('@/views/Notice.vue')
             },
             {
                 path: 'profile',
-                name: 'DriveProfile',
-                component: Profile
+                name: 'UserProfile',
+                component: () => import('@/views/Profile.vue')
             }
         ]
     },
     {
         path: '/admin',
-        name: 'admin',
-        component: AdminLayout,
+        name: 'AdminLayout',
+        component: () => import('@/components/AdminLayout.vue'),
         children: [
             {
                 path: 'user',
-                name: 'UserManage',
-                component: UserManage
+                name: 'UserManagement',
+                component: () => import('@/views/admin/UserManage.vue')
             },
             {
                 path: 'permission',
-                name: 'PermissionManage',
-                component: PermissionManage
+                name: 'PermissionManagement',
+                component: () => import('@/views/admin/PermissionManage.vue')
             },
             {
                 path: 'role',
-                name: 'RoleManage',
-                component: RoleManage
+                name: 'RoleManagement',
+                component: () => import('@/views/admin/RoleManage.vue')
             },
             {
                 path: 'org',
-                name: 'OrgManage',
-                component: OrgManage
+                name: 'OrgManagement',
+                component: () => import('@/views/admin/OrgManage.vue')
             },
             {
                 path: 'member',
-                name: 'MemberManage',
-                component: MemberManage
+                name: 'MemberManagement',
+                component: () => import('@/views/admin/MemberManage.vue')
             },
             {
                 path: 'log',
-                name: 'LogManage',
-                component: LogManage
+                name: 'LogManagement',
+                component: () => import('@/views/admin/LogManage.vue')
             },
             {
-                path: 'settings',
-                name: 'SystemManage',
-                component: SystemManage
+                path: 'system',
+                name: 'SystemManagement',
+                component: () => import('@/views/admin/SystemManage.vue')
             },
             {
-                path: 'space-stats',
+                path: 'drive-stats',
                 name: 'DriveStat',
-                component: DriveStat
+                component: () => import('@/views/admin/DriveStat.vue')
             },
             {
                 path: 'traffic-stats',
                 name: 'TrafficStat',
-                component: TrafficStat
+                component: () => import('@/views/admin/TrafficStat.vue')
             },
             {
                 path: 'profile',
                 name: 'AdminProfile',
-                component: Profile
+                component: () => import('@/views/Profile.vue')
             }
         ]
+    },
+    {
+        path: '/s/:linkKey',
+        name: 'SharedFile',
+        component: () => import('@/views/SharedFile.vue')
     }
 ]
 

@@ -45,15 +45,6 @@
         </div>
 
         <div class="flex gap-2">
-          <select
-              v-model="filterStatus"
-              class="h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
-          >
-            <option value="">全部状态</option>
-            <option value="1">启用</option>
-            <option value="0">禁用</option>
-          </select>
-
           <button
               @click="handleSearch"
               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
@@ -459,11 +450,11 @@ const loadUserList = async () => {
 }
 
 // 全选逻辑（仅选中当前页）
-const isAllSelected = computed(() => {
+computed(() => {
   const selectedIds = selectedUsers.value.map(user => user.id)
   return paginatedTableData.value.length > 0 &&
       paginatedTableData.value.every(user => selectedIds.includes(user.id))
-})
+});
 
 // 处理表格选择变化
 const handleSelectionChange = (selection) => {

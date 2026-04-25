@@ -599,8 +599,8 @@ const storageMenu = [
 ]
 
 const fileMenu = [
-  { key: 'link', label: '安全外链', icon: Link, title: '安全外链', route: '/drive/links' },
-  { key: 'recovery', label: '误删恢复', icon: Delete, title: '误删恢复', route: '/drive/recovery' },
+  { key: 'share', label: '安全外链', icon: Link, title: '安全外链', route: '/drive/share' },
+  { key: 'recycle', label: '误删恢复', icon: Delete, title: '误删恢复', route: '/drive/recycle' },
   { key: 'notice', label: '消息通知', icon: Bell, title: '消息通知', route: '/drive/notice' }
 ]
 
