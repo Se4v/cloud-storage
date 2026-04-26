@@ -162,6 +162,8 @@ public class RoleService {
         logMap.put("newCode", req.getCode());
         logMap.put("oldName", existingRole.getName());
         logMap.put("newName", req.getName());
+        logMap.put("oldType", existingRole.getType());
+        logMap.put("newType", req.getType());
         logMap.put("enabled", req.getIsEnabled());
         LogContextHolder.addDetailProperty("role_update", logMap);
 
@@ -170,6 +172,7 @@ public class RoleService {
                 Wrappers.<Role>lambdaUpdate()
                         .set(Role::getName, req.getName())
                         .set(Role::getCode, req.getCode())
+                        .set(Role::getType, req.getType())
                         .set(Role::getEnabled, req.getIsEnabled())
                         .eq(Role::getId, req.getId()));
         if (count != 1) throw new BusinessException("更新角色失败");

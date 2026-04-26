@@ -355,16 +355,13 @@ const handleSave = async () => {
   saving.value = true
   
   try {
-    // 构造提交数据（后端要求 String 类型）
-    const submitData = {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/system/update`, {
       defaultPassword: form.defaultPassword,
       totalQuota: String(form.totalQuota),
       maxFileSize: String(form.maxFileSize),
       storageWarningThreshold: String(form.storageWarningThreshold),
       fileTypeBlacklist: form.fileTypeBlacklist
-    }
-    
-    const { data: res } = await axios.post(`${API_BASE_URL}/api/system/update`, submitData, getAuthConfig())
+    }, getAuthConfig())
     if (res.code !== 200) {
       ElMessage.error(res.msg || '保存失败')
       return

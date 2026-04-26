@@ -452,7 +452,7 @@ const loadEnterpriseData = async () => {
 
 const loadPersonalData = async () => {
   try {
-    const { data: res} = await axios.get(`${API_BASE_URL}/api/drive-stat/personal`, getAuthConfig())
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/drive-stat/personal`, getAuthConfig())
     if (res.code !== 200) {
       ElMessage.error(res.msg || '加载个人空间数据失败')
       return

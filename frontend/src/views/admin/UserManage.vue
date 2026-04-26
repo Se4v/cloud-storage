@@ -605,16 +605,15 @@ const handleSaveUser = async () => {
     
     if (isEdit.value) {
       // 编辑用户
-      const submitData = {
+      const { data: res } = await axios.post(`${API_BASE_URL}/api/user/update`, {
         id: userForm.id,
         realName: userForm.realName,
         mobile: userForm.mobile,
         email: userForm.email || '',
         storageQuota: storageQuotaBytes,
         isEnabled: userForm.isEnabled
-      }
-      const res = await axios.post(`${API_BASE_URL}/api/user/update`, submitData, getAuthConfig())
-      if (res.data.code !== 200) {
+      }, getAuthConfig())
+      if (res.code !== 200) {
         ElMessage.error(res.msg || '修改失败')
         return
       }
@@ -623,13 +622,12 @@ const handleSaveUser = async () => {
       await loadUserList()
     } else {
       // 创建用户
-      const submitData = {
+      const { data: res } = await axios.post(`${API_BASE_URL}/api/user/create`, {
         username: userForm.username,
         realName: userForm.realName,
         mobile: userForm.mobile,
         storageQuota: storageQuotaBytes
-      }
-      const { data: res } = await axios.post(`${API_BASE_URL}/api/user/create`, submitData, getAuthConfig())
+      }, getAuthConfig())
       if (res.code !== 200) {
         ElMessage.error(res.msg || '创建失败')
         return

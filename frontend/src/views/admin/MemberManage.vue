@@ -104,7 +104,7 @@
                 confirm-button-text="确认"
                 cancel-button-text="取消"
                 confirm-button-class="!bg-red-600 !border-red-600"
-                @confirm="handleDelete(row)"
+                @confirm="selectedRows = [row]; handleBatchDelete()"
               >
                 <template #reference>
                   <el-button
@@ -344,13 +344,13 @@ const roleList = ref([])
 // 加载成员列表
 const loadMemberList = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/member/all`, getAuthConfig())
-    if (res.data.code === 200) {
-      memberList.value = res.data.data || []
-      total.value = memberList.value.length
-    } else {
-      ElMessage.error(res.data.msg || '获取成员列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/member/all`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取成员列表失败')
+      return
     }
+    memberList.value = res.data || []
+    total.value = memberList.value.length
   } catch (error) {
     console.error('获取成员列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取成员列表失败')
@@ -360,12 +360,12 @@ const loadMemberList = async () => {
 // 加载部门列表
 const loadOrgNodeList = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/member/org`, getAuthConfig())
-    if (res.data.code === 200) {
-      orgNodeList.value = res.data.data || []
-    } else {
-      ElMessage.error(res.data.msg || '获取部门列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/member/org`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取部门列表失败')
+      return
     }
+    orgNodeList.value = res.data || []
   } catch (error) {
     console.error('获取部门列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取部门列表失败')
@@ -375,12 +375,12 @@ const loadOrgNodeList = async () => {
 // 加载角色列表
 const loadRoleList = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/member/role`, getAuthConfig())
-    if (res.data.code === 200) {
-      roleList.value = res.data.data || []
-    } else {
-      ElMessage.error(res.data.msg || '获取角色列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/member/role`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取角色列表失败')
+      return
     }
+    roleList.value = res.data || []
   } catch (error) {
     console.error('获取角色列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取角色列表失败')
@@ -437,24 +437,9 @@ const handleEdit = async (row) => {
   dialogVisible.value = true
 }
 
-// 删除单个成员
-const handleDelete = async (row) => {
-  try {
-    const res = await axios.post(`${API_BASE_URL}/api/member/delete`, { memberIds: [row.id] }, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('删除成功')
-      await loadMemberList()
-    } else {
-      ElMessage.error(res.data.msg || '删除失败')
-    }
-  } catch (error) {
-    console.error('删除成员失败:', error)
-    ElMessage.error(error.response?.data?.msg || '删除失败')
-  }
-}
-
 // 批量删除
 const handleBatchDelete = async () => {
+  if (!selectedRows.value) return
   try {
     await ElMessageBox.confirm(
       `确定要删除选中的 ${selectedRows.value.length} 个成员吗？`,
@@ -466,15 +451,16 @@ const handleBatchDelete = async () => {
         confirmButtonClass: '!bg-red-600 !border-red-600'
       }
     )
-    const ids = selectedRows.value.map(row => row.id)
-    const res = await axios.post(`${API_BASE_URL}/api/member/delete`, { memberIds: ids }, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('批量删除成功')
-      selectedRows.value = []
-      await loadMemberList()
-    } else {
-      ElMessage.error(res.data.msg || '批量删除失败')
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/member/delete`, {
+      memberIds: selectedRows.value.map(row => row.id)
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '批量删除失败')
+      return
     }
+    ElMessage.success('批量删除成功')
+    selectedRows.value = []
+    await loadMemberList()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('批量删除失败:', error)
@@ -486,46 +472,30 @@ const handleBatchDelete = async () => {
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        if (isEdit.value) {
-          // 更新成员
-          const submitData = {
-            memberId: formData.id,
-            nodeId: formData.nodeId,
-            roleId: formData.roleId
-          }
-          const res = await axios.post(`${API_BASE_URL}/api/member/update`, submitData, getAuthConfig())
-          if (res.data.code === 200) {
-            ElMessage.success('更新成功')
-            dialogVisible.value = false
-            await loadMemberList()
-          } else {
-            ElMessage.error(res.data.msg || '更新失败')
-          }
-        } else {
-          // 创建成员
-          const submitData = {
-            username: formData.username,
-            nodeId: formData.nodeId,
-            roleId: formData.roleId
-          }
-          const res = await axios.post(`${API_BASE_URL}/api/member/create`, submitData, getAuthConfig())
-          if (res.data.code === 200) {
-            ElMessage.success('创建成功')
-            dialogVisible.value = false
-            await loadMemberList()
-          } else {
-            ElMessage.error(res.data.msg || '创建失败')
-          }
-        }
-      } catch (error) {
-        console.error(isEdit.value ? '更新成员失败:' : '创建成员失败:', error)
-        ElMessage.error(error.response?.data?.msg || (isEdit.value ? '更新失败' : '创建失败'))
+  try {
+    await formRef.value.validate()
+
+    const url = isEdit.value ? `${API_BASE_URL}/api/member/update` : `${API_BASE_URL}/api/member/create`
+    const submitData = isEdit.value
+        ? { memberId: formData.id, nodeId: formData.nodeId, roleId: formData.roleId }
+        : { username: formData.username, nodeId: formData.nodeId, roleId: formData.roleId }
+
+    const { data: res } = await axios.post(url, submitData, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || isEdit.value ? '更新失败' : '创建失败')
+      return
+    }
+    ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
+    dialogVisible.value = false
+    await loadMemberList()
+  } catch (error) {
+    if (error !== false) {
+      console.error('提交异常:', error)
+      if (error.response) {
+        ElMessage.error(error.response.data?.msg || '操作失败')
       }
     }
-  })
+  }
 }
 
 // 初始化加载数据

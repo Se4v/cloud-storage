@@ -318,8 +318,9 @@ const handleDownload = async () => {
   if (!filesToDownload.length) return
 
   try {
-    const ids = filesToDownload.map(f => f.id)
-    const res = await axios.post(`${API_BASE_URL}/api/share/download`, { ids: ids }, { responseType: 'blob' })
+    const res = await axios.post(`${API_BASE_URL}/api/share/download`, {
+      ids: filesToDownload.map(f => f.id)
+    }, { responseType: 'blob' })
 
     // 从响应头中获取文件名
     const disposition = res.headers['content-disposition']

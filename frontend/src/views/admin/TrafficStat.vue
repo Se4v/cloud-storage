@@ -568,7 +568,7 @@ const loadFileTypeDistribution = async () => {
   try {
     const { data: res } = await axios.get(`${API_BASE_URL}/api/traffic/distribution`, getAuthConfig())
     if (res.code !== 200) {
-      ElMessage.error(res.data.msg || '加载文件类型分布失败')
+      ElMessage.error(res.msg || '加载文件类型分布失败')
       return
     }
     const data = res.data || []

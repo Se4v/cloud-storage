@@ -806,7 +806,6 @@ const confirmCreateFolder = async () => {
     ElMessage.warning('请输入文件夹名称')
     return
   }
-
   if (!driveId.value) {
     ElMessage.error('未获取到 driveId')
     return
@@ -818,7 +817,6 @@ const confirmCreateFolder = async () => {
       parentId: currentParentId.value,
       folderName: newFolderName.value.trim()
     }, getAuthConfig())
-
     if (res.code !== 200) {
       ElMessage.error(res.msg || '创建失败')
       return
@@ -838,9 +836,8 @@ const handleBatchDownload = async () => {
   if (!selectedFiles.value.length) return
 
   try {
-    const ids = selectedFiles.value.map(f => f.id)
     const res = await axios.post(`${API_BASE_URL}/api/personal/download`, {
-      ids: ids
+      ids: selectedFiles.value.map(f => f.id)
     }, {
       ...getAuthConfig(),
       responseType: 'blob'
@@ -983,9 +980,7 @@ const loadFolderTree = async () => {
   try {
     const { data: res } = await axios.get(`${API_BASE_URL}/api/personal/folder`, {
       ...getAuthConfig(),
-      params: {
-        driveId: driveId.value
-      }
+      params: { driveId: driveId.value }
     })
     if (res.code !== 200) {
       folderTreeData.value = []
@@ -1127,11 +1122,10 @@ const getFileChunk = (file, start, end) => {
 
 // 上传单个文件
 const uploadSingleFile = async (file, initView, taskId) => {
-  // 1. 秒传成功 (isSkip = true)
+  // 1. 秒传成功
   if (initView.isSkip) {
     uploadStore.markAsSkipped(taskId)
     ElMessage.success(`文件 "${file.name}" 秒传成功`)
-    // 刷新文件列表
     await loadFileList(currentParentId.value)
     return
   }
@@ -1153,29 +1147,26 @@ const uploadSingleFile = async (file, initView, taskId) => {
 const uploadSmallFile = async (file, initView, taskId) => {
   try {
     // 使用预签名URL直接上传到MinIO
-    const response = await axios.put(initView.uploadUrl, file, {
+    await axios.put(initView.uploadUrl, file, {
       headers: {
         'Content-Type': file.type || 'application/octet-stream'
       },
       onUploadProgress: (progressEvent) => {
-        // 更新上传进度
         uploadStore.updateProgress(taskId, progressEvent.loaded, progressEvent.total)
       }
     })
 
     // 上传完成后通知后端
-    const simpleUploadRes = await axios.post(`${API_BASE_URL}/api/personal/simple-upload`, {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/personal/simple-upload`, {
       sha256: initView.sha256
     }, getAuthConfig())
-
-    if (simpleUploadRes.data.code === 200) {
-      uploadStore.completeTask(taskId)
-      ElMessage.success(`文件 "${file.name}" 上传成功`)
-      // 刷新文件列表
-      await loadFileList(currentParentId.value)
-    } else {
-      uploadStore.failTask(taskId, simpleUploadRes.data.msg || '上传记录失败')
+    if (res.code !== 200) {
+      uploadStore.failTask(taskId, res.msg || '上传记录失败')
+      return
     }
+    uploadStore.completeTask(taskId)
+    ElMessage.success(`文件 "${file.name}" 上传成功`)
+    await loadFileList(currentParentId.value)
   } catch (error) {
     console.error('小文件上传失败:', error)
     uploadStore.failTask(taskId, '上传失败')
@@ -1191,9 +1182,7 @@ const uploadLargeFile = async (file, initView, taskId) => {
 
     // 设置总分片数
     const task = uploadStore.uploadTasks.find(t => t.id === taskId)
-    if (task) {
-      task.totalChunks = totalChunks
-    }
+    if (task) task.totalChunks = totalChunks
 
     // 批量上报的数组
     const chunkReportBatch = []
@@ -1201,9 +1190,7 @@ const uploadLargeFile = async (file, initView, taskId) => {
     // 上传每个分片
     for (let i = 1; i <= totalChunks; i++) {
       // 如果已经上传过了，跳过
-      if (uploadedChunksSet.has(i)) {
-        continue
-      }
+      if (uploadedChunksSet.has(i)) continue
 
       const start = (i - 1) * CHUNK_SIZE
       const end = Math.min(i * CHUNK_SIZE, file.size)

@@ -251,8 +251,7 @@ const handleLogin = async () => {
     }
   } catch (error) {
     console.error('登录失败:', error)
-    const errorMsg = error.response?.data?.msg || error.message || '登录失败，请检查网络连接'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.message || '登录失败，请检查网络连接')
   } finally {
     loading.value = false
   }

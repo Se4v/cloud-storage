@@ -136,7 +136,7 @@
                     confirm-button-text="确认"
                     cancel-button-text="取消"
                     confirm-button-class="!bg-red-600 !border-red-600"
-                    @confirm="handleDelete(row)"
+                    @confirm="selectedRows = [row]; handleBatchDelete()"
                 >
                   <template #reference>
                     <el-button
@@ -404,37 +404,8 @@ const handleEdit = (row) => {
   dialogVisible.value = true
 }
 
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-        `确定要删除组织节点 "${row.name}" 吗？此操作不可恢复。`,
-        '确认删除',
-        {
-          confirmButtonText: '删除',
-          cancelButtonText: '取消',
-          type: 'warning',
-          confirmButtonClass: '!bg-red-600 !border-red-600 !rounded-lg',
-          cancelButtonClass: '!rounded-lg',
-          customClass: '!rounded-xl'
-        }
-    )
-    const res = await axios.post(`${API_BASE_URL}/api/org/delete`, { nodeIds: [row.id] }, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('删除成功')
-      await loadData()
-    } else {
-      ElMessage.error(res.data.msg || '删除失败')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除失败:', error)
-      ElMessage.error(error.response?.data?.msg || '删除失败')
-    }
-  }
-}
-
 const handleBatchDelete = async () => {
-  if (selectedRows.value.length === 0) {
+  if (!selectedRows.value.length) {
     ElMessage.warning('请先选择要删除的组织节点')
     return
   }
@@ -451,15 +422,16 @@ const handleBatchDelete = async () => {
           customClass: '!rounded-xl'
         }
     )
-    const ids = selectedRows.value.map(row => row.id)
-    const res = await axios.post(`${API_BASE_URL}/api/org/delete`, { nodeIds: ids }, getAuthConfig())
-    if (res.data.code === 200) {
-      ElMessage.success('批量删除成功')
-      selectedRows.value = []
-      await loadData()
-    } else {
-      ElMessage.error(res.data.msg || '删除失败')
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/org/delete`, {
+      nodeIds: selectedRows.value.map(row => row.id)
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '删除失败')
+      return
     }
+    ElMessage.success('删除成功')
+    selectedRows.value = []
+    await loadData()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
@@ -470,68 +442,48 @@ const handleBatchDelete = async () => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // 将GB转换为字节
-        const storageQuotaBytes = Number(storageQuotaGB.value) * GB
-        if (isEdit.value) {
-          const submitData = {
-            id: formData.id,
-            name: formData.name,
-            type: formData.type,
-            parentId: formData.parentId,
-            storageQuota: storageQuotaBytes,
-            isEnabled: formData.isEnabled,
-            adminUsername: formData.adminUsername
-          }
-          const res = await axios.post(`${API_BASE_URL}/api/org/update`, submitData, getAuthConfig())
-          if (res.data.code === 200) {
-            ElMessage.success('更新成功')
-            dialogVisible.value = false
-            await loadData()
-          } else {
-            ElMessage.error(res.data.msg || '更新失败')
-          }
-        } else {
-          const submitData = {
-            name: formData.name,
-            type: formData.type,
-            parentId: formData.parentId,
-            storageQuota: storageQuotaBytes,
-            adminUsername: formData.adminUsername
-          }
-          const res = await axios.post(`${API_BASE_URL}/api/org/create`, submitData, getAuthConfig())
-          if (res.data.code === 200) {
-            ElMessage.success('创建成功')
-            dialogVisible.value = false
-            await loadData()
-          } else {
-            ElMessage.error(res.data.msg || '创建失败')
-          }
-        }
-      } catch (error) {
-        console.error(isEdit.value ? '更新失败:' : '创建失败:', error)
-        ElMessage.error(error.response?.data?.msg || (isEdit.value ? '更新失败' : '创建失败'))
+  try {
+    await formRef.value.validate()
+
+    const url = isEdit.value ? `${API_BASE_URL}/api/org/update` : `${API_BASE_URL}/api/org/create`
+    const submitData = isEdit.value
+        ? { id: formData.id, name: formData.name, type: formData.type, parentId: formData.parentId,
+          storageQuota: Number(storageQuotaGB.value) * GB, isEnabled: formData.isEnabled, adminUsername: formData.adminUsername }
+        : { name: formData.name, type: formData.type, parentId: formData.parentId,
+          storageQuota: Number(storageQuotaGB.value) * GB, adminUsername: formData.adminUsername }
+
+    const { data: res } = await axios.post(url, submitData, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res .msg || isEdit.value ? '更新失败' : '创建失败')
+      return
+    }
+    ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
+    dialogVisible.value = false
+    await loadData()
+  } catch (error) {
+    if (error !== false) {
+      console.error('提交异常:', error)
+      if (error.response) {
+        ElMessage.error(error.response.data?.msg || '操作失败')
       }
     }
-  })
+  }
 }
 
 // 加载组织列表
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/org/all`, getAuthConfig())
-    if (res.data.code === 200) {
-      orgList.value = res.data.data || []
-      total.value = orgList.value.length
-    } else {
-      ElMessage.error(res.data.msg || '加载数据失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/org/all`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载数据失败')
+      return
     }
+    orgList.value = res.data || []
+    total.value = orgList.value.length
   } catch (error) {
     console.error('加载数据失败:', error)
-    ElMessage.error(error.response?.data?.msg || '加载数据失败')
+    ElMessage.error(error.message || '加载数据失败')
   } finally {
     loading.value = false
   }

@@ -364,17 +364,17 @@ const loadData = async () => {
       params.endTime = queryForm.timeRange[1]
     }
     
-    const res = await axios.get(`${API_BASE_URL}/api/log/all`, {
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/log/all`, {
       ...getAuthConfig(),
       params
     })
     
-    if (res.data.code === 200) {
-      tableData.value = res.data.data || []
-      total.value = res.data.total || 0
-    } else {
-      ElMessage.error(res.data.msg || '获取日志列表失败')
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取日志列表失败')
+      return
     }
+    tableData.value = res.data || []
+    total.value = res.total || 0
   } catch (error) {
     console.error('获取日志列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取日志列表失败')

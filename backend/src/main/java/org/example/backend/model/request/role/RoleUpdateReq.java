@@ -16,5 +16,8 @@ public class RoleUpdateReq {
     private String code;
     @NotNull
     @PositiveOrZero
+    private Integer type;
+    @NotNull
+    @PositiveOrZero
     private Integer isEnabled;
 }

@@ -127,7 +127,7 @@
 
         <el-table-column label="操作" min-width="140" align="left">
           <template #default="{ row }">
-            <div class="flex items-center justify-end gap-2">
+
               <button
                   v-if="row.type === 2"
                   @click="handlePermissionConfig(row)"
@@ -144,19 +144,13 @@
                 <el-icon :size="16"><Edit /></el-icon>
               </button>
               <button
-                  @click="handleDelete(row)"
-                  :disabled="row.type === 1"
-                  :class="[
-                  'p-2 rounded-lg transition-colors duration-200',
-                  row.type === 1
-                    ? 'text-slate-300 cursor-not-allowed'
-                    : 'text-slate-600 hover:text-red-600 hover:bg-red-50'
-                ]"
+                  @click="selectedRoles = [row]; handleBatchDelete()"
+                  :class="['p-2 rounded-lg transition-colors duration-200']"
                   title="删除"
               >
                 <el-icon :size="16"><Delete /></el-icon>
               </button>
-            </div>
+
           </template>
         </el-table-column>
 
@@ -227,10 +221,8 @@
                 placeholder="请输入角色代码，如：ROLE_USER"
                 size="large"
                 class="custom-input"
-                :disabled="isEditing && form.type === 1"
             >
             </el-input>
-            <p class="mt-1.5 text-xs text-slate-500">代码用于系统识别，创建后不可修改</p>
           </el-form-item>
 
           <el-form-item label="角色类型" prop="type">
@@ -239,20 +231,17 @@
                 placeholder="选择角色类型"
                 size="large"
                 class="w-full custom-select"
-                :disabled="isEditing"
             >
               <el-option label="组织角色" :value="2">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
                   <span>组织角色</span>
-                  <span class="text-xs text-slate-400 ml-auto">可删除修改</span>
                 </div>
               </el-option>
               <el-option label="系统角色" :value="1">
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-amber-500"></div>
                   <span>系统角色</span>
-                  <span class="text-xs text-slate-400 ml-auto">不可删除</span>
                 </div>
               </el-option>
             </el-select>
@@ -317,7 +306,7 @@
         </div>
         <div>
           <h3 class="text-base font-semibold text-slate-900 mb-1">
-            {{ isBatchDelete ? `确定要删除选中的 ${selectedRoles.length} 个角色吗？` : '确定要删除该角色吗？' }}
+            {{ `确定要删除选中的 ${selectedRoles.length} 个角色吗？` }}
           </h3>
           <p class="text-sm text-slate-500 leading-relaxed">
             此操作不可撤销。删除后，关联该角色的用户将失去相应权限，请谨慎操作。
@@ -466,11 +455,13 @@ const permissionsLoaded = ref(false)
 const loadPermissionList = async () => {
   if (permissionsLoaded.value) return
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/role/perm`, getAuthConfig())
-    if (res.data.code === 200) {
-      permissionList.value = res.data.data || []
-      permissionsLoaded.value = true
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/role/perm`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '加载权限列表失败:')
+      return
     }
+    permissionList.value = res.data || []
+    permissionsLoaded.value = true
   } catch (error) {
     console.error('加载权限列表失败:', error)
   }
@@ -480,8 +471,6 @@ const loadPermissionList = async () => {
 const dialogVisible = ref(false)
 const deleteDialogVisible = ref(false)
 const isEditing = ref(false)
-const isBatchDelete = ref(false)
-const currentRow = ref(null)
 
 // 表单引用
 const formRef = ref(null)
@@ -519,24 +508,22 @@ onMounted(() => {
 const loadRoleList = async () => {
   loading.value = true
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/role/all`, getAuthConfig())
-    if (res.data.code === 200) {
-      let filtered = res.data.data || []
-
-      // 搜索过滤
-      if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        filtered = filtered.filter(item =>
-            item.name?.toLowerCase().includes(query) ||
-            item.code?.toLowerCase().includes(query)
-        )
-      }
-
-      total.value = filtered.length
-      roleList.value = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
-    } else {
-      ElMessage.error(res.data.msg || '获取角色列表失败')
+    const { data: res } = await axios.get(`${API_BASE_URL}/api/role/all`, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '获取角色列表失败')
+      return
     }
+    // 搜索过滤
+    let filtered = res.data || []
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      filtered = filtered.filter(item =>
+          item.name?.toLowerCase().includes(query) ||
+          item.code?.toLowerCase().includes(query)
+      )
+    }
+    total.value = filtered.length
+    roleList.value = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
   } catch (error) {
     console.error('获取角色列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取角色列表失败')
@@ -585,22 +572,19 @@ const savePermissions = async () => {
   if (!currentRole.value) return
   permLoading.value = true
   try {
-    const submitData = {
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/role/assign`, {
       roleId: currentRole.value.id,
       permissionIds: selectedPermissions.value
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '权限配置失败')
+      return
     }
-    const res = await axios.post(`${API_BASE_URL}/api/role/assign`, submitData, getAuthConfig())
-    if (res.data.code === 200) {
-      // 更新本地数据
-      currentRole.value.permissions = [...selectedPermissions.value]
-      ElMessage.success('权限配置成功')
-      permDialogVisible.value = false
-    } else {
-      ElMessage.error(res.data.msg || '权限配置失败')
-    }
+    currentRole.value.permissions = [...selectedPermissions.value]
+    ElMessage.success('权限配置成功')
+    permDialogVisible.value = false
   } catch (error) {
     console.error('权限配置失败:', error)
-    ElMessage.error(error.response?.data?.msg || '权限配置失败')
   } finally {
     permLoading.value = false
   }
@@ -610,67 +594,38 @@ const savePermissions = async () => {
 const handleSubmit = async () => {
   if (!formRef.value) return
 
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      submitLoading.value = true
-      try {
-        if (isEditing.value) {
-          // 编辑角色
-          const submitData = {
-            id: form.id,
-            name: form.name,
-            code: form.code,
-            isEnabled: form.isEnabled
-          }
-          const res = await axios.post(`${API_BASE_URL}/api/role/update`, submitData, getAuthConfig())
-          if (res.data.code === 200) {
-            ElMessage.success('角色更新成功')
-            dialogVisible.value = false
-            await loadRoleList()
-          } else {
-            ElMessage.error(res.data.msg || '更新失败')
-          }
-        } else {
-          // 创建角色
-          const submitData = {
-            name: form.name,
-            code: form.code,
-            type: form.type
-          }
-          const res = await axios.post(`${API_BASE_URL}/api/role/create`, submitData, getAuthConfig())
-          if (res.data.code === 200) {
-            ElMessage.success('角色创建成功')
-            dialogVisible.value = false
-            await loadRoleList()
-          } else {
-            ElMessage.error(res.data.msg || '创建失败')
-          }
-        }
-      } catch (error) {
-        console.error(isEditing.value ? '更新角色失败:' : '创建角色失败:', error)
-        ElMessage.error(error.response?.data?.msg || (isEditing.value ? '更新失败' : '创建失败'))
-      } finally {
-        submitLoading.value = false
+  try {
+    await formRef.value.validate()
+    submitLoading.value = true
+
+    const url = isEditing.value ? `${API_BASE_URL}/api/role/update` : `${API_BASE_URL}/api/role/create`
+    const submitData = isEditing.value
+        ? { id: form.id, name: form.name, code: form.code, type: form.type, isEnabled: form.isEnabled }
+        : { name: form.name, code: form.code, type: form.type }
+
+    const { data: res } = await axios.post(url, submitData, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || (isEditing.value ? '更新失败' : '创建失败'))
+      return
+    }
+    ElMessage.success(isEditing.value ? '角色更新成功' : '角色创建成功')
+    dialogVisible.value = false
+    await loadRoleList()
+  } catch (error) {
+    if (error !== false) {
+      console.error('提交异常:', error)
+      if (error.response) {
+        ElMessage.error(error.response.data?.msg || '操作失败')
       }
     }
-  })
-}
-
-// 删除角色
-const handleDelete = (row) => {
-  if (row.type === 1) {
-    ElMessage.warning('系统角色不可删除')
-    return
+  } finally {
+    submitLoading.value = false
   }
-  isBatchDelete.value = false
-  currentRow.value = row
-  deleteDialogVisible.value = true
 }
 
 // 批量删除
 const handleBatchDelete = () => {
-  if (selectedRoles.value.length === 0) return
-  isBatchDelete.value = true
+  if (!selectedRoles.value.length) return
   deleteDialogVisible.value = true
 }
 
@@ -678,44 +633,21 @@ const handleBatchDelete = () => {
 const confirmDelete = async () => {
   deleteLoading.value = true
   try {
-    if (isBatchDelete.value) {
-      // 过滤掉系统角色
-      const deletableIds = selectedRoles.value
-          .filter(item => item.type !== 1)
-          .map(item => item.id)
-
-      if (deletableIds.length === 0) {
-        ElMessage.warning('选中的角色中包含系统角色，无法删除')
-        deleteDialogVisible.value = false
-        return
-      }
-
-      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, {
-        roleIds: deletableIds
-      }, getAuthConfig())
-      if (res.data.code === 200) {
-        ElMessage.success(`成功删除 ${deletableIds.length} 个角色`)
-        selectedRoles.value = []
-        deleteDialogVisible.value = false
-        await loadRoleList()
-      } else {
-        ElMessage.error(res.data.msg || '删除失败')
-      }
-    } else {
-      const res = await axios.post(`${API_BASE_URL}/api/role/delete`, {
-        roleIds: [currentRow.value.id]
-      }, getAuthConfig())
-      if (res.data.code === 200) {
-        ElMessage.success('角色删除成功')
-        deleteDialogVisible.value = false
-        await loadRoleList()
-      } else {
-        ElMessage.error(res.data.msg || '删除失败')
-      }
+    const roleIds = selectedRoles.value.map(item => item.id)
+    const { data: res } = await axios.post(`${API_BASE_URL}/api/role/delete`, {
+      roleIds: roleIds
+    }, getAuthConfig())
+    if (res.code !== 200) {
+      ElMessage.error(res.msg || '删除失败')
+      return
     }
+    ElMessage.success(`成功删除 ${roleIds.length} 个角色`)
+    selectedRoles.value = []
+    deleteDialogVisible.value = false
+    await loadRoleList()
   } catch (error) {
     console.error('删除角色失败:', error)
-    ElMessage.error(error.response?.data?.msg || '删除失败')
+    ElMessage.error(error.message || '删除失败')
   } finally {
     deleteLoading.value = false
   }
@@ -728,9 +660,7 @@ const resetForm = () => {
   form.code = ''
   form.type = 2
   form.isEnabled = 1
-  if (formRef.value) {
-    formRef.value.resetFields()
-  }
+  if (formRef.value) formRef.value.resetFields()
 }
 </script>
 
