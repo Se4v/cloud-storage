@@ -213,7 +213,7 @@ public class MemberService {
             );
         }
 
-        List<MemberResp> resp = members.stream()
+        return members.stream()
                 .map(member -> {
                     User user = userMap.get(member.getUserId());
                     Role role = roleMap.get(member.getRoleId());
@@ -227,8 +227,6 @@ public class MemberService {
                             .build();
                 })
                 .toList();
-
-        return resp;
     }
 
     /**
@@ -236,12 +234,11 @@ public class MemberService {
      * @return 组织角色列表
      */
     public List<Role> listOrgRoles() {
-        List<Role> orgRoles = roleMapper.selectList(
+        return roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery()
                         .eq(Role::getType, DbConsts.ROLE_TYPE_ORG)
                         .eq(Role::getEnabled, DbConsts.ENABLED_YES)
                         .eq(Role::getDeleted, DbConsts.DELETED_NO));
-        return orgRoles;
     }
 
     /**
@@ -249,10 +246,9 @@ public class MemberService {
      * @return 组织节点列表
      */
     public List<Node> listOrgNodes() {
-        List<Node> orgNodes = nodeMapper.selectList(
+        return nodeMapper.selectList(
                 Wrappers.<Node>lambdaQuery()
                         .eq(Node::getIsEnabled, DbConsts.ENABLED_YES)
                         .eq(Node::getIsDeleted, DbConsts.DELETED_NO));
-        return orgNodes;
     }
 }

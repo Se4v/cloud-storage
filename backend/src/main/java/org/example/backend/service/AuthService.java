@@ -104,7 +104,6 @@ public class AuthService {
         loginUser.setOrgPermissions(orgPermissions);
 
         // Redis缓存登录信息
-        // TODO:使用 Redis 事务或 Pipeline 保证两个写操作的原子性
         redisTemplate.opsForValue().set(RedisConsts.KEY_AUTH_USER + token, loginUser, 4, TimeUnit.HOURS);
         redisTemplate.opsForValue().set(RedisConsts.KEY_AUTH_TOKEN + req.getUsername(), token, 4, TimeUnit.HOURS);
 

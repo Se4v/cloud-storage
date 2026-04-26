@@ -30,11 +30,9 @@ public class SystemService {
      */
     public Map<String, String> getSystemConfigs() {
         List<Config> configs = configMapper.selectList(
-                Wrappers.<Config>lambdaQuery()
-                        .eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
-        Map<String, String> configMap = configs.stream()
+                Wrappers.<Config>lambdaQuery().eq(Config::getIsEnabled, DbConsts.ENABLED_YES));
+        return configs.stream()
                 .collect(Collectors.toMap(Config::getConfigKey, Config::getConfigValue, (a, b) -> a));
-        return configMap;
     }
 
     /**

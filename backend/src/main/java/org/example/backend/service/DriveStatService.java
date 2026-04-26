@@ -40,13 +40,12 @@ public class DriveStatService {
         Long allocatedQuota = usedQuota - Long.parseLong(quotaSums.get("sumUsedQuota").toString());
         Long remainingQuota = totalQuota - usedQuota;
 
-        DriveOverviewResp resp = DriveOverviewResp.builder()
+        return DriveOverviewResp.builder()
                 .totalQuota(totalQuota)
                 .allocatedQuota(allocatedQuota)
                 .usedQuota(usedQuota)
                 .remainingQuota(remainingQuota)
                 .build();
-        return resp;
     }
 
     /**
@@ -56,8 +55,8 @@ public class DriveStatService {
     public DriveUsageBreakdownResp getDriveUsageBreakdown() {
         List<Map<String, Object>> result = driveMapper.selectQuotaSumByType();
 
-        Long enterpriseQuota = 0L;
-        Long personalQuota = 0L;
+        long enterpriseQuota = 0L;
+        long personalQuota = 0L;
         for (Map<String, Object> map : result) {
             Integer type = (Integer) map.get("type");
             if (type == DbConsts.DRIVE_TYPE_PERSONAL) {
@@ -67,11 +66,10 @@ public class DriveStatService {
             }
         }
 
-        DriveUsageBreakdownResp resp = DriveUsageBreakdownResp.builder()
+        return DriveUsageBreakdownResp.builder()
                 .enterpriseQuota(enterpriseQuota)
                 .personalQuota(personalQuota)
                 .build();
-        return resp;
     }
 
     /**
@@ -82,7 +80,7 @@ public class DriveStatService {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery().eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_ENTERPRISE));
 
-        List<DriveDetailResp> resp = drives.stream()
+        return drives.stream()
                 .map(drive -> {
                     Long remainingQuota = drive.getTotalQuota() - drive.getUsedQuota();
                     return DriveDetailResp.builder()
@@ -93,8 +91,6 @@ public class DriveStatService {
                             .build();
                 })
                 .toList();
-
-        return resp;
     }
 
     /**
@@ -105,7 +101,7 @@ public class DriveStatService {
         List<Drive> drives = driveMapper.selectList(
                 Wrappers.<Drive>lambdaQuery().eq(Drive::getDriveType, DbConsts.DRIVE_TYPE_PERSONAL));
 
-        List<DriveDetailResp> resp = drives.stream()
+        return drives.stream()
                 .map(drive -> {
                     Long remainingQuota = drive.getTotalQuota() - drive.getUsedQuota();
                     return DriveDetailResp.builder()
@@ -116,7 +112,5 @@ public class DriveStatService {
                             .build();
                 })
                 .toList();
-
-        return resp;
     }
 }

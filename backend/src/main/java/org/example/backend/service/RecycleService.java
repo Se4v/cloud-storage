@@ -59,7 +59,8 @@ public class RecycleService {
                 .collect(Collectors.toMap(Drive::getId, drive -> drive));
 
         // 组装结果
-        List<RecycleResp> resp = entries.stream()
+
+        return entries.stream()
                 .map(entry -> {
                     Drive drive = driveMap.get(entry.getDriveId());
                     String path = drive.getDriveType() == DbConsts.DRIVE_TYPE_PERSONAL ?
@@ -76,8 +77,6 @@ public class RecycleService {
                             .build();
                 })
                 .toList();
-
-        return resp;
     }
 
     /**

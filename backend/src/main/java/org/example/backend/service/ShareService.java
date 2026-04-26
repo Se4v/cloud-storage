@@ -3,7 +3,6 @@ package org.example.backend.service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
-import org.example.backend.common.result.Result;
 import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.ShareMapper;
@@ -17,7 +16,6 @@ import org.example.backend.model.entity.Share;
 import org.example.backend.model.response.share.LinkInfoResp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -102,11 +100,10 @@ public class ShareService {
                             .eq(Share::getIsDeleted, DbConsts.DELETED_NO)
                             .gt(Share::getExpiredAt, LocalDateTime.now()));
             if (link == null) return List.of();
-            List<Entry> entries = entryMapper.selectList(
+            return entryMapper.selectList(
                     Wrappers.<Entry>lambdaQuery()
                             .eq(Entry::getId, link.getEntryId())
                             .eq(Entry::getStatus, DbConsts.ENTRY_STATUS_UNDELETED));
-            return entries;
         }
         List<Entry> entries = entryMapper.selectList(
                 Wrappers.<Entry>lambdaQuery()
@@ -124,13 +121,11 @@ public class ShareService {
         User sharer = userMapper.selectOne(
                 Wrappers.<User>lambdaQuery().eq(User::getId, link.getUserId()));
 
-        LinkInfoResp resp = LinkInfoResp.builder()
+        return LinkInfoResp.builder()
                 .username(sharer.getUsername())
                 .expireTime(link.getExpiredAt())
                 .linkType(link.getLinkType())
                 .build();
-
-        return resp;
     }
 
     public void checkAccessCode(LinkCheckReq req) {

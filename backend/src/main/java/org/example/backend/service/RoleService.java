@@ -183,9 +183,8 @@ public class RoleService {
      * @return 角色列表
      */
     public List<Role> listAllRoles() {
-        List<Role> allRoles = roleMapper.selectList(
+        return roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery().eq(Role::getDeleted, DbConsts.DELETED_NO));
-        return allRoles;
     }
 
     /**
@@ -259,8 +258,7 @@ public class RoleService {
      * @return 权限列表
      */
     public List<Permission> listPermissions() {
-        List<Permission> permissions = permissionMapper.selectList(
+        return permissionMapper.selectList(
                 Wrappers.<Permission>lambdaQuery().eq(Permission::getType, 2));
-        return permissions;
     }
 }

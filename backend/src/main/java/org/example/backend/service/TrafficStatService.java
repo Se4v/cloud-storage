@@ -62,14 +62,12 @@ public class TrafficStatService {
             }
         }
 
-        TrafficOverviewResp resp = TrafficOverviewResp.builder()
+        return TrafficOverviewResp.builder()
                 .totalQuota(totalQuota)
                 .usedQuota(usedQuota)
                 .totalUpload(totalUpload)
                 .totalDownload(totalDownload)
                 .build();
-
-        return resp;
     }
 
     /**
@@ -109,7 +107,7 @@ public class TrafficStatService {
         if (result == null || result.isEmpty()) return List.of();
 
         Map<String, Object> quotaSums = driveMapper.selectQuotaSums();
-        Long usedQuota = Long.parseLong(quotaSums.get("sumUsedQuota").toString());
+        long usedQuota = Long.parseLong(String.valueOf(quotaSums.get("sumUsedQuota")));
 
         List<FileTypeDistributionResp> resp = new ArrayList<>();
         for (Map<String, Object> map : result) {

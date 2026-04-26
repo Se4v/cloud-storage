@@ -1,5 +1,9 @@
 package org.example.backend.service;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.support.ExcelTypeEnum;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.backend.mapper.LogMapper;
 import org.example.backend.model.entity.Log;
@@ -7,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
 
@@ -30,6 +35,11 @@ public class LogService {
         return logMapper.selectList(null);
     }
 
+    /**
+     * 获取操作日志详细
+     * @param logId 操作日志ID
+     * @return 操作日志详细
+     */
     public String getLogDetail(Long logId) {
         Log log = logMapper.selectById(logId);
         String json;
@@ -54,5 +64,15 @@ public class LogService {
             // 异步任务中的异常需要单独处理，防止吞掉错误
             logger.error("异步保存日志失败", e);
         }
+    }
+
+    public StreamingResponseBody export() {
+        return outputStream -> {
+            List<Log> logs = logMapper.selectList(null);
+            EasyExcel.write(outputStream, Log.class)
+                    .excelType(ExcelTypeEnum.CSV) // 指定为 CSV
+                    .sheet("日志表")              // 指定 sheet 名称
+                    .doWrite(logs);
+        };
     }
 }

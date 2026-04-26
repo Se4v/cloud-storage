@@ -205,7 +205,8 @@ public class UserService {
                 ));
 
         // 转换
-        List<UserResp> resp = users.stream()
+
+        return users.stream()
                 .map(user -> UserResp.builder()
                         .id(user.getId())
                         .username(user.getUsername())
@@ -217,8 +218,6 @@ public class UserService {
                         .roles(userRoleMap.getOrDefault(user.getId(), List.of()))
                         .build())
                 .toList();
-
-        return resp;
     }
 
     /**
@@ -314,11 +313,10 @@ public class UserService {
      * @return 系统角色列表
      */
     public List<Role> listSystemRole() {
-        List<Role> systemRoles = roleMapper.selectList(
+        return roleMapper.selectList(
                 Wrappers.<Role>lambdaQuery()
                         .eq(Role::getType, DbConsts.ROLE_TYPE_SYSTEM)
                         .eq(Role::getEnabled, DbConsts.ENABLED_YES)
                         .eq(Role::getDeleted, DbConsts.DELETED_NO));
-        return systemRoles;
     }
 }

@@ -27,12 +27,11 @@ public class NoticeService {
      */
     public List<Notice> listUnreadNotices() {
         Long currentUserId = SecurityUtils.getUserId();
-        List<Notice> unreadNotices = noticeMapper.selectList(
+        return noticeMapper.selectList(
                 Wrappers.<Notice>lambdaQuery()
                         .eq(Notice::getTargetId, currentUserId)
                         .eq(Notice::getIsRead, DbConsts.READ_NO)
                         .eq(Notice::getIsDeleted, DbConsts.DELETED_NO));
-        return unreadNotices;
     }
 
     /**
@@ -41,11 +40,10 @@ public class NoticeService {
      */
     public List<Notice> listNotices() {
         Long currentUserId = SecurityUtils.getUserId();
-        List<Notice> notices = noticeMapper.selectList(
+        return noticeMapper.selectList(
                 Wrappers.<Notice>lambdaQuery()
                         .eq(Notice::getTargetId, currentUserId)
                         .eq(Notice::getIsDeleted, DbConsts.DELETED_NO));
-        return notices;
     }
 
     /**

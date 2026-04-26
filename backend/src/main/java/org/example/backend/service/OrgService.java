@@ -67,11 +67,9 @@ public class OrgService {
                 .toList();
         
         // 递归构建树形结构
-        List<OrgNodeTreeResp> orgTree = rootNodes.stream()
+        return rootNodes.stream()
                 .map(node -> buildOrgTree(node, nodeMap, driveMap))
                 .toList();
-        
-        return orgTree;
     }
 
     /**
@@ -305,7 +303,7 @@ public class OrgService {
         Map<Long, String> userMap = userList.stream()
                 .collect(Collectors.toMap(User::getId, User::getUsername));
 
-        List<OrgNodeResp> resp = nodeList.stream()
+        return nodeList.stream()
                 .map(node -> {
                     String parentName = parentNodeMap.getOrDefault(node.getParentId(), "根节点");
                     Drive drive = driveMap.get(node.getId());
@@ -324,7 +322,5 @@ public class OrgService {
                             .build();
                 })
                 .toList();
-
-        return resp;
     }
 }

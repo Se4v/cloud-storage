@@ -95,6 +95,13 @@
         <!-- 操作按钮 -->
         <div class="flex gap-2 flex-shrink-0 lg:ml-auto">
           <button
+            @click="handleExport"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+          >
+            <el-icon :size="16"><Download /></el-icon>
+            导出
+          </button>
+          <button
             @click="handleSearch"
             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
           >
@@ -246,7 +253,8 @@ import {
   Operation,
   CircleCheck,
   ArrowDown,
-  Document
+  Document,
+  Download
 } from '@element-plus/icons-vue'
 import { useUserStore } from "@/stores/user.js";
 
@@ -387,6 +395,36 @@ const loadData = async () => {
 onMounted(() => {
   loadData()
 })
+
+// 导出
+const handleExport = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/log/export`, {
+      ...getAuthConfig(),
+      responseType: 'blob'
+    })
+    // 从响应头中获取文件名
+    const disposition = res.headers['content-disposition']
+    const filenameRegex = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"/
+    const match = disposition?.match(filenameRegex)
+    const filename = match?.[1] ? decodeURIComponent(match[1]) : match?.[2] || 'log.csv'
+
+    // 创建下载链接
+    const url = window.URL.createObjectURL(res.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败')
+  }
+}
 
 // 搜索
 const handleSearch = async () => {
