@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class RecycleResp {
     private Long id;
+    private String deleter;
     private String name;
     private Integer type;
     private String path;

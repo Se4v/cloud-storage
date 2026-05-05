@@ -52,12 +52,6 @@
             <el-icon :size="16"><Search /></el-icon>
             查询
           </button>
-          <button
-              @click="handleReset"
-              class="h-9 px-4 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-md text-sm font-medium transition-colors"
-          >
-            重置
-          </button>
         </div>
       </div>
     </div>
@@ -504,13 +498,6 @@ const paginatedTableData = computed(() => {
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
-}
-
-const handleReset = () => {
-  searchQuery.value = ''
-  filterStatus.value = ''
-  currentPage.value = 1
-  handleSearch()
 }
 
 // 分页

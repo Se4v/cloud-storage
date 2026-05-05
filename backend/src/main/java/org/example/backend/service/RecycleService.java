@@ -7,6 +7,8 @@ import org.example.backend.common.util.SecurityUtils;
 import org.example.backend.mapper.DriveMapper;
 import org.example.backend.mapper.EntryMapper;
 import org.example.backend.mapper.StorageMapper;
+import org.example.backend.mapper.UserMapper;
+import org.example.backend.model.entity.User;
 import org.example.backend.model.request.file.EntryDeletionReq;
 import org.example.backend.model.request.file.EntryRestoreReq;
 import org.example.backend.model.entity.Drive;
@@ -24,11 +26,14 @@ public class RecycleService {
     private final EntryMapper entryMapper;
     private final StorageMapper storageMapper;
     private final DriveMapper driveMapper;
+    private final UserMapper userMapper;
 
-    public RecycleService(EntryMapper entryMapper, StorageMapper storageMapper, DriveMapper driveMapper) {
+    public RecycleService(EntryMapper entryMapper, StorageMapper storageMapper,
+                          DriveMapper driveMapper, UserMapper userMapper) {
         this.entryMapper = entryMapper;
         this.storageMapper = storageMapper;
         this.driveMapper = driveMapper;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -46,17 +51,13 @@ public class RecycleService {
         if (entries == null || entries.isEmpty()) return List.of();
 
         // 获取关联的空间ID
-        Set<Long> driveIds = entries.stream()
-                .map(Entry::getDriveId)
-                .collect(Collectors.toSet());
+        Set<Long> driveIds = entries.stream().map(Entry::getDriveId).collect(Collectors.toSet());
 
         // 批量查询空间信息
         Map<Long, Drive> driveMap;
-        List<Drive> drives = driveMapper.selectList(
-                Wrappers.<Drive>lambdaQuery().in(Drive::getId, driveIds));
+        List<Drive> drives = driveMapper.selectList(Wrappers.<Drive>lambdaQuery().in(Drive::getId, driveIds));
         if (drives == null || drives.isEmpty()) return List.of();
-        driveMap = drives.stream()
-                .collect(Collectors.toMap(Drive::getId, drive -> drive));
+        driveMap = drives.stream().collect(Collectors.toMap(Drive::getId, drive -> drive));
 
         // 组装结果
         return entries.stream()
@@ -73,6 +74,52 @@ public class RecycleService {
                             .size(entry.getFileSize())
                             .deleteTime(entry.getDeletedAt())
                             .expireTime(entry.getExpiredAt())
+                            .build();
+                })
+                .toList();
+    }
+
+    /**
+     * 查询回收站中所有条目
+     * @return 回收站条目列表
+     */
+    public List<RecycleResp> listAllEntries() {
+        // 查询用户回收站中的条目
+        List<Entry> entries = entryMapper.selectList(Wrappers.<Entry>lambdaQuery()
+                .in(Entry::getStatus, DbConsts.ENTRY_STATUS_DELETED, DbConsts.ENTRY_STATUS_PERMANENT_DELETED));
+        if (entries == null || entries.isEmpty()) return List.of();
+
+        // 获取关联的空间ID
+        Set<Long> driveIds = entries.stream().map(Entry::getDriveId).collect(Collectors.toSet());
+
+        // 批量查询空间信息
+        Map<Long, Drive> driveMap;
+        List<Drive> drives = driveMapper.selectList(Wrappers.<Drive>lambdaQuery().in(Drive::getId, driveIds));
+        if (drives == null || drives.isEmpty()) throw new BusinessException("获取回收站文件失败");
+        driveMap = drives.stream().collect(Collectors.toMap(Drive::getId, drive -> drive));
+
+        Set<Long> userIds = entries.stream().map(Entry::getDeleterId).collect(Collectors.toSet());
+        Map<Long, User> userMap;
+        List<User> users = userMapper.selectList(Wrappers.<User>lambdaQuery().in(User::getId, userIds));
+        if (users == null || users.isEmpty()) throw new BusinessException("获取回收站文件失败");
+        userMap = users.stream().collect(Collectors.toMap(User::getId, user -> user));
+
+        // 组装结果
+        return entries.stream()
+                .map(entry -> {
+                    Drive drive = driveMap.get(entry.getDriveId());
+                    String path = drive.getDriveType() == DbConsts.DRIVE_TYPE_PERSONAL ?
+                            "个人空间/项目文件" : "企业空间/" + drive.getDriveName();
+                    String deleter = userMap.get(entry.getUserId()).getUsername();
+
+                    return RecycleResp.builder()
+                            .id(entry.getId())
+                            .deleter(deleter)
+                            .name(entry.getEntryName())
+                            .type(entry.getEntryType())
+                            .path(path)
+                            .size(entry.getFileSize())
+                            .deleteTime(entry.getDeletedAt())
                             .build();
                 })
                 .toList();

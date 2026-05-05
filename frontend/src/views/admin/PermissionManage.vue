@@ -2,7 +2,7 @@
   <div class="p-8 max-w-7xl mx-auto">
     <!-- 筛选区 -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6">
-      <div class="flex flex-wrap items-center gap-4">
+      <div class="flex flex-wrap items-center justify-end gap-4">
         <!-- 搜索框 -->
         <div class="relative w-full sm:w-64">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

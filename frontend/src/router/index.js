@@ -84,6 +84,11 @@ const routes = [
                 component: () => import('@/views/admin/SystemManage.vue')
             },
             {
+                path: 'recycle',
+                name: 'RecycleManagement',
+                component: () => import('@/views/admin/RecycleManage.vue')
+            },
+            {
                 path: 'drive-stats',
                 name: 'DriveStat',
                 component: () => import('@/views/admin/DriveStat.vue')

@@ -67,7 +67,7 @@
         <!-- 网盘配置 -->
         <div class="mb-6">
           <h3 class="px-4 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            网盘配置
+            网盘管理
           </h3>
           <div class="space-y-1 px-2">
             <button
@@ -170,7 +170,8 @@ import {
   Lock,
   Tools,
   SetUp,
-  Avatar
+  Avatar,
+  Delete
 } from '@element-plus/icons-vue'
 import axios from "axios"
 import { ElMessage } from "element-plus";
@@ -211,7 +212,8 @@ const managementMenu = [
 
 // 网盘配置菜单
 const configMenu = [
-  { key: 'system-settings', label: '系统设置', icon: SetUp, route: '/admin/system' }
+  { key: 'system-settings', label: '系统设置', icon: SetUp, route: '/admin/system' },
+  { key: 'recycle-mgmt', label: '回收站管理', icon: Delete, route: '/admin/recycle' }
 ]
 
 // 安全与审计菜单

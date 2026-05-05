@@ -179,13 +179,13 @@
             </div>
           </div>
 
-          <!-- 退出管理中心按钮 -->
+          <!-- 退出按钮 -->
           <button
               @click="handleLogout"
               class="w-full flex items-center gap-2 mt-3 text-sm text-slate-600 hover:text-red-600 transition-colors"
           >
             <el-icon :size="16"><SwitchButton /></el-icon>
-            <span class="font-medium">退出管理中心</span>
+            <span class="font-medium">退出</span>
           </button>
         </div>
       </div>
