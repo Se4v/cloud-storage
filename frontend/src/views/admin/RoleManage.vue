@@ -398,7 +398,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import {
@@ -436,11 +436,32 @@ const permLoading = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(0)
 
 // 表格数据
-const roleList = ref([])
+const allRoleData = ref([])
 const selectedRoles = ref([])
+
+// 搜索过滤后的数据
+const filteredRoleList = computed(() => {
+  let result = allRoleData.value
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(item =>
+        item.name?.toLowerCase().includes(query) ||
+        item.code?.toLowerCase().includes(query)
+    )
+  }
+  return result
+})
+
+// 分页后的数据
+const roleList = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredRoleList.value.slice(start, end)
+})
+
+const total = computed(() => filteredRoleList.value.length)
 
 // 权限配置对话框
 const permDialogVisible = ref(false)
@@ -513,17 +534,7 @@ const loadRoleList = async () => {
       ElMessage.error(res.msg || '获取角色列表失败')
       return
     }
-    // 搜索过滤
-    let filtered = res.data || []
-    if (searchQuery.value) {
-      const query = searchQuery.value.toLowerCase()
-      filtered = filtered.filter(item =>
-          item.name?.toLowerCase().includes(query) ||
-          item.code?.toLowerCase().includes(query)
-      )
-    }
-    total.value = filtered.length
-    roleList.value = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
+    allRoleData.value = res.data || []
   } catch (error) {
     console.error('获取角色列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取角色列表失败')
@@ -535,7 +546,6 @@ const loadRoleList = async () => {
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  loadRoleList()
 }
 
 // 多选变化

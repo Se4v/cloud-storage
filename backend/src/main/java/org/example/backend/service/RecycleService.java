@@ -59,7 +59,6 @@ public class RecycleService {
                 .collect(Collectors.toMap(Drive::getId, drive -> drive));
 
         // 组装结果
-
         return entries.stream()
                 .map(entry -> {
                     Drive drive = driveMap.get(entry.getDriveId());

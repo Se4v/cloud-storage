@@ -34,7 +34,7 @@
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <el-table
         v-loading="loading"
-        :data="filteredPermissions"
+        :data="paginatedPermissions"
         row-key="id"
         class="w-full"
         header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
@@ -89,6 +89,7 @@
           layout="prev, pager, next"
           background
           class="!gap-2"
+          @current-change="handleCurrentChange"
         />
       </div>
     </div>
@@ -189,9 +190,21 @@ const filteredPermissions = computed(() => {
   return result
 })
 
+// 分页后的数据
+const paginatedPermissions = computed(() => {
+  const start = (currentPage.value - 1) * 10
+  const end = start + 10
+  return filteredPermissions.value.slice(start, end)
+})
+
 // 查询方法
 const handleSearch = () => {
   currentPage.value = 1
+}
+
+// 页码变化
+const handleCurrentChange = (val) => {
+  currentPage.value = val
 }
 </script>
 

@@ -140,7 +140,7 @@
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <el-table
         v-loading="loading"
-        :data="tableData"
+        :data="paginatedData"
         row-key="id"
         class="w-full"
         header-cell-class-name="!bg-slate-50 !text-slate-700 !font-semibold !border-b !border-slate-200"
@@ -244,7 +244,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import {
@@ -307,14 +307,15 @@ const getOperationTypeClass = (type) => {
   return operationTypeMap[type]?.class || 'bg-slate-50 text-slate-700 border-slate-200'
 }
 
-// 表格数据
-const tableData = ref([
-  {
-    id: 123,
-    username: '12345',
-    realName: '的撒'
-  }
-])
+// 全部数据（后端返回）
+const allData = ref([])
+
+// 分页后的表格数据
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return allData.value.slice(start, end)
+})
 const loading = ref(false)
 
 // 详情对话框相关
@@ -381,8 +382,8 @@ const loadData = async () => {
       ElMessage.error(res.msg || '获取日志列表失败')
       return
     }
-    tableData.value = res.data || []
-    total.value = res.total || 0
+    allData.value = res.data || []
+    total.value = res.total !== undefined ? res.total : allData.value.length
   } catch (error) {
     console.error('获取日志列表失败:', error)
     ElMessage.error(error.response?.data?.msg || '获取日志列表失败')
@@ -443,7 +444,7 @@ const handleReset = async () => {
 }
 
 // 页码变化
-const handleCurrentChange = async (val) => {
+const handleCurrentChange = (val) => {
   currentPage.value = val
 }
 </script>
