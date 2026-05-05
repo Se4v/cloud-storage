@@ -1,6 +1,7 @@
 package org.example.backend.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.apache.ibatis.executor.BatchResult;
 import org.example.backend.common.constant.DbConsts;
 import org.example.backend.common.exception.BusinessException;
 import org.example.backend.common.util.SecurityUtils;
@@ -11,6 +12,7 @@ import org.example.backend.model.entity.Notice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -74,5 +76,18 @@ public class NoticeService {
                         .eq(Notice::getTargetId, currentUserId)
                         .in(Notice::getId, req.getIds()));
         if (count != req.getIds().size()) throw new BusinessException("删除通知失败");
+    }
+
+    /**
+     * 创建通知
+     * @param notices 通知列表
+     */
+    @Transactional
+    public void createNotices(List<Notice> notices) {
+        List<BatchResult> results = noticeMapper.insert(notices);
+        int count = results.stream()
+                .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
+                .sum();
+        if (count != notices.size()) throw new BusinessException("创建通知失败");
     }
 }

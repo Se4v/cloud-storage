@@ -51,4 +51,9 @@ public class ConfigService {
     public List<String> getFileTypeBlacklist() {
         return List.of(configCache.getOrDefault("file_type_blacklist", "").split(","));
     }
+
+    public double getStorageWarningThreshold() {
+        String value = configCache.getOrDefault("storage_warning_threshold", "");
+        return Double.parseDouble(value);
+    }
 }
